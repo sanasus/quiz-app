@@ -23,17 +23,14 @@ export const quizApiQuestionSchema = z.object({
   type: z.enum(['MULTIPLE_CHOICE', 'TRUE_FALSE']).optional(),
   difficulty: z.enum(['EASY', 'MEDIUM', 'HARD']),
   explanation: z.string().nullable().optional(),
-  tags: z.array(z.object({ name: z.string() })).optional(),
+  tags: z.array(z.string()).optional(),
   category: z.string().nullable().optional(),
   // Fields that may or may not be present
   quizId: z.string().optional(),
   quizTitle: z.string().optional(),
-  // The old browse-mode fields (for backwards compat with docs)
-  answers: z
-    .discriminatedUnion('type', [
-      z.object({ id: z.string(), text: z.string(), isCorrect: z.boolean() }),
-    ])
-    .array(),
+  // Answers array: [{ id, text, isCorrect }]
+  answers: z.array(quizApiAnswerSchema),
+  // Legacy browse-mode fields (kept optional for compat)
   multiple_correct_answers: z.enum(['true', 'false']).optional(),
   correct_answers: z.record(z.string(), z.enum(['true', 'false'])).optional(),
   description: z.string().nullable().optional(),
