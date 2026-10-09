@@ -1,14 +1,14 @@
-import { Link, createFileRoute } from '@tanstack/react-router';
-import { useTranslation } from 'react-i18next';
+import { Link, createFileRoute } from '@tanstack/react-router'
+import { useTranslation } from 'react-i18next'
 
 // eslint-disable-next-line react/only-export-components
 export const Route = createFileRoute('/404')({
   component: NotFoundPage,
-});
+})
 
 // eslint-disable-next-line react/only-export-components
 export function NotFoundPage() {
-  const { t } = useTranslation();
+  const { t } = useTranslation()
 
   return (
     <div className="flex min-h-[70vh] flex-col items-center justify-center gap-6 text-center">
@@ -21,5 +21,5 @@ export function NotFoundPage() {
         {t('common.back')}
       </Link>
     </div>
-  );
+  )
 }

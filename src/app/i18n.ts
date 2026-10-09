@@ -1,9 +1,9 @@
-import i18n from 'i18next';
-import { initReactI18next } from 'react-i18next';
-import LanguageDetector from 'i18next-browser-languagedetector';
+import i18n from 'i18next'
+import { initReactI18next } from 'react-i18next'
+import LanguageDetector from 'i18next-browser-languagedetector'
 
-import ruTranslation from '../locales/ru.json';
-import enTranslation from '../locales/en.json';
+import ruTranslation from '../locales/ru.json'
+import enTranslation from '../locales/en.json'
 
 i18n
   .use(LanguageDetector)
@@ -25,6 +25,6 @@ i18n
   })
   .catch(() => {
     // i18n init errors are non-fatal for Chunk 0 stubs
-  });
+  })
 
-export default i18n;
+export default i18n

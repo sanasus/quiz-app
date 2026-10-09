@@ -1,5 +1,5 @@
-import { Outlet, createRootRoute } from '@tanstack/react-router';
-import { useTranslation } from 'react-i18next';
+import { Outlet, createRootRoute } from '@tanstack/react-router'
+import { useTranslation } from 'react-i18next'
 
 const routes = [
   { path: '/', label: '🏠', key: 'home.nav.home' },
@@ -9,20 +9,20 @@ const routes = [
   { path: '/stats', label: '📊', key: 'home.nav.stats' },
   { path: '/achievements', label: '🏅', key: 'home.nav.achievements' },
   { path: '/settings', label: '⚙️', key: 'home.nav.settings' },
-];
+]
 
 // eslint-disable-next-line react/only-export-components
-export const Route  = createRootRoute({
+export const Route = createRootRoute({
   component: RootComponent,
-});
+})
 
 export function RootComponent() {
-  const { t, i18n } = useTranslation();
+  const { t, i18n } = useTranslation()
 
   const toggleLang = () => {
-    const next = i18n.language === 'ru' ? 'en' : 'ru';
-    i18n.changeLanguage(next).catch(() => {});
-  };
+    const next = i18n.language === 'ru' ? 'en' : 'ru'
+    i18n.changeLanguage(next).catch(() => {})
+  }
 
   return (
     <div className="flex min-h-screen flex-col bg-bg">
@@ -82,5 +82,5 @@ export function RootComponent() {
         QuizApp · Powered by QuizAPI
       </footer>
     </div>
-  );
+  )
 }
