@@ -90,12 +90,12 @@ export const ResultsScreen = () => {
             {result.mistakes.map((m, idx) => (
               <div key={idx} className="rounded-lg bg-muted p-3">
                 <p className="mb-1 font-medium text-text">{m.question.text}</p>
-                <div className="flex flex-wrap gap-2 text-sm">
+                <div className="flex flex-col gap-1 text-sm">
                   <span className="text-danger">
-                    ❌ {m.selectedOptionIds.join(', ')}
+                    ❌ {m.selectedOptionIds.map((id) => m.question.options.find((o) => o.id === id)?.text ?? id).join(', ')}
                   </span>
                   <span className="text-success">
-                    ✅ {m.question.correctOptionIds.join(', ')}
+                    ✅ {m.question.correctOptionIds.map((id) => m.question.options.find((o) => o.id === id)?.text ?? id).join(', ')}
                   </span>
                 </div>
               </div>
