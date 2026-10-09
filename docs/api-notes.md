@@ -514,6 +514,25 @@ HTTP:
 201 Created
 ```
 
+JSON:
+
+``` json
+{
+  "success": true,
+  "data": {
+    "id": "quiz_new789",
+    "title": "React Hooks Quiz",
+    "description": "Test your knowledge of React hooks",
+    "category": "Programming",
+    "categoryId": null,
+    "difficulty": "MEDIUM",
+    "tags": ["react", "hooks"],
+    "published": true,
+    "featured": false
+  }
+}
+```
+
 ------------------------------------------------------------------------
 
 # 10. Questions API
@@ -569,6 +588,35 @@ curl -X GET \
 
 В этом режиме вопросы возвращаются в порядке квиза.
 
+### Пример response
+
+``` json
+{
+  "success": true,
+  "data": [
+    {
+      "id": "ques_xyz789",
+      "quizId": "quiz_abc123",
+      "text": "What is the typeof null in JavaScript?",
+      "type": "MULTIPLE_CHOICE",
+      "difficulty": "MEDIUM",
+      "explanation": "typeof null returns 'object' due to a legacy bug.",
+      "category": "Programming",
+      "answers": [
+        { "id": "ans_1", "text": "null", "isCorrect": false },
+        { "id": "ans_2", "text": "object", "isCorrect": true },
+        { "id": "ans_3", "text": "undefined", "isCorrect": false },
+        { "id": "ans_4", "text": "string", "isCorrect": false }
+      ]
+    }
+  ],
+  "meta": {
+    "total": 10,
+    "quizId": "quiz_abc123"
+  }
+}
+```
+
 ------------------------------------------------------------------------
 
 ## 10.3 GET `/api/v1/questions`
@@ -600,6 +648,59 @@ curl -X GET \
 ```
 
 В browse mode `answers` включаются всегда.
+
+### Пример response
+
+``` json
+{
+  "success": true,
+  "data": [
+    {
+      "id": "ques_xyz789",
+      "text": "What is the typeof null in JavaScript?",
+      "type": "MULTIPLE_CHOICE",
+      "difficulty": "MEDIUM",
+      "explanation": "typeof null returns 'object' due to a legacy bug.",
+      "category": "Programming",
+      "tags": ["javascript", "fundamentals"],
+      "quizId": "quiz_abc123",
+      "quizTitle": "JavaScript Essentials",
+      "answers": [
+        { "id": "ans_1", "text": "null", "isCorrect": false },
+        { "id": "ans_2", "text": "object", "isCorrect": true },
+        { "id": "ans_3", "text": "undefined", "isCorrect": false },
+        { "id": "ans_4", "text": "string", "isCorrect": false }
+      ]
+    }
+  ],
+  "meta": {
+    "total": 23,
+    "pageTotal": 1,
+    "page": 1,
+    "lastPage": 3,
+    "limit": 10,
+    "offset": 0,
+    "links": {
+      "first": "/api/v1/questions?...&offset=0&limit=10",
+      "last": "/api/v1/questions?...&offset=20&limit=10",
+      "next": "/api/v1/questions?...&offset=10&limit=10",
+      "prev": null
+    }
+  }
+}
+```
+
+### Pagination Meta Object (browse mode)
+
+   Поле         Тип       Описание
+   ------------ --------- ----------------------------------------
+   `total`      integer   Общее число вопросов по фильтрам
+   `pageTotal`  integer   Вопросов в текущей странице
+   `page`       integer   Текущая страница (1-based)
+   `lastPage`   integer   Последняя страница
+   `limit`      integer   Значение limit
+   `offset`     integer   Значение offset
+   `links`      object    Ссылки: first, last, next, prev
 
 ------------------------------------------------------------------------
 
@@ -712,7 +813,16 @@ limit
 offset
 ```
 
-Для questions browse mode `meta` содержит:
+Для questions **по конкретному quiz** (`quiz_id` задан) `meta` содержит:
+
+``` json
+{
+  "total": 10,
+  "quizId": "quiz_abc123"
+}
+```
+
+Для questions **browse mode** (`quiz_id` отсутствует) `meta` содержит:
 
 ``` json
 {
@@ -1536,6 +1646,18 @@ v1
 Не использовать структуры `/api/v2` из маркетинговой страницы как
 источник истины для v1-интеграции.
 
+### 8. Meta различается между режимами Questions API
+
+-   `GET /questions?quiz_id=...` → meta: `{ total, quizId }`
+-   `GET /questions` (browse) → meta: `{ total, pageTotal, page, lastPage, limit, offset, links }`
+
+Не полагаться на одинаковую структуру `meta` между этими двумя режимами.
+
+### 9. include_answers по умолчанию false
+
+При запросе `GET /questions?quiz_id=...` ответы **не** включаются
+по умолчанию. Нужно явно передать `include_answers=true`.
+
 ------------------------------------------------------------------------
 
 # 26. Source of truth
@@ -1573,4 +1695,6 @@ v1
 11. Webhooks всегда проверять через HMAC-SHA256.
 12. Не смешивать v1 и v2.
 13. Если документация и пример расходятся, считать OpenAPI v1 и /docs источником истины.
+14. `include_answers` по умолчанию `false` — всегда добавлять для quiz_id запросов.
+15. Meta отличается между режимами Questions API — не путать.
 ```
