@@ -25,6 +25,7 @@
     "easy": "Лёгкая",
     "medium": "Средняя",
     "hard": "Сложная",
+    "expert": "Эксперт",
     "classic": "Классика",
     "timed": "На время",
     "blitz": "Блиц",
@@ -97,7 +98,8 @@
     "cancel": "Отмена",
     "confirm": "Подтвердить",
     "back": "Назад",
-    "category_all": "Все"
+    "category_all": "Все",
+    "all_categories": "Все категории"
   },
   "category": {
     "code": "Код",

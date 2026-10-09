@@ -10,6 +10,22 @@
 > Источники: https://quizapi.io/docs,
 > https://quizapi.io/api/v1/openapi.json
 
+## ⚠️ Правило: моки для всего API
+
+> **При добавлении любого нового API-эндпоинта — обязательно создай мок-данные.**
+>
+> Все моки хранятся в `src/shared/api/mock-*.ts` и включаются через
+> `VITE_USE_MOCK_DATA=true` в `.env`.
+>
+> - `mock-data.ts` — `mockDelay()`, `fetchMockMetadata()`
+> - `mock-categories.ts` — `fetchMockCategories()`
+> - `mock-questions.ts` — `fetchMockQuestions()`
+>
+> Каждый мок должен:
+> 1. Иметь асинхронную функцию с `await mockDelay()` (800ms) для видимости skeleton-загрузчиков.
+> 2. Возвращать данные, совместимые с внутренними типами (`Question`, `Topic`, `Category`, `ApiMetadata`).
+> 3. Покрывать все фильтры, которые использует UI (difficulty, category, questionCount).
+
 ------------------------------------------------------------------------
 
 ## 1. Что такое QuizAPI

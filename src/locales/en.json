@@ -25,6 +25,7 @@
     "easy": "Easy",
     "medium": "Medium",
     "hard": "Hard",
+    "expert": "Expert",
     "classic": "Classic",
     "timed": "Timed",
     "blitz": "Blitz",
@@ -97,7 +98,8 @@
     "cancel": "Cancel",
     "confirm": "Confirm",
     "back": "Back",
-    "category_all": "All"
+    "category_all": "All",
+    "all_categories": "All categories"
   },
   "category": {
     "code": "Code",

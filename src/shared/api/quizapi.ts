@@ -3,15 +3,34 @@
  *
  * Base URL: https://quizapi.io/api/v1
  * Auth: Authorization: Bearer VITE_QUIZAPI_KEY
+ *
+ * Development: set VITE_USE_MOCK_DATA=true to use mock data instead of live API.
  */
 
 import { useQuery } from '@tanstack/react-query'
 import type {
+  ApiMetadata,
+  Category,
   Question,
   QuizConfig,
+  Topic,
 } from '../types/quiz'
 import { adaptQuestions } from './adapter'
-import { quizApiQuestionSchema } from './schemas'
+import {
+  categoriesApiResponseSchema,
+  metadataApiResponseSchema,
+  quizApiQuestionSchema,
+} from './schemas'
+import { fetchMockMetadata } from './mock-data'
+import { fetchMockCategories } from './mock-categories'
+import { fetchMockQuestions } from './mock-questions'
+
+// ---------------------------------------------------------------------------
+// Dev flag
+// ---------------------------------------------------------------------------
+
+/** Whether to use mock data instead of live API calls. */
+const USE_MOCK = import.meta.env.VITE_USE_MOCK_DATA === 'true'
 
 // ---------------------------------------------------------------------------
 // Raw fetch helpers (called by hooks)
@@ -31,6 +50,8 @@ function getApiKey(): string {
 }
 
 async function fetchQuestions(config: QuizConfig): Promise<Question[]> {
+  if (USE_MOCK) return fetchMockQuestions(config.questionCount, config.difficulty, config.category)
+
   const params = new URLSearchParams({
     limit: String(config.questionCount),
     difficulty: config.difficulty.toUpperCase(),
@@ -93,6 +114,102 @@ async function fetchQuestions(config: QuizConfig): Promise<Question[]> {
 }
 
 // ---------------------------------------------------------------------------
+// Metadata
+// ---------------------------------------------------------------------------
+
+async function fetchMetadata(): Promise<ApiMetadata> {
+  if (USE_MOCK) return fetchMockMetadata()
+
+  const url = `${API_BASE}/metadata`
+
+  const response = await fetch(url, {
+    headers: {
+      Authorization: `Bearer ${getApiKey()}`,
+    },
+  })
+
+  if (!response.ok) {
+    throw new Error(`QuizAPI metadata error: HTTP ${response.status}`)
+  }
+
+  const json = await response.json()
+  const parseResult = metadataApiResponseSchema.safeParse(json)
+
+  if (!parseResult.success) {
+    throw new Error(
+      `Invalid metadata response: ${parseResult.error.message}`,
+    )
+  }
+
+  return parseResult.data.data
+}
+
+// ---------------------------------------------------------------------------
+// Categories (hierarchical: topics → categories with icons, quiz counts)
+// ---------------------------------------------------------------------------
+
+async function fetchCategories(): Promise<{
+  topics: Topic[]
+  /** All categories flattened for lookup by slug. */
+  flatCategories: Category[]
+}> {
+  if (USE_MOCK) return fetchMockCategories()
+
+  const url = `${API_BASE}/categories`
+
+  const response = await fetch(url, {
+    headers: {
+      Authorization: `Bearer ${getApiKey()}`,
+    },
+  })
+
+  if (!response.ok) {
+    throw new Error(`QuizAPI categories error: HTTP ${response.status}`)
+  }
+
+  const json = await response.json()
+  const parseResult = categoriesApiResponseSchema.safeParse(json)
+
+  if (!parseResult.success) {
+    throw new Error(
+      `Invalid categories response: ${parseResult.error.message}`,
+    )
+  }
+
+  const topics: Topic[] = parseResult.data.data
+  // Also build a flat list for quick slug → category lookup
+  const flatCategories: Category[] = []
+  for (const topic of topics) {
+    for (const cat of topic.categories) {
+      flatCategories.push({ ...cat, icon: cat.icon ?? null })
+    }
+  }
+
+  // Filter: remove topics/categories with no quizzes
+  const filteredTopics = topics
+    .map((topic) => {
+      const filteredCats = topic.categories.filter(
+        (cat) => cat.quizCount != null && cat.quizCount > 0,
+      )
+      return {
+        ...topic,
+        categories: filteredCats,
+      }
+    })
+    .filter((topic) => topic.categories.length > 0)
+
+  // Update flatCategories to match filtered topics
+  const filteredFlatCategories: Category[] = []
+  for (const topic of filteredTopics) {
+    for (const cat of topic.categories) {
+      filteredFlatCategories.push({ ...cat, icon: cat.icon ?? null })
+    }
+  }
+
+  return { topics: filteredTopics, flatCategories: filteredFlatCategories }
+}
+
+// ---------------------------------------------------------------------------
 // TanStack Query hooks
 // ---------------------------------------------------------------------------
 
@@ -113,6 +230,36 @@ export function useQuizQuestions(config: QuizConfig | null) {
     },
     staleTime: 5 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
+  })
+}
+
+// ---------------------------------------------------------------------------
+// useMetadata — fetches available difficulties, question types, etc.
+// ---------------------------------------------------------------------------
+
+const METADATA_QUERY_KEY = ['quiz', 'metadata'] as const
+
+export function useMetadata() {
+  return useQuery({
+    queryKey: METADATA_QUERY_KEY,
+    queryFn: fetchMetadata,
+    staleTime: 24 * 60 * 60 * 1000, // 24 hours — changes rarely
+    gcTime: 7 * 24 * 60 * 60 * 1000, // 7 days
+  })
+}
+
+// ---------------------------------------------------------------------------
+// useCategories — fetches topics + flat category list
+// ---------------------------------------------------------------------------
+
+const CATEGORIES_QUERY_KEY = ['quiz', 'categories'] as const
+
+export function useCategories() {
+  return useQuery({
+    queryKey: CATEGORIES_QUERY_KEY,
+    queryFn: fetchCategories,
+    staleTime: 24 * 60 * 60 * 1000, // 24 hours
+    gcTime: 7 * 24 * 60 * 60 * 1000, // 7 days
   })
 }
 
