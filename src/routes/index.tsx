@@ -1,4 +1,4 @@
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute, Link } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
 
 export const Route = createFileRoute('/')({
@@ -14,7 +14,12 @@ function HomePage() {
       <h1 className="text-4xl font-bold text-primary">
         🏠 {t('home.welcome')}
       </h1>
-      <p className="text-text-2">{t('home.start')}</p>
+      <Link
+        to="/setup"
+        className="rounded-lg bg-primary px-6 py-3 text-lg font-bold text-white shadow-md transition-all hover:bg-primary-hover hover:shadow-lg hover:-translate-y-0.5 active:scale-[0.98] cursor-pointer"
+      >
+        {t('home.start')}
+      </Link>
     </div>
   )
 }

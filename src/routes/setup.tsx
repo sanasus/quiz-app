@@ -56,19 +56,19 @@ export const SetupScreen = () => {
         {t('setup.title')}
       </h1>
 
-      <div className="flex flex-col gap-6 rounded-xl bg-surface p-6 shadow-md">
+      <div className="flex flex-col gap-6 rounded-xl bg-surface p-6 shadow-md transition-all hover:shadow-lg">
         {/* Category */}
-        <div>
-          <label className="mb-2 block text-sm font-medium text-text-2">
+        <div className="group">
+          <label className="mb-2 block text-sm font-medium text-text-2 group-hover:text-primary transition-colors cursor-default">
             {t('setup.category')}
           </label>
           <select
             value={category}
             onChange={(e) => setCategory(e.target.value)}
-            className="w-full rounded-lg border-border bg-bg px-3 py-2 text-text focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+            className="w-full rounded-lg border-border bg-surface px-3 py-2 text-text hover:border-primary/50 hover:bg-primary/5 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 cursor-pointer transition-all"
           >
             {CATEGORIES.map((c) => (
-              <option key={c.value} value={c.value}>
+              <option key={c.value} value={c.value} className="bg-surface text-text">
                 {t(c.labelKey)}
               </option>
             ))}
@@ -76,8 +76,8 @@ export const SetupScreen = () => {
         </div>
 
         {/* Difficulty */}
-        <div>
-          <label className="mb-2 block text-sm font-medium text-text-2">
+        <div className="group">
+          <label className="mb-2 block text-sm font-medium text-text-2 group-hover:text-primary transition-colors cursor-default">
             {t('setup.difficulty')}
           </label>
           <div className="flex gap-2">
@@ -86,11 +86,11 @@ export const SetupScreen = () => {
                 key={d.value}
                 type="button"
                 onClick={() => setDifficulty(d.value)}
-                className={`flex-1 rounded-lg border-2 px-3 py-2 text-sm font-medium transition-colors
+                className={`flex-1 rounded-lg border-[3px] px-3 py-2 text-sm font-bold transition-all
                   ${
                     difficulty === d.value
-                      ? 'border-primary bg-primary/10 text-primary'
-                      : 'border-border bg-bg text-text-2 hover:border-border/60'
+                      ? 'border-primary ring-2 ring-primary/30 bg-primary/20 text-primary scale-[1.03] cursor-pointer'
+                      : 'border-border bg-bg text-text-2 hover:border-primary/50 hover:bg-primary/5 hover:text-text cursor-pointer active:scale-[0.98]'
                   }`}
               >
                 {t(d.labelKey)}
@@ -100,8 +100,8 @@ export const SetupScreen = () => {
         </div>
 
         {/* Question count */}
-        <div>
-          <label className="mb-2 block text-sm font-medium text-text-2">
+        <div className="group">
+          <label className="mb-2 block text-sm font-medium text-text-2 group-hover:text-primary transition-colors cursor-default">
             {t('setup.question_count')}
           </label>
           <input
@@ -110,7 +110,7 @@ export const SetupScreen = () => {
             max={50}
             value={questionCount}
             onChange={(e) => setQuestionCount(Number(e.target.value))}
-            className="w-full accent-primary"
+            className="w-full accent-primary hover:accent-primary-active cursor-pointer"
           />
           <div className="mt-1 text-center text-lg font-bold text-primary">
             {questionCount}
@@ -118,8 +118,8 @@ export const SetupScreen = () => {
         </div>
 
         {/* Mode */}
-        <div>
-          <label className="mb-2 block text-sm font-medium text-text-2">
+        <div className="group">
+          <label className="mb-2 block text-sm font-medium text-text-2 group-hover:text-primary transition-colors cursor-default">
             {t('setup.mode')}
           </label>
           <div className="flex flex-col gap-2 sm:flex-row">
@@ -128,11 +128,11 @@ export const SetupScreen = () => {
                 key={m.value}
                 type="button"
                 onClick={() => setMode(m.value)}
-                className={`flex-1 rounded-lg border-2 px-3 py-2 text-sm font-medium transition-colors
+                className={`flex-1 rounded-lg border-[3px] px-3 py-2 text-sm font-bold transition-all
                   ${
                     mode === m.value
-                      ? 'border-primary bg-primary/10 text-primary'
-                      : 'border-border bg-bg text-text-2 hover:border-border/60'
+                      ? 'border-primary ring-2 ring-primary/30 bg-primary/20 text-primary scale-[1.03] cursor-pointer'
+                      : 'border-border bg-bg text-text-2 hover:border-primary/50 hover:bg-primary/5 hover:text-text cursor-pointer active:scale-[0.98]'
                   }`}
               >
                 {t(m.labelKey)}
@@ -145,7 +145,7 @@ export const SetupScreen = () => {
         <button
           type="button"
           onClick={handleStart}
-          className="mt-2 rounded-lg bg-primary px-6 py-3 text-lg font-bold text-white shadow-md transition-colors hover:bg-primary/90"
+          className="mt-2 w-full rounded-lg bg-primary px-6 py-3 text-lg font-bold text-white shadow-md transition-all hover:bg-primary-hover hover:shadow-lg hover:-translate-y-0.5 active:scale-[0.98] active:shadow-md cursor-pointer"
         >
           {t('setup.start')}
         </button>

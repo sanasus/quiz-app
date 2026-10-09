@@ -1,7 +1,18 @@
 @import 'tailwindcss';
 
-/* Custom color tokens for Tailwind v4 auto-generated utilities */
-:root {
+@theme {
+  /* Semantic colors */
+  --color-primary: #6c5ce7;
+  --color-primary-hover: #5a4bd1;
+  --color-success: #00b894;
+  --color-success-hover: #00a383;
+  --color-warning: #fdcb6e;
+  --color-warning-hover: #f9bf3b;
+  --color-danger: #e17055;
+  --color-danger-hover: #d63031;
+  --color-info: #0984e3;
+  --color-info-hover: #0770c2;
+
   /* Base palette */
   --color-bg: #faf9ff;
   --color-bg-2: #f3f0ff;
@@ -21,23 +32,11 @@
   --color-muted-foreground: #7c74a0;
   --color-accent: #f3f0ff;
   --color-accent-foreground: #1e1b2e;
-
-  /* Semantic colors */
-  --color-primary: #6c5ce7;
-  --color-primary-hover: #5a4bd1;
-  --color-success: #00b894;
-  --color-success-hover: #00a383;
-  --color-warning: #fdcb6e;
-  --color-warning-hover: #f9bf3b;
-  --color-danger: #e17055;
-  --color-danger-hover: #d63031;
-  --color-info: #0984e3;
-  --color-info-hover: #0770c2;
 }
 
 /* Dark theme overrides (auto-detect) */
 @media (prefers-color-scheme: dark) {
-  :root {
+  @theme {
     --color-bg: #0f0d1a;
     --color-bg-2: #1a1630;
     --color-bg-3: #252040;
