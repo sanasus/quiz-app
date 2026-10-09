@@ -1,4 +1,14 @@
 // Stub components for all 7 routes defined in PLAN.md §5
+import { z } from 'zod'
+
+export const quizConfigSchema = z.object({
+  category: z.string(),
+  difficulty: z.enum(['easy', 'medium', 'hard']),
+  questionCount: z.coerce.number().min(1).max(50),
+  mode: z.enum(['classic', 'timed', 'blitz', 'survival']),
+})
+
+export type QuizConfigInput = z.infer<typeof quizConfigSchema>
 export function HomeStub() {
   return (
     <div className="flex flex-col items-center justify-center min-h-[60vh] gap-6 animate-fade-in">

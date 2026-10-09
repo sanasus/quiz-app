@@ -32,19 +32,22 @@
   },
   "quiz": {
     "question": "Question",
-    "of": "of",
+    "progress": "{{current}} of {{total}}",
     "submit": "Submit",
     "next": "Next",
     "time_remaining": "Time remaining",
     "lives": "Lives",
-    "score": "Score",
-    "streak": "Streak"
+    "score": "Score: {{score}}",
+    "streak": "Streak",
+    "explanation": "Explanation"
   },
   "results": {
     "title": "Results",
     "score": "Score",
     "correct": "Correct",
     "incorrect": "Incorrect",
+    "accuracy": "Accuracy",
+    "mistakes_title": "Mistakes",
     "time_spent": "Time spent",
     "repeat_mistakes": "Repeat mistakes",
     "new_quiz": "New Quiz"
@@ -93,6 +96,13 @@
     "retry": "Retry",
     "cancel": "Cancel",
     "confirm": "Confirm",
-    "back": "Back"
+    "back": "Back",
+    "category_all": "All"
+  },
+  "category": {
+    "code": "Code",
+    "science": "Science",
+    "history": "History",
+    "geography": "Geography"
   }
 }

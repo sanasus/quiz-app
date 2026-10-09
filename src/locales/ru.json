@@ -32,19 +32,22 @@
   },
   "quiz": {
     "question": "Вопрос",
-    "of": "из",
+    "progress": "{{current}} из {{total}}",
     "submit": "Ответить",
     "next": "Далее",
     "time_remaining": "Оставшееся время",
     "lives": "Жизни",
-    "score": "Очки",
-    "streak": "Серия"
+    "score": "Очки: {{score}}",
+    "streak": "Серия",
+    "explanation": "Пояснение"
   },
   "results": {
     "title": "Результаты",
     "score": "Очки",
     "correct": "Правильные",
     "incorrect": "Неправильные",
+    "accuracy": "Точность",
+    "mistakes_title": "Ошибки",
     "time_spent": "Затраченное время",
     "repeat_mistakes": "Повторить ошибки",
     "new_quiz": "Новый тест"
@@ -93,6 +96,13 @@
     "retry": "Повторить",
     "cancel": "Отмена",
     "confirm": "Подтвердить",
-    "back": "Назад"
+    "back": "Назад",
+    "category_all": "Все"
+  },
+  "category": {
+    "code": "Код",
+    "science": "Наука",
+    "history": "История",
+    "geography": "География"
   }
 }
