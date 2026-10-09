@@ -6,50 +6,38 @@
 import { z } from 'zod'
 
 // ---------------------------------------------------------------------------
-// Answer keys: answer_a, answer_b, … up to answer_f
+// Single QuizApiQuestion (browse mode — array-of-answers format)
 // ---------------------------------------------------------------------------
 
-const VALID_ANSWER_KEYS = [
-  'answer_a',
-  'answer_b',
-  'answer_c',
-  'answer_d',
-  'answer_e',
-  'answer_f',
-] as const
+export const quizApiAnswerSchema = z.object({
+  id: z.string(),
+  text: z.string(),
+  isCorrect: z.boolean(),
+})
 
-const VALID_CORRECT_KEYS: ReadonlyArray<string> = VALID_ANSWER_KEYS.map((k) => `${k}_correct`)
-
-/** Validate that all keys in an object are valid answer keys. */
-function hasValidAnswerKeys(obj: Record<string, string>): boolean {
-  return Object.keys(obj).every((k) => VALID_ANSWER_KEYS.includes(k as typeof VALID_ANSWER_KEYS[number]))
-}
-
-/** Validate that all keys in an object are valid correct-answer keys. */
-function hasValidCorrectKeys(obj: Record<string, string>): boolean {
-  return Object.keys(obj).every((k) => VALID_CORRECT_KEYS.includes(k as typeof VALID_CORRECT_KEYS[number]))
-}
-
-// ---------------------------------------------------------------------------
-// Single QuizApiQuestion (browse mode)
-// ---------------------------------------------------------------------------
+export type QuizApiAnswer = z.infer<typeof quizApiAnswerSchema>
 
 export const quizApiQuestionSchema = z.object({
-  id: z.number(),
-  question: z.string().min(1),
-  description: z.string().nullable(),
-  answers: z.record(z.string(), z.string()).refine(hasValidAnswerKeys, {
-    message: 'answers keys must be subset of answer_a…answer_f',
-  }),
-  multiple_correct_answers: z.enum(['true', 'false']),
-  correct_answers: z.record(z.string(), z.enum(['true', 'false'])).refine(hasValidCorrectKeys, {
-    message: 'correct_answers keys must be subset of answer_a_correct…answer_f_correct',
-  }),
-  explanation: z.string().nullable(),
-  tip: z.string().nullable(),
-  tags: z.array(z.object({ name: z.string() })),
-  category: z.string(),
-  difficulty: z.enum(['Easy', 'Medium', 'Hard']),
+  id: z.string(),
+  text: z.string().min(1),
+  type: z.enum(['MULTIPLE_CHOICE', 'TRUE_FALSE']).optional(),
+  difficulty: z.enum(['EASY', 'MEDIUM', 'HARD']),
+  explanation: z.string().nullable().optional(),
+  tags: z.array(z.object({ name: z.string() })).optional(),
+  category: z.string().nullable().optional(),
+  // Fields that may or may not be present
+  quizId: z.string().optional(),
+  quizTitle: z.string().optional(),
+  // The old browse-mode fields (for backwards compat with docs)
+  answers: z
+    .discriminatedUnion('type', [
+      z.object({ id: z.string(), text: z.string(), isCorrect: z.boolean() }),
+    ])
+    .array(),
+  multiple_correct_answers: z.enum(['true', 'false']).optional(),
+  correct_answers: z.record(z.string(), z.enum(['true', 'false'])).optional(),
+  description: z.string().nullable().optional(),
+  tip: z.string().nullable().optional(),
 })
 
 export type QuizApiQuestion = z.infer<typeof quizApiQuestionSchema>

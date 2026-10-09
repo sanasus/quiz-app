@@ -67,16 +67,28 @@ async function fetchQuestions(config: QuizConfig): Promise<Question[]> {
   const json = await response.json()
 
   // The API returns { success: true, data: [...] }
-  const rawArray = json.data ?? []
+  const rawArray = (json as any).data ?? []
 
-  // Validate each item
+  if (!Array.isArray(rawArray) || rawArray.length === 0) {
+    throw new Error('No questions returned from API. Try different settings.')
+  }
+
+  // Validate each item — log failures for debugging
   const valid: Question[] = []
   for (const raw of rawArray) {
     const parseResult = quizApiQuestionSchema.safeParse(raw)
     if (parseResult.success) {
       const adapted = adaptQuestions([parseResult.data])
       valid.push(...adapted)
+    } else {
+      console.warn('Failed to parse question:', parseResult.error.message, raw)
     }
+  }
+
+  if (valid.length === 0) {
+    throw new Error(
+      'API returned questions but none passed validation. Check API key and settings.',
+    )
   }
 
   return valid

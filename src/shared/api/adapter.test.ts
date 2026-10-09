@@ -12,32 +12,21 @@ import { describe, it, expect } from 'vitest'
 import { adaptQuestion } from './adapter'
 import type { QuizApiQuestion } from './schemas'
 
-// Helper: minimal valid fixture
+// Helper: minimal valid fixture (new array-of-answers format)
 function makeFixture(
   overrides: Partial<QuizApiQuestion> = {},
 ): QuizApiQuestion {
   return {
-    id: 1,
-    question: 'What is 2+2?',
-    description: null,
-    answers: {
-      answer_a: '3',
-      answer_b: '4',
-      answer_c: '5',
-      answer_d: '6',
-    },
-    multiple_correct_answers: 'false',
-    correct_answers: {
-      answer_a_correct: 'false',
-      answer_b_correct: 'true',
-      answer_c_correct: 'false',
-      answer_d_correct: 'false',
-    },
+    id: 'q1',
+    text: 'What is 2+2?',
+    difficulty: 'EASY',
+    answers: [
+      { id: 'a1', text: '3', isCorrect: false },
+      { id: 'a2', text: '4', isCorrect: true },
+      { id: 'a3', text: '5', isCorrect: false },
+      { id: 'a4', text: '6', isCorrect: false },
+    ],
     explanation: '2 + 2 = 4',
-    tip: null,
-    tags: [{ name: 'Math' }],
-    category: 'Math',
-    difficulty: 'Easy',
     ...overrides,
   }
 }
@@ -48,42 +37,42 @@ describe('adaptQuestion', () => {
     const result = adaptQuestion(fixture)
 
     expect(result).not.toBeNull()
-    expect(result!.id).toBe('1')
+    expect(result!.id).toBe('q1')
     expect(result!.text).toBe('What is 2+2?')
     expect(result!.multiple).toBe(false)
-    expect(result!.correctOptionIds).toEqual(['answer_b'])
+    expect(result!.correctOptionIds).toEqual(['a2'])
     expect(result!.options.length).toBe(4)
     expect(result!.difficulty).toBe('easy')
   })
 
   it('adapts multiple correct answers', () => {
     const fixture = makeFixture({
-      id: 2,
-      question: 'Select all primes',
-      multiple_correct_answers: 'true',
-      correct_answers: {
-        answer_a_correct: 'true',
-        answer_b_correct: 'true',
-        answer_c_correct: 'false',
-        answer_d_correct: 'false',
-      },
+      id: 'q2',
+      text: 'Select all primes',
+      difficulty: 'MEDIUM',
+      answers: [
+        { id: 'a1', text: '2', isCorrect: true },
+        { id: 'a2', text: '4', isCorrect: true },
+        { id: 'a3', text: '6', isCorrect: false },
+        { id: 'a4', text: '8', isCorrect: false },
+      ],
     })
     const result = adaptQuestion(fixture)
 
     expect(result).not.toBeNull()
     expect(result!.multiple).toBe(true)
-    expect(result!.correctOptionIds).toEqual(['answer_a', 'answer_b'])
+    expect(result!.correctOptionIds).toEqual(['a1', 'a2'])
   })
 
   it('returns null when no correct answer', () => {
     const fixture = makeFixture({
-      id: 3,
-      correct_answers: {
-        answer_a_correct: 'false',
-        answer_b_correct: 'false',
-        answer_c_correct: 'false',
-        answer_d_correct: 'false',
-      },
+      id: 'q3',
+      answers: [
+        { id: 'a1', text: '3', isCorrect: false },
+        { id: 'a2', text: '5', isCorrect: false },
+        { id: 'a3', text: '6', isCorrect: false },
+        { id: 'a4', text: '7', isCorrect: false },
+      ],
     })
     const result = adaptQuestion(fixture)
     expect(result).toBeNull()
@@ -91,9 +80,8 @@ describe('adaptQuestion', () => {
 
   it('returns null when only 1 option', () => {
     const fixture = makeFixture({
-      id: 4,
-      answers: { answer_a: 'Only option' },
-      correct_answers: { answer_a_correct: 'true' },
+      id: 'q4',
+      answers: [{ id: 'a1', text: 'Only option', isCorrect: true }],
     })
     const result = adaptQuestion(fixture)
     expect(result).toBeNull()
@@ -101,7 +89,7 @@ describe('adaptQuestion', () => {
 
   it('preserves explanation and description', () => {
     const fixture = makeFixture({
-      id: 5,
+      id: 'q5',
       description: 'A simple question',
       explanation: 'The answer is 4 because...',
     })
@@ -114,7 +102,7 @@ describe('adaptQuestion', () => {
 
   it('handles null description and explanation', () => {
     const fixture = makeFixture({
-      id: 6,
+      id: 'q6',
       description: null,
       explanation: null,
     })
@@ -127,14 +115,14 @@ describe('adaptQuestion', () => {
 
   it('maps difficulty correctly', () => {
     const mapDifficulty = (
-      diff: 'Easy' | 'Medium' | 'Hard',
+      diff: 'EASY' | 'MEDIUM' | 'HARD',
     ): 'easy' | 'medium' | 'hard' => {
       const r = adaptQuestion(makeFixture({ difficulty: diff }))
       return r!.difficulty
     }
 
-    expect(mapDifficulty('Easy')).toBe('easy')
-    expect(mapDifficulty('Medium')).toBe('medium')
-    expect(mapDifficulty('Hard')).toBe('hard')
+    expect(mapDifficulty('EASY')).toBe('easy')
+    expect(mapDifficulty('MEDIUM')).toBe('medium')
+    expect(mapDifficulty('HARD')).toBe('hard')
   })
 })

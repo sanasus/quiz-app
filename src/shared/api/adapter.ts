@@ -15,22 +15,23 @@ import type { Question } from '../types/quiz'
  * Returns `null` if the question should be dropped.
  */
 export function adaptQuestion(raw: QuizApiQuestion): Question | null {
-  // Collect options and correct option IDs
+  // Use the answers array (new format): [{ id, text, isCorrect }]
+  const answers = raw.answers
+
+  // Validation: must have answers array with items
+  if (!Array.isArray(answers) || answers.length < 2) {
+    return null
+  }
+
+  // Collect options and correct option IDs from isCorrect boolean
   const options: { id: string; text: string }[] = []
   const correctOptionIds: string[] = []
 
-  for (const [key, text] of Object.entries(raw.answers)) {
-    options.push({ id: key, text })
-
-    const correctKey = `${key}_correct` as keyof typeof raw.correct_answers
-    if (raw.correct_answers[correctKey] === 'true') {
-      correctOptionIds.push(key)
+  for (const ans of answers) {
+    options.push({ id: ans.id, text: ans.text })
+    if (ans.isCorrect) {
+      correctOptionIds.push(ans.id)
     }
-  }
-
-  // Validation: minimum 2 options
-  if (options.length < 2) {
-    return null
   }
 
   // Validation: at least one correct answer
@@ -38,18 +39,27 @@ export function adaptQuestion(raw: QuizApiQuestion): Question | null {
     return null
   }
 
-  const multiple = raw.multiple_correct_answers === 'true'
+  // Determine if multiple correct answers
+  const multiple = correctOptionIds.length > 1
+
+  // Map uppercase difficulty to lowercase
+  const difficultyMap: Record<string, 'easy' | 'medium' | 'hard'> = {
+    EASY: 'easy',
+    MEDIUM: 'medium',
+    HARD: 'hard',
+  }
+  const difficulty = difficultyMap[raw.difficulty] ?? 'medium'
 
   return {
-    id: String(raw.id),
-    text: raw.question,
+    id: raw.id,
+    text: raw.text,
     description: raw.description ?? undefined,
     explanation: raw.explanation ?? undefined,
     options,
     correctOptionIds,
     multiple,
-    category: raw.category,
-    difficulty: raw.difficulty.toLowerCase() as 'easy' | 'medium' | 'hard',
+    category: raw.category ?? undefined,
+    difficulty,
   }
 }
 
