@@ -1,0 +1,98 @@
+{
+  "app": {
+    "title": "QuizApp",
+    "nav": {
+      "home": "Home",
+      "setup": "Setup",
+      "stats": "Statistics",
+      "achievements": "Achievements",
+      "settings": "Settings"
+    }
+  },
+  "home": {
+    "welcome": "Welcome to QuizApp!",
+    "start": "Start Quiz",
+    "last_results": "Last Results",
+    "level": "Level"
+  },
+  "setup": {
+    "title": "Quiz Settings",
+    "category": "Category",
+    "difficulty": "Difficulty",
+    "question_count": "Number of Questions",
+    "mode": "Mode",
+    "start": "Start",
+    "easy": "Easy",
+    "medium": "Medium",
+    "hard": "Hard",
+    "classic": "Classic",
+    "timed": "Timed",
+    "blitz": "Blitz",
+    "survival": "Survival"
+  },
+  "quiz": {
+    "question": "Question",
+    "of": "of",
+    "submit": "Submit",
+    "next": "Next",
+    "time_remaining": "Time remaining",
+    "lives": "Lives",
+    "score": "Score",
+    "streak": "Streak"
+  },
+  "results": {
+    "title": "Results",
+    "score": "Score",
+    "correct": "Correct",
+    "incorrect": "Incorrect",
+    "time_spent": "Time spent",
+    "repeat_mistakes": "Repeat mistakes",
+    "new_quiz": "New Quiz"
+  },
+  "stats": {
+    "title": "Statistics",
+    "total_sessions": "Total Sessions",
+    "accuracy": "Accuracy",
+    "avg_streak": "Average Streak",
+    "best_score": "Best Score",
+    "by_category": "By Category",
+    "by_difficulty": "By Difficulty",
+    "history": "History",
+    "reset": "Reset Statistics"
+  },
+  "achievements": {
+    "title": "Achievements",
+    "first_blood": "First Blood",
+    "first_blood_desc": "Complete your first session",
+    "streak_10": "Streak 10",
+    "streak_10_desc": "Answer 10 questions correctly in a row",
+    "perfectionist": "Perfectionist",
+    "perfectionist_desc": "100% on hard difficulty",
+    "speedster": "Speedster",
+    "speedster_desc": "Blitz without mistakes",
+    "survivor": "Survivor",
+    "survivor_desc": "Reach 20 questions in Survival",
+    "expert": "Category Expert",
+    "expert_desc": "50 correct answers in one category",
+    "persistent": "Persistent",
+    "persistent_desc": "Play N days in a row"
+  },
+  "settings": {
+    "title": "Settings",
+    "language": "Language",
+    "theme": "Theme",
+    "animations": "Animations",
+    "light": "Light",
+    "dark": "Dark",
+    "system": "System"
+  },
+  "common": {
+    "loading": "Loading...",
+    "error": "Error",
+    "not_found": "Page not found",
+    "retry": "Retry",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "back": "Back"
+  }
+}

@@ -1,0 +1,133 @@
+@import "tailwindcss";
+
+/* Custom color tokens for Tailwind v4 auto-generated utilities */
+:root {
+  /* Base palette */
+  --color-bg: #faf9ff;
+  --color-bg-2: #f3f0ff;
+  --color-bg-3: #ebe7ff;
+  --color-surface: #ffffff;
+  --color-surface-hover: #f3f0ff;
+  --color-border: #e5e0f0;
+  --color-text: #1e1b2e;
+  --color-text-2: #4a4463;
+  --color-text-3: #7c74a0;
+  --color-foreground: #1e1b2e;
+  --color-card: #ffffff;
+  --color-card-foreground: #1e1b2e;
+  --color-popover: #ffffff;
+  --color-popover-foreground: #1e1b2e;
+  --color-muted: #f3f0ff;
+  --color-muted-foreground: #7c74a0;
+  --color-accent: #f3f0ff;
+  --color-accent-foreground: #1e1b2e;
+
+  /* Semantic colors */
+  --color-primary: #6c5ce7;
+  --color-primary-hover: #5a4bd1;
+  --color-success: #00b894;
+  --color-success-hover: #00a383;
+  --color-warning: #fdcb6e;
+  --color-warning-hover: #f9bf3b;
+  --color-danger: #e17055;
+  --color-danger-hover: #d63031;
+  --color-info: #0984e3;
+  --color-info-hover: #0770c2;
+}
+
+/* Dark theme overrides (auto-detect) */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-bg: #0f0d1a;
+    --color-bg-2: #1a1630;
+    --color-bg-3: #252040;
+    --color-surface: #1a1630;
+    --color-surface-hover: #252040;
+    --color-border: #2e2850;
+    --color-text: #ede9fe;
+    --color-text-2: #b8b0d0;
+    --color-text-3: #7c74a0;
+    --color-foreground: #ede9fe;
+    --color-card: #1a1630;
+    --color-card-foreground: #ede9fe;
+    --color-popover: #1a1630;
+    --color-popover-foreground: #ede9fe;
+    --color-muted: #252040;
+    --color-muted-foreground: #7c74a0;
+    --color-accent: #252040;
+    --color-accent-foreground: #ede9fe;
+
+    --color-primary: #a29bfe;
+    --color-primary-hover: #6c5ce7;
+    --color-success: #55efc4;
+    --color-success-hover: #00b894;
+    --color-warning: #ffeaa7;
+    --color-warning-hover: #fdcb6e;
+    --color-danger: #fab1a0;
+    --color-danger-hover: #e17055;
+    --color-info: #74b9ff;
+    --color-info-hover: #0984e3;
+  }
+}
+
+/* Global base styles */
+@layer base {
+  * {
+    box-sizing: border-box;
+  }
+
+  html {
+    font-size: 16px;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  @media (max-width: 768px) {
+    html {
+      font-size: 15px;
+    }
+  }
+
+  body {
+    font-family: var(--font-sans), system-ui, sans-serif;
+    color: var(--color-text, #1e1b2e);
+    background: var(--color-bg, #faf9ff);
+    line-height: 1.6;
+    margin: 0;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    transition: background-color 0.2s ease, color 0.2s ease;
+  }
+
+  #root {
+    min-height: 100svh;
+    display: flex;
+    flex-direction: column;
+  }
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: var(--color-bg-2, #f3f0ff);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-border, #e5e0f0);
+  border-radius: var(--radius-full, 9999px);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-text-3, #8b85a0);
+}

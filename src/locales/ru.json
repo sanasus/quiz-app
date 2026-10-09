@@ -1,0 +1,98 @@
+{
+  "app": {
+    "title": "QuizApp",
+    "nav": {
+      "home": "Главная",
+      "setup": "Настройки",
+      "stats": "Статистика",
+      "achievements": "Достижения",
+      "settings": "Настройки"
+    }
+  },
+  "home": {
+    "welcome": "Добро пожаловать в QuizApp!",
+    "start": "Начать тест",
+    "last_results": "Последние результаты",
+    "level": "Уровень"
+  },
+  "setup": {
+    "title": "Настройки теста",
+    "category": "Категория",
+    "difficulty": "Сложность",
+    "question_count": "Количество вопросов",
+    "mode": "Режим",
+    "start": "Начать",
+    "easy": "Лёгкая",
+    "medium": "Средняя",
+    "hard": "Сложная",
+    "classic": "Классика",
+    "timed": "На время",
+    "blitz": "Блиц",
+    "survival": "Выживание"
+  },
+  "quiz": {
+    "question": "Вопрос",
+    "of": "из",
+    "submit": "Ответить",
+    "next": "Далее",
+    "time_remaining": "Оставшееся время",
+    "lives": "Жизни",
+    "score": "Очки",
+    "streak": "Серия"
+  },
+  "results": {
+    "title": "Результаты",
+    "score": "Очки",
+    "correct": "Правильные",
+    "incorrect": "Неправильные",
+    "time_spent": "Затраченное время",
+    "repeat_mistakes": "Повторить ошибки",
+    "new_quiz": "Новый тест"
+  },
+  "stats": {
+    "title": "Статистика",
+    "total_sessions": "Всего сессий",
+    "accuracy": "Точность",
+    "avg_streak": "Средняя серия",
+    "best_score": "Лучший результат",
+    "by_category": "По категориям",
+    "by_difficulty": "По сложности",
+    "history": "История",
+    "reset": "Сбросить статистику"
+  },
+  "achievements": {
+    "title": "Достижения",
+    "first_blood": "Первая кровь",
+    "first_blood_desc": "Завершите первую сессию",
+    "streak_10": "Серия 10",
+    "streak_10_desc": "Ответьте правильно 10 вопросов подряд",
+    "perfectionist": "Перфекционист",
+    "perfectionist_desc": "100% на сложном уровне",
+    "speedster": "Скоростной",
+    "speedster_desc": "Блиц без ошибок",
+    "survivor": "Выживший",
+    "survivor_desc": "Дойдите до 20 вопросов в \"Выживании\"",
+    "expert": "Знаток категории",
+    "expert_desc": "50 верных ответов в одной категории",
+    "persistent": "Постоянство",
+    "persistent_desc": "Играйте N дней подряд"
+  },
+  "settings": {
+    "title": "Настройки",
+    "language": "Язык",
+    "theme": "Тема",
+    "animations": "Анимации",
+    "light": "Светлая",
+    "dark": "Тёмная",
+    "system": "Системная"
+  },
+  "common": {
+    "loading": "Загрузка...",
+    "error": "Ошибка",
+    "not_found": "Страница не найдена",
+    "retry": "Повторить",
+    "cancel": "Отмена",
+    "confirm": "Подтвердить",
+    "back": "Назад"
+  }
+}
