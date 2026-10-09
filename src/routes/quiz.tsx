@@ -40,7 +40,7 @@ export const QuizScreen = () => {
 
   // Handle session end (all questions answered)
   useEffect(() => {
-    if (store.status === 'finished') {
+    if (store.status === 'finished' && !store.finishedSession) {
       const correctCount = store.questions.filter((q) => {
         const selected = store.answers[q.id] ?? []
         return (
@@ -66,10 +66,10 @@ export const QuizScreen = () => {
         }
       }
 
-      store.finishSession(totalScore, store.timeSpent, correctCount)
+      store.finishSession(totalScore, Math.floor((Date.now() - questionStartTime.current) / 1000), correctCount)
       navigate({ to: '/results' })
     }
-  }, [store.status, store, navigate])
+  }, [store.status, store.finishedSession, store.questions, store.answers, store.streak, navigate])
 
   // Current question
   const currentQuestion = store.questions[store.currentIndex]
