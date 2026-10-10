@@ -27,6 +27,20 @@ export const DEFAULT_CONFIG: QuizConfig = {
 }
 
 // ---------------------------------------------------------------------------
+// Time limit helpers
+// ---------------------------------------------------------------------------
+
+/** Timed mode: 1 second per question. */
+export function getTimedTimeLimit(questionCount: number): number {
+  return questionCount
+}
+
+/** Blitz mode: fixed time limit based on question count. */
+export function getBlitzTimeLimit(questionCount: number): number {
+  return Math.max(10, questionCount * 3)
+}
+
+// ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
 
@@ -52,6 +66,7 @@ interface QuizSessionStore extends QuizSession {
     correctCount: number,
   ) => void
   loseLife: () => void
+  setBlitzTimeElapsed: (elapsed: number) => void
   repeatMistakes: (config: QuizConfig) => void
   reset: () => void
 }
@@ -362,6 +377,8 @@ export const useQuizSessionStore = create<QuizSessionStore>((set) => ({
       }
     }),
   loseLife: () => set((s) => ({ ...sessionReducer(s, { type: 'LOSE_LIFE' }) })),
+  setBlitzTimeElapsed: (elapsed) =>
+    set((s) => ({ ...s, blitzTimeElapsed: elapsed })),
   repeatMistakes: (config) =>
     set((s) => {
       const mistakes = s.finishedSession?.mistakes ?? []
