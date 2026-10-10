@@ -3,7 +3,7 @@
  */
 
 import { createFileRoute } from '@tanstack/react-router'
-import { QuizScreen } from './views/quiz-screen'
+import { QuizScreen } from '../views/quiz-screen'
 
 export const Route = createFileRoute('/quiz')({
   component: QuizScreen,

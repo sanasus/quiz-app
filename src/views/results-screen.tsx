@@ -5,7 +5,7 @@
 import { useEffect } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
-import { useQuizSessionStore } from '../../shared/lib/session-store'
+import { useQuizSessionStore } from '../shared/lib/session-store'
 
 export function ResultsScreen() {
   const { t } = useTranslation()

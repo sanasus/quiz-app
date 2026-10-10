@@ -3,7 +3,7 @@
  */
 
 import { createFileRoute } from '@tanstack/react-router'
-import { ResultsScreen } from './views/results-screen'
+import { ResultsScreen } from '../views/results-screen'
 
 export const Route = createFileRoute('/results')({
   component: ResultsScreen,

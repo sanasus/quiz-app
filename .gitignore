@@ -44,3 +44,7 @@ coverage
 # ACL recovery artifacts
 .acl-recovery/
 acl-recovery/
+
+# Agent/OpenCode artifacts
+.agents/
+skills-lock.json

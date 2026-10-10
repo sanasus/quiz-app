@@ -5,10 +5,10 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useNavigate, useSearch } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
-import { useQuizSessionStore, getBlitzTimeLimit, getTimedTimeLimit } from '../../shared/lib/session-store'
-import { useQuizQuestions } from '../../shared/api/quizapi'
-import { calculateScore } from '../../shared/lib/scoring'
-import { quizConfigSchema } from '../-index'
+import { useQuizSessionStore, getBlitzTimeLimit, getTimedTimeLimit } from '../shared/lib/session-store'
+import { useQuizQuestions } from '../shared/api/quizapi'
+import { calculateScore } from '../shared/lib/scoring'
+import { quizConfigSchema } from '../routes/-index'
 
 // ---------------------------------------------------------------------------
 // Quiz Screen Component
@@ -26,7 +26,47 @@ export function QuizScreen() {
   const effectiveConfig = config ?? store.repeatConfig
 
   // ---------------------------------------------------------------------------
-  // Timer
+  // Question timer (handles per-question countdown for timed mode)
+  // ---------------------------------------------------------------------------
+
+  const [currentSubmission, setCurrentSubmission] = useState<string[]>([])
+
+  const timerStartedRef = useRef(false)
+
+  useEffect(() => {
+    if (store.status !== 'playing') {
+      timerStartedRef.current = false
+      return
+    }
+
+    if (timerStartedRef.current) return
+
+    const limit = store.timeRemaining
+    if (limit === undefined || limit === null) return
+
+    timerStartedRef.current = true
+
+    const interval = setInterval(() => {
+      // Read live state: `store` is a snapshot from this render, and the
+      // effect does not re-run while status stays 'playing', so the interval
+      // closure would otherwise see a stale timeRemaining and never expire.
+      const current = useQuizSessionStore.getState()
+      const remaining = current.timeRemaining
+      if (remaining === undefined || remaining <= 1) {
+        clearInterval(interval)
+        timerStartedRef.current = false
+        current.timeUp()
+        return
+      }
+      current.timerTick()
+    }, 1000)
+
+    return () => clearInterval(interval)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [store.status])
+
+  // ---------------------------------------------------------------------------
+  // Blitz mode: track elapsed time
   // ---------------------------------------------------------------------------
 
   const sessionStartTimeRef = useRef<number | null>(null)
@@ -35,78 +75,25 @@ export function QuizScreen() {
   }
 
   useEffect(() => {
-    if (!effectiveConfig) return
-
-    const interval = setInterval(() => {
-      if (store.status !== 'playing') {
-        clearInterval(interval)
-        return
-      }
-
-      if (effectiveConfig.mode === 'timed') {
-        const elapsed = Math.floor(
-          (Date.now() - sessionStartTimeRef.current!) / 1000,
-        )
-        const remaining = effectiveConfig.questionCount - elapsed
-        if (remaining <= 0) {
-          clearInterval(interval)
-          store.timeUp()
-        } else {
-          store.startTimer(remaining)
-        }
-      } else if (effectiveConfig.mode === 'blitz') {
-        const elapsed = Math.floor(
-          (Date.now() - sessionStartTimeRef.current!) / 1000,
-        )
-        const limit = getBlitzTimeLimit(effectiveConfig.questionCount)
-        if (elapsed >= limit) {
-          clearInterval(interval)
-          store.timeUp()
-        } else {
-          store.setBlitzTimeElapsed(elapsed)
-        }
-      }
-    }, 1000)
-
-    return () => clearInterval(interval)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [effectiveConfig])
-
-  // ---------------------------------------------------------------------------
-  // Question timer
-  // ---------------------------------------------------------------------------
-
-  const [questionTimeLeft, setQuestionTimeLeft] = useState<number | null>(null)
-  const [currentSubmission, setCurrentSubmission] = useState<string[]>([])
-
-  useEffect(() => {
+    if (!effectiveConfig || effectiveConfig.mode !== 'blitz') return
     if (store.status !== 'playing') return
 
-    const currentQuestion = store.questions[store.currentIndex]
-    if (!currentQuestion) return
-
-    const limit = store.timeRemaining
-    if (!limit) return
-
-    // Derive time from state during render, not in effect
-    setQuestionTimeLeft(limit)
-
     const interval = setInterval(() => {
-      setQuestionTimeLeft((prev) => {
-        if (prev === null) return prev
-        const next = prev - 1
-        if (next <= 0) {
-          clearInterval(interval)
-          store.timeUp()
-          return 0
-        }
-        return next
-      })
+      const elapsed = Math.floor(
+        (Date.now() - sessionStartTimeRef.current!) / 1000,
+      )
+      const limit = getBlitzTimeLimit(effectiveConfig.questionCount)
+      if (elapsed >= limit) {
+        clearInterval(interval)
+        store.timeUp()
+      } else {
+        store.setBlitzTimeElapsed(elapsed)
+      }
     }, 1000)
 
     return () => clearInterval(interval)
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [store.status, store.questions, store.currentIndex, store.timeRemaining])
+  }, [effectiveConfig, store.status])
 
   // ---------------------------------------------------------------------------
   // Load questions when config is valid
@@ -127,7 +114,6 @@ export function QuizScreen() {
     if (prevConfigRef.current === configKey) return
     prevConfigRef.current = configKey
 
-    sessionStartTimeRef.current = Date.now()
     store.reset()
     store.loadQuestions(questions, effectiveConfig)
 
@@ -160,7 +146,7 @@ export function QuizScreen() {
       currentQuestion.correctOptionIds.length === selectedOptionIds.length &&
       currentQuestion.correctOptionIds.every((id) => selectedOptionIds.includes(id))
     const scoreDelta = isCorrect
-      ? calculateScore(store.config.difficulty, questionTimeLeft ?? 0, store.streak)
+      ? calculateScore(store.config.difficulty, store.timeRemaining ?? 0, store.streak)
       : 0
     store.submitAnswer(scoreDelta)
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -191,7 +177,7 @@ export function QuizScreen() {
     if (isFinished || isAllAnswered) {
       const score = calculateScore(
         store.config.difficulty,
-        questionTimeLeft ?? 0,
+        store.timeRemaining ?? 0,
         store.streak,
       )
       const currentCorrect = (() => {
@@ -208,7 +194,10 @@ export function QuizScreen() {
           q.correctOptionIds.every((id) => selected.includes(id))
         )
       }).length
-      store.finishSession(score, store.timeSpent, prevCorrect + (currentCorrect ? 1 : 0))
+      const elapsed = sessionStartTimeRef.current
+        ? Math.floor((Date.now() - sessionStartTimeRef.current) / 1000)
+        : 0
+      store.finishSession(score, elapsed, prevCorrect + (currentCorrect ? 1 : 0))
       navigate({ to: '/results' })
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
