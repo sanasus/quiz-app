@@ -38,7 +38,7 @@ export function QuizScreen() {
     if (!effectiveConfig) return
 
     const interval = setInterval(() => {
-      if (store.getState().status !== 'playing') {
+      if (store.status !== 'playing') {
         clearInterval(interval)
         return
       }
@@ -50,9 +50,9 @@ export function QuizScreen() {
         const remaining = effectiveConfig.questionCount - elapsed
         if (remaining <= 0) {
           clearInterval(interval)
-          store.getState().timeUp()
+          store.timeUp()
         } else {
-          store.getState().startTimer(remaining)
+          store.startTimer(remaining)
         }
       } else if (effectiveConfig.mode === 'blitz') {
         const elapsed = Math.floor(
@@ -61,9 +61,9 @@ export function QuizScreen() {
         const limit = getBlitzTimeLimit(effectiveConfig.questionCount)
         if (elapsed >= limit) {
           clearInterval(interval)
-          store.getState().timeUp()
+          store.timeUp()
         } else {
-          store.getState().setBlitzTimeElapsed(elapsed)
+          store.setBlitzTimeElapsed(elapsed)
         }
       }
     }, 1000)
@@ -97,7 +97,7 @@ export function QuizScreen() {
         const next = prev - 1
         if (next <= 0) {
           clearInterval(interval)
-          store.getState().timeUp()
+          store.timeUp()
           return 0
         }
         return next
@@ -128,19 +128,19 @@ export function QuizScreen() {
     prevConfigRef.current = configKey
 
     sessionStartTimeRef.current = Date.now()
-    store.getState().reset()
-    store.getState().loadQuestions(questions, effectiveConfig)
+    store.reset()
+    store.loadQuestions(questions, effectiveConfig)
 
     // Initialize timer based on mode
     if (effectiveConfig.mode === 'timed') {
       const timeLimit = getTimedTimeLimit(effectiveConfig.questionCount)
-      store.getState().startTimer(timeLimit)
+      store.startTimer(timeLimit)
     } else if (effectiveConfig.mode === 'blitz') {
       const timeLimit = getBlitzTimeLimit(effectiveConfig.questionCount)
-      store.getState().startTimer(timeLimit)
+      store.startTimer(timeLimit)
     }
 
-    store.getState().startPlaying()
+    store.startPlaying()
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [questions, effectiveConfig, store.questions.length])
 
