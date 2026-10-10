@@ -6,36 +6,41 @@ React 19 · TypeScript 6 · Vite 8 · TanStack Router · TanStack Query · Zusta
 ## Commands
 ```
 npm run dev          # Vite dev server (HMR)
-npm run build        # tsc -b && vite build
+npm run build        # tsc -b && vite build (regenerates routeTree.gen.ts)
 npm run typecheck    # tsc -b
 npm run lint         # oxlint
 npm run format       # prettier --write "src/**/*.{ts,tsx,css,json}"
 npm run test         # vitest (jsdom, globals: true)
+npm run e2e          # playwright test (runs against dev server with mock data)
 npm run preview      # vite preview
 ```
 Run `typecheck` before committing — `noUnusedLocals` and `noUnusedParameters` are enforced.
 
 ## Env
-- `VITE_QUIZAPI_KEY` — API key (required for live mode)
+- `VITE_QUIZAPI_KEY` — API key (required for live mode; see `.env`)
 - `VITE_USE_MOCK_DATA=true` — switch to mock data (see `src/shared/api/mock-*.ts`)
 
 ## Architecture
 - **Entry**: `src/main.tsx` → `<Providers>` → `<RouterProvider>`
-- **Routes**: TanStack Router (codegen at `src/routeTree.gen.ts`). Do not edit manually — run `build` to regenerate.
-- **State**: React Query (server state, retry: 2, stale: 5 min) + Zustand (client state)
-- **API layer**: `src/shared/api/` — adapter converts raw QuizAPI responses to internal models; mock data mirrors the real API
-- **i18n**: `src/app/i18n.ts` — en/ru, browser detection, localStorage persistence
+- **Providers**: `src/app/providers.tsx` — wraps `QueryClientProvider` → `I18nextProvider` → `RouterProvider` (ReactQueryDevtools unconditionally mounted)
+- **Routes**: TanStack Router with `autoCodeSplitting: true`. Codegen at `src/routeTree.gen.ts` — do not edit; run `build` to regenerate.
+- **State**: React Query (`retry: 2`, `staleTime: 5 min`, `gcTime: 10 min`) + Zustand (client state)
+- **API layer**: `src/shared/api/` — `adapter.ts` converts raw QuizAPI responses to internal models; mock mirrors the real API
+- **i18n**: `src/app/i18n.ts` — en/ru, `fallbackLng: 'en'`, detection order: querystring → localStorage → navigator
 - **Alias**: `@` → `src/` (both vite and tsconfig)
+- **tsconfig**: `tsconfig.json` is a root file with project references; compiler options live in `tsconfig.app.json`
+- **Structure**: `src/features/` (domain code), `src/shared/` (api, lib, types, ui), `src/routes/`, `src/locales/`
 
 ## Testing
 - Config: `vitest.config.ts` — jsdom env, globals enabled, setup at `src/test/setup.ts`
 - Tests: `src/**/*.{test,spec}.{js,mjs,ts,tsx}`
 - Run single file: `npm run test src/shared/api/adapter.test.ts`
 - Run single test: `npm run test -- -t "test name"`
+- E2E: `npm run e2e` — Playwright against `localhost:5173` (dev server auto-started with mock data)
 
 ## Formatting / Linting
-- Prettier: no semicolons, single quotes, trailing comma all, 80 char, LF
-- Oxlint: `react`, `typescript`, `oxc` plugins; `react/rules-of-hooks` error; `react/only-export-components` warn (allow constant exports)
+- Prettier: no semicolons, single quotes, trailing comma all, 80 char, LF, `arrowParens: always`
+- Oxlint: `react`, `typescript`, `oxc` plugins; `react/rules-of-hooks` error; `react/only-export-components` warn (allowConstantExport)
 
 ## Constraints
 - `verbatimModuleSyntax` and `erasableSyntaxOnly` enabled — avoid `import type { X } = require(...)` and non-erasable syntax.
