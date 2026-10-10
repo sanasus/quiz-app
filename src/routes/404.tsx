@@ -6,8 +6,7 @@ export const Route = createFileRoute('/404')({
   component: NotFoundPage,
 })
 
-// eslint-disable-next-line react/only-export-components
-export function NotFoundPage() {
+function NotFoundPage() {
   const { t } = useTranslation()
 
   return (
