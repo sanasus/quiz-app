@@ -276,9 +276,3 @@ export function useCategories() {
     gcTime: 7 * 24 * 60 * 60 * 1000, // 7 days
   })
 }
-
-// ---------------------------------------------------------------------------
-// Session store (Zustand) — re-exported from session-store.ts
-// ---------------------------------------------------------------------------
-
-export { useQuizSessionStore } from '../lib/session-store'
