@@ -141,10 +141,16 @@ function sessionReducer(
           lives: state.lives,
         }
       }
-      // For other modes, just mark as answered
+      // For other modes, mark as answered with empty selection
+      const currentQ = state.questions[state.currentIndex]
+      if (!currentQ) return state
       return {
         ...state,
         status: 'answered',
+        answers: {
+          ...state.answers,
+          [currentQ.id]: [],
+        },
         streak: 0,
         bestStreak: state.bestStreak,
         lives:
@@ -176,7 +182,6 @@ function sessionReducer(
 
       return {
         ...state,
-        status: 'answered',
         answers: {
           ...state.answers,
           [questionId]: newAnswers,
