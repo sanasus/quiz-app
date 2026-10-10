@@ -52,6 +52,9 @@ export const QuizScreen = () => {
   const config = configResult.success ? configResult.data : null
 
   const store = useQuizSessionStore()
+
+  // Use repeatConfig from store as fallback (repeat-mistakes flow)
+  const effectiveConfig = config ?? store.repeatConfig
   const questionStartTime = useRef<number>(0)
   const sessionStartTime = useRef<number>(0)
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
@@ -135,31 +138,31 @@ export const QuizScreen = () => {
   // Load questions when config is valid
   // ---------------------------------------------------------------------------
 
-  const { data: questions, error } = useQuizQuestions(config)
+  const { data: questions, error } = useQuizQuestions(effectiveConfig)
 
   useEffect(() => {
-    if (!questions || !config) return
+    if (!questions || !effectiveConfig) return
 
     // Detect config changes via ref to avoid stale query cache issues
-    const configKey = `${config.category}-${config.difficulty}-${config.questionCount}-${config.mode}`
+    const configKey = `${effectiveConfig.category}-${effectiveConfig.difficulty}-${effectiveConfig.questionCount}-${effectiveConfig.mode}`
     if (prevConfigRef.current === configKey) return
     prevConfigRef.current = configKey
 
     sessionStartTime.current = Date.now()
     storeRef.current.reset()
-    storeRef.current.loadQuestions(questions, config)
+    storeRef.current.loadQuestions(questions, effectiveConfig)
 
     // Initialize timer based on mode
-    if (config.mode === 'timed') {
-      const timeLimit = getTimedTimeLimit(config.questionCount)
+    if (effectiveConfig.mode === 'timed') {
+      const timeLimit = getTimedTimeLimit(effectiveConfig.questionCount)
       storeRef.current.startTimer(timeLimit)
-    } else if (config.mode === 'blitz') {
-      const timeLimit = getBlitzTimeLimit(config.questionCount)
+    } else if (effectiveConfig.mode === 'blitz') {
+      const timeLimit = getBlitzTimeLimit(effectiveConfig.questionCount)
       storeRef.current.startTimer(timeLimit)
     }
 
     storeRef.current.startPlaying()
-  }, [questions, config])
+  }, [questions, effectiveConfig])
 
   // ---------------------------------------------------------------------------
   // Handle session end (all questions answered or time up)
@@ -200,7 +203,7 @@ export const QuizScreen = () => {
     }
   }, [sessionEndDeps, navigate, config])
 
-  if (!config) {
+  if (!effectiveConfig) {
     navigate({ to: '/setup' })
     return null
   }

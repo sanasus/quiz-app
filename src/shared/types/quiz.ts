@@ -50,6 +50,8 @@ export interface QuizSession {
   // Mode-specific timers
   timeRemaining?: number // timed mode: seconds left on current question
   blitzTimeElapsed?: number // blitz mode: seconds elapsed since start
+  // Repeat-mistakes support
+  repeatConfig: QuizConfig | null
 }
 
 // ---------------------------------------------------------------------------

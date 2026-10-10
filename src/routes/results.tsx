@@ -37,7 +37,15 @@ export const ResultsScreen = () => {
 
   const handleRepeatMistakes = () => {
     store.repeatMistakes(store.config)
-    navigate({ to: '/quiz' })
+    navigate({
+      to: '/quiz',
+      search: {
+        category: store.config.category,
+        difficulty: store.config.difficulty,
+        questionCount: store.config.questionCount,
+        mode: store.config.mode,
+      },
+    })
   }
 
   const handleNewQuiz = () => {

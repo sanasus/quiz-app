@@ -73,6 +73,7 @@ function createInitialState(config: QuizConfig): QuizSession {
     timeSpent: 0,
     mode: config.mode,
     config,
+    repeatConfig: null,
   }
 }
 
@@ -253,6 +254,7 @@ function sessionReducer(
         ...createInitialState(action.payload.config),
         questions: action.payload.questions,
         status: 'playing',
+        repeatConfig: action.payload.config,
       }
 
     case 'RESET':
