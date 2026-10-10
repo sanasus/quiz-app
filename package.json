@@ -10,6 +10,7 @@
     "format": "prettier --write \"src/**/*.{ts,tsx,css,json}\"",
     "preview": "vite preview",
     "test": "vitest",
+    "e2e": "playwright test",
     "typecheck": "tsc -b"
   },
   "dependencies": {
@@ -28,6 +29,7 @@
     "zustand": "^5.0.15"
   },
   "devDependencies": {
+    "@playwright/test": "^1.64.0",
     "@tanstack/react-query-devtools": "^5.104.1",
     "@tanstack/router-devtools": "^1.167.2",
     "@testing-library/jest-dom": "^7.0.1",
