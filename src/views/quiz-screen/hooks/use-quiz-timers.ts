@@ -14,6 +14,10 @@ export function useQuizTimers(effectiveConfig: { mode: string; questionCount: nu
 
   // Timed mode: per-question countdown
   useEffect(() => {
+    if (!effectiveConfig || effectiveConfig.mode !== 'timed') {
+      timerStartedRef.current = false
+      return
+    }
     if (store.status !== 'playing') {
       timerStartedRef.current = false
       return
