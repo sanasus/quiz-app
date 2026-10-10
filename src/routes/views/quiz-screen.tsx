@@ -2,7 +2,7 @@
  * /quiz — Quiz screen with question, options, timer, and scoring.
  */
 
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useNavigate, useSearch } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
 import { useQuizSessionStore, getBlitzTimeLimit, getTimedTimeLimit } from '../../shared/lib/session-store'
@@ -21,8 +21,6 @@ export function QuizScreen() {
   const configResult = quizConfigSchema.safeParse(search)
   const config = configResult.success ? configResult.data : null
   const store = useQuizSessionStore()
-  const storeRef = useRef(store)
-  storeRef.current = store
 
   // Use repeatConfig from store as fallback (repeat-mistakes flow)
   const effectiveConfig = config ?? store.repeatConfig
@@ -31,43 +29,47 @@ export function QuizScreen() {
   // Timer
   // ---------------------------------------------------------------------------
 
-  const sessionStartTime = useRef(Date.now())
+  const sessionStartTimeRef = useRef<number | null>(null)
+  if (sessionStartTimeRef.current === null) {
+    sessionStartTimeRef.current = Date.now()
+  }
 
   useEffect(() => {
     if (!effectiveConfig) return
 
     const interval = setInterval(() => {
-      if (storeRef.current.status !== 'playing') {
+      if (store.getState().status !== 'playing') {
         clearInterval(interval)
         return
       }
 
       if (effectiveConfig.mode === 'timed') {
         const elapsed = Math.floor(
-          (Date.now() - sessionStartTime.current) / 1000,
+          (Date.now() - sessionStartTimeRef.current!) / 1000,
         )
         const remaining = effectiveConfig.questionCount - elapsed
         if (remaining <= 0) {
           clearInterval(interval)
-          storeRef.current.timeUp()
+          store.getState().timeUp()
         } else {
-          storeRef.current.setTimeRemaining(remaining)
+          store.getState().startTimer(remaining)
         }
       } else if (effectiveConfig.mode === 'blitz') {
         const elapsed = Math.floor(
-          (Date.now() - sessionStartTime.current) / 1000,
+          (Date.now() - sessionStartTimeRef.current!) / 1000,
         )
         const limit = getBlitzTimeLimit(effectiveConfig.questionCount)
         if (elapsed >= limit) {
           clearInterval(interval)
-          storeRef.current.timeUp()
+          store.getState().timeUp()
         } else {
-          storeRef.current.setBlitzTimeElapsed(elapsed)
+          store.getState().setBlitzTimeElapsed(elapsed)
         }
       }
     }, 1000)
 
     return () => clearInterval(interval)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [effectiveConfig])
 
   // ---------------------------------------------------------------------------
@@ -80,12 +82,13 @@ export function QuizScreen() {
   useEffect(() => {
     if (store.status !== 'playing') return
 
-    const currentQuestionId = store.questions[store.currentIndex]?.id
-    if (!currentQuestionId) return
+    const currentQuestion = store.questions[store.currentIndex]
+    if (!currentQuestion) return
 
     const limit = store.timeRemaining
     if (!limit) return
 
+    // Derive time from state during render, not in effect
     setQuestionTimeLeft(limit)
 
     const interval = setInterval(() => {
@@ -94,7 +97,7 @@ export function QuizScreen() {
         const next = prev - 1
         if (next <= 0) {
           clearInterval(interval)
-          store.timeUp()
+          store.getState().timeUp()
           return 0
         }
         return next
@@ -102,7 +105,8 @@ export function QuizScreen() {
     }, 1000)
 
     return () => clearInterval(interval)
-  }, [currentQuestionId])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [store.status, store.questions, store.currentIndex, store.timeRemaining])
 
   // ---------------------------------------------------------------------------
   // Load questions when config is valid
@@ -123,21 +127,22 @@ export function QuizScreen() {
     if (prevConfigRef.current === configKey) return
     prevConfigRef.current = configKey
 
-    sessionStartTime.current = Date.now()
-    storeRef.current.reset()
-    storeRef.current.loadQuestions(questions, effectiveConfig)
+    sessionStartTimeRef.current = Date.now()
+    store.getState().reset()
+    store.getState().loadQuestions(questions, effectiveConfig)
 
     // Initialize timer based on mode
     if (effectiveConfig.mode === 'timed') {
       const timeLimit = getTimedTimeLimit(effectiveConfig.questionCount)
-      storeRef.current.startTimer(timeLimit)
+      store.getState().startTimer(timeLimit)
     } else if (effectiveConfig.mode === 'blitz') {
       const timeLimit = getBlitzTimeLimit(effectiveConfig.questionCount)
-      storeRef.current.startTimer(timeLimit)
+      store.getState().startTimer(timeLimit)
     }
 
-    storeRef.current.startPlaying()
-  }, [questions, effectiveConfig])
+    store.getState().startPlaying()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [questions, effectiveConfig, store.questions.length])
 
   const currentQuestion = store.questions[store.currentIndex]
 
@@ -145,21 +150,21 @@ export function QuizScreen() {
   // Submit / Skip / Next handlers
   // ---------------------------------------------------------------------------
 
-  const handleSubmit = () => {
+  const handleSubmit = useCallback(() => {
     if (!currentQuestion) return
     const selectedOptionIds = currentSubmission.filter((id) => id !== '')
     store.selectOption(currentQuestion.id, selectedOptionIds)
-  }
+  }, [currentQuestion, currentSubmission, store])
 
-  const handleSkip = () => {
+  const handleSkip = useCallback(() => {
     if (!currentQuestion) return
     store.skipQuestion(currentQuestion.id)
-  }
+  }, [currentQuestion, store])
 
-  const handleNext = () => {
+  const handleNext = useCallback(() => {
     if (!currentQuestion) return
     store.advance()
-  }
+  }, [currentQuestion, store])
 
   // ---------------------------------------------------------------------------
   // Session end detection
@@ -187,6 +192,7 @@ export function QuizScreen() {
       )
       navigate({ to: '/results' })
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sessionEndDeps, navigate, config])
 
   if (!effectiveConfig) {
