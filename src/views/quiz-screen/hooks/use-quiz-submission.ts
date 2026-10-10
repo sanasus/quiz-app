@@ -30,8 +30,9 @@ export function useQuizSubmission(currentQuestion: Question | null) {
 
   const handleNext = useCallback(() => {
     if (!currentQuestion) return
+    setCurrentSubmission([])
     store.nextQuestion()
-  }, [currentQuestion, store])
+  }, [currentQuestion, setCurrentSubmission, store])
 
   const hasSelection = currentSubmission.some((id) => id !== '')
 

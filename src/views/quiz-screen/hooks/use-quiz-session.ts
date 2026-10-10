@@ -36,6 +36,7 @@ export function useQuizSession(effectiveConfig: QuizConfig | null): QuizSessionR
     }
 
     store.startPlaying()
+    store.startSessionTimer()
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [questions, effectiveConfig, store.questions.length])
 
