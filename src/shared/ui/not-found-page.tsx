@@ -1,12 +1,7 @@
-import { Link, createFileRoute } from '@tanstack/react-router'
+import { Link } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
 
-// eslint-disable-next-line react/only-export-components
-export const Route = createFileRoute('/404')({
-  component: NotFoundPage,
-})
-
-function NotFoundPage() {
+export function NotFoundPage() {
   const { t } = useTranslation()
 
   return (
