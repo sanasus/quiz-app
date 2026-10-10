@@ -30,9 +30,9 @@ export const DEFAULT_CONFIG: QuizConfig = {
 // Time limit helpers
 // ---------------------------------------------------------------------------
 
-/** Timed mode: 1 second per question. */
+/** Timed mode: 10 seconds per question. */
 export function getTimedTimeLimit(questionCount: number): number {
-  return questionCount
+  return questionCount * 10
 }
 
 /** Blitz mode: fixed time limit based on question count. */
@@ -148,6 +148,9 @@ function sessionReducer(
         if (nextIndex >= state.questions.length) {
           return { ...state, status: 'finished', timeRemaining: 0 }
         }
+        // Reset timeRemaining for the next question (10s per remaining question)
+        const remainingQuestions = state.config.questionCount - nextIndex
+        const timeRemaining = remainingQuestions * 10
         return {
           ...state,
           status: 'playing',
@@ -155,6 +158,7 @@ function sessionReducer(
           streak: 0,
           bestStreak: state.bestStreak,
           lives: state.lives,
+          timeRemaining,
         }
       }
       // For other modes, mark as answered with empty selection
@@ -250,7 +254,18 @@ function sessionReducer(
       if (nextIndex >= state.questions.length) {
         return { ...state, status: 'finished' }
       }
-      return { ...state, currentIndex: nextIndex, status: 'playing' }
+      // Reset timeRemaining for timed mode (10s per remaining question)
+      const remainingQuestions = state.config.questionCount - nextIndex
+      const timeRemaining =
+        state.mode === 'timed'
+          ? remainingQuestions * 10
+          : state.timeRemaining
+      return {
+        ...state,
+        currentIndex: nextIndex,
+        status: 'playing',
+        timeRemaining,
+      }
     }
 
     case 'FINISH_SESSION':

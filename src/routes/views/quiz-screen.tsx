@@ -153,18 +153,28 @@ export function QuizScreen() {
   const handleSubmit = useCallback(() => {
     if (!currentQuestion) return
     const selectedOptionIds = currentSubmission.filter((id) => id !== '')
-    store.selectOption(currentQuestion.id, selectedOptionIds)
-  }, [currentQuestion, currentSubmission, store])
+    for (const id of selectedOptionIds) {
+      store.selectOption(id)
+    }
+    const isCorrect =
+      currentQuestion.correctOptionIds.length === selectedOptionIds.length &&
+      currentQuestion.correctOptionIds.every((id) => selectedOptionIds.includes(id))
+    const scoreDelta = isCorrect
+      ? calculateScore(store.config.difficulty, questionTimeLeft ?? 0, store.streak)
+      : 0
+    store.submitAnswer(scoreDelta)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentQuestion, currentSubmission, store.config.difficulty, store.streak])
 
   const handleSkip = useCallback(() => {
     if (!currentQuestion) return
-    store.skipQuestion(currentQuestion.id)
-  }, [currentQuestion, store])
+    store.skipQuestion()
+  }, [currentQuestion])
 
   const handleNext = useCallback(() => {
     if (!currentQuestion) return
-    store.advance()
-  }, [currentQuestion, store])
+    store.nextQuestion()
+  }, [currentQuestion])
 
   // ---------------------------------------------------------------------------
   // Session end detection
@@ -179,17 +189,26 @@ export function QuizScreen() {
       store.currentIndex >= store.questions.length - 1
 
     if (isFinished || isAllAnswered) {
-      store.finishSession(
-        currentQuestion?.id,
-        calculateScore(
-          currentQuestion,
-          store.answers[currentQuestion?.id ?? ''],
-          store.config.difficulty,
-          questionTimeLeft,
-          store.timeSpent,
-        ),
-        store.correctCount,
+      const score = calculateScore(
+        store.config.difficulty,
+        questionTimeLeft ?? 0,
+        store.streak,
       )
+      const currentCorrect = (() => {
+        const selected = store.answers[currentQuestion.id] ?? []
+        return (
+          currentQuestion.correctOptionIds.length === selected.length &&
+          currentQuestion.correctOptionIds.every((id) => selected.includes(id))
+        )
+      })()
+      const prevCorrect = store.questions.slice(0, store.currentIndex).filter((q) => {
+        const selected = store.answers[q.id] ?? []
+        return (
+          q.correctOptionIds.length === selected.length &&
+          q.correctOptionIds.every((id) => selected.includes(id))
+        )
+      }).length
+      store.finishSession(score, store.timeSpent, prevCorrect + (currentCorrect ? 1 : 0))
       navigate({ to: '/results' })
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
