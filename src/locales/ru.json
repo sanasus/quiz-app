@@ -35,6 +35,7 @@
     "question": "Вопрос",
     "progress": "{{current}} из {{total}}",
     "submit": "Ответить",
+    "skip": "Пропустить",
     "next": "Далее",
     "time_remaining": "Оставшееся время",
     "lives": "Жизни",

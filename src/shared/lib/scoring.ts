@@ -28,7 +28,7 @@ export function calculateScore(
   timeSec: number,
   streak: number,
 ): number {
-  const base = BASE_SCORES[difficulty]
+  const base = BASE_SCORES[difficulty] ?? BASE_SCORES.easy
   const speed = Math.min(10, Math.floor(timeSec / 5))
   const streakMult = 1 + Math.min(streak / 5, 4) * 0.2
   return Math.round(base * streakMult + speed)

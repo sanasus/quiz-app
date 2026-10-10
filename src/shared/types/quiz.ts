@@ -47,6 +47,9 @@ export interface QuizSession {
   timeSpent: number // seconds
   mode: QuizMode
   config: QuizConfig
+  // Mode-specific timers
+  timeRemaining?: number // timed mode: seconds left on current question
+  blitzTimeElapsed?: number // blitz mode: seconds elapsed since start
 }
 
 // ---------------------------------------------------------------------------
@@ -71,8 +74,11 @@ export type SessionAction =
       payload: { questions: Question[]; config: QuizConfig }
     }
   | { type: 'START_PLAYING' }
+  | { type: 'START_TIMER'; payload: { timeRemaining: number } }
+  | { type: 'TIMER_TICK' }
+  | { type: 'TIME_UP' }
   | { type: 'SELECT_OPTION'; payload: { questionId: string; optionId: string } }
-  | { type: 'SUBMIT_ANSWER' }
+  | { type: 'SUBMIT_ANSWER'; payload: { scoreDelta: number } }
   | { type: 'NEXT_QUESTION' }
   | {
       type: 'FINISH_SESSION'
@@ -82,6 +88,11 @@ export type SessionAction =
   | {
       type: 'REPEAT_MISTAKES'
       payload: { questions: Question[]; config: QuizConfig }
+    }
+  | { type: 'SKIP_QUESTION' }
+  | {
+      type: 'UPDATE_CONFIG'
+      payload: Partial<QuizConfig>
     }
   | { type: 'RESET' }
 

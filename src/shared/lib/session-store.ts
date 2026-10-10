@@ -19,10 +19,10 @@ import type {
 
 const DEFAULT_LIVES = 3
 
-const DEFAULT_CONFIG: QuizConfig = {
+export const DEFAULT_CONFIG: QuizConfig = {
   category: 'all',
   difficulty: 'easy',
-  questionCount: 10,
+  questionCount: 2,
   mode: 'classic',
 }
 
@@ -38,9 +38,14 @@ interface QuizSessionStore extends QuizSession {
   startLoading: () => void
   loadQuestions: (questions: Question[], config: QuizConfig) => void
   startPlaying: () => void
+  startTimer: (timeRemaining: number) => void
+  timerTick: () => void
+  timeUp: () => void
   selectOption: (optionId: string) => void
-  submitAnswer: () => void
+  submitAnswer: (scoreDelta: number) => void
+  skipQuestion: () => void
   nextQuestion: () => void
+  updateConfig: (partial: Partial<QuizConfig>) => void
   finishSession: (
     score: number,
     timeSpent: number,
@@ -102,6 +107,53 @@ function sessionReducer(
     case 'START_PLAYING':
       return { ...state, status: 'playing' }
 
+    case 'START_TIMER':
+      return {
+        ...state,
+        timeRemaining: action.payload.timeRemaining,
+      }
+
+    case 'TIMER_TICK': {
+      const remaining = (state.timeRemaining ?? 1) - 1
+      // Only blitz mode auto-finishes on tick; timed mode handles timeout in useEffect
+      if (remaining <= 0) {
+        if (state.mode === 'blitz') {
+          return { ...state, timeRemaining: 0, status: 'finished' }
+        }
+        return { ...state, timeRemaining: 0 }
+      }
+      return { ...state, timeRemaining: remaining }
+    }
+
+    case 'TIME_UP': {
+      if (state.mode === 'timed') {
+        // Auto-advance to next question on timeout
+        const nextIndex = state.currentIndex + 1
+        if (nextIndex >= state.questions.length) {
+          return { ...state, status: 'finished', timeRemaining: 0 }
+        }
+        return {
+          ...state,
+          status: 'playing',
+          currentIndex: nextIndex,
+          streak: 0,
+          bestStreak: state.bestStreak,
+          lives: state.lives,
+        }
+      }
+      // For other modes, just mark as answered
+      return {
+        ...state,
+        status: 'answered',
+        streak: 0,
+        bestStreak: state.bestStreak,
+        lives:
+          state.mode === 'survival'
+            ? Math.max(0, state.lives - 1)
+            : state.lives,
+      }
+    }
+
     case 'SELECT_OPTION': {
       const { questionId, optionId } = action.payload
       const question = state.questions[state.currentIndex]
@@ -146,8 +198,8 @@ function sessionReducer(
 
       return {
         ...state,
-        status: 'playing',
-        score: state.score, // score updated by caller
+        status: 'answered',
+        score: state.score + (isCorrect ? action.payload.scoreDelta : 0),
         streak: isCorrect ? state.streak + 1 : 0,
         bestStreak: isCorrect
           ? Math.max(state.bestStreak, state.streak + 1)
@@ -155,6 +207,20 @@ function sessionReducer(
         lives: isCorrect
           ? state.lives
           : Math.max(0, state.lives - 1),
+      }
+    }
+
+    case 'SKIP_QUESTION': {
+      // Skip: no score, streak reset, lose life in survival
+      return {
+        ...state,
+        status: 'answered',
+        streak: 0,
+        bestStreak: state.bestStreak,
+        lives:
+          state.mode === 'survival'
+            ? Math.max(0, state.lives - 1)
+            : state.lives,
       }
     }
 
@@ -185,7 +251,16 @@ function sessionReducer(
       }
 
     case 'RESET':
-      return createInitialState(state.config)
+      return {
+        ...createInitialState(state.config),
+        status: 'idle',
+      }
+
+    case 'UPDATE_CONFIG':
+      return {
+        ...state,
+        config: { ...state.config, ...action.payload },
+      }
 
     default:
       return state
@@ -211,6 +286,17 @@ export const useQuizSessionStore = create<QuizSessionStore>((set) => ({
     })),
   startPlaying: () =>
     set((s) => ({ ...sessionReducer(s, { type: 'START_PLAYING' }) })),
+  startTimer: (timeRemaining) =>
+    set((s) => ({
+      ...sessionReducer(s, {
+        type: 'START_TIMER',
+        payload: { timeRemaining },
+      }),
+    })),
+  timerTick: () =>
+    set((s) => ({ ...sessionReducer(s, { type: 'TIMER_TICK' }) })),
+  timeUp: () =>
+    set((s) => ({ ...sessionReducer(s, { type: 'TIME_UP' }) })),
   selectOption: (optionId) =>
     set((s) => {
       const question = s.questions[s.currentIndex]
@@ -222,10 +308,19 @@ export const useQuizSessionStore = create<QuizSessionStore>((set) => ({
         }),
       }
     }),
-  submitAnswer: () =>
-    set((s) => ({ ...sessionReducer(s, { type: 'SUBMIT_ANSWER' }) })),
+  submitAnswer: (scoreDelta) =>
+    set((s) => ({ ...sessionReducer(s, { type: 'SUBMIT_ANSWER', payload: { scoreDelta } }) })),
+  skipQuestion: () =>
+    set((s) => ({ ...sessionReducer(s, { type: 'SKIP_QUESTION' }) })),
   nextQuestion: () =>
     set((s) => ({ ...sessionReducer(s, { type: 'NEXT_QUESTION' }) })),
+  updateConfig: (partial) =>
+    set((s) => ({
+      ...sessionReducer(s, {
+        type: 'UPDATE_CONFIG',
+        payload: partial,
+      }),
+    })),
   finishSession: (score, timeSpent, correctCount) =>
     set((s) => {
       const mistakes: SessionResult['mistakes'] = []
