@@ -2,7 +2,7 @@
  * /results — Session results with score, accuracy, and repeat-mistakes.
  */
 
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
 import { useQuizSessionStore } from '../shared/lib/session-store'
@@ -11,11 +11,15 @@ export function ResultsScreen() {
   const { t } = useTranslation()
   const navigate = useNavigate()
   const store = useQuizSessionStore()
+  const repeatMistakesRef = useRef(false)
 
   // Guard: no finished session → redirect to setup
   useEffect(() => {
-    if (store.status !== 'finished') {
+    if (store.status !== 'finished' && !repeatMistakesRef.current) {
       navigate({ to: '/setup', replace: true })
+    }
+    if (repeatMistakesRef.current) {
+      repeatMistakesRef.current = false
     }
   }, [store.status, navigate])
 
@@ -36,6 +40,7 @@ export function ResultsScreen() {
   }
 
   const handleRepeatMistakes = () => {
+    repeatMistakesRef.current = true
     store.repeatMistakes(store.config)
     navigate({
       to: '/quiz',

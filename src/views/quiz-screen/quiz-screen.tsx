@@ -5,6 +5,7 @@
  * delegates rendering to atomic components.
  */
 
+import { useEffect } from 'react'
 import { useQuizSessionStore } from '../../shared/lib/session-store'
 import { useQuizConfig } from './hooks/use-quiz-config'
 import { useQuizSession } from './hooks/use-quiz-session'
@@ -35,6 +36,13 @@ export function QuizScreen() {
   } = useQuizSubmission(result.currentQuestion)
 
   useQuizSessionEnd(result.currentQuestion)
+
+  // Blitz mode: auto-submit when selection changes
+  useEffect(() => {
+    if (store.mode === 'blitz' && hasSelection && store.status === 'playing') {
+      handleSubmit()
+    }
+  }, [currentSubmission, store.mode, store.status])
 
   // ---------------------------------------------------------------------------
   // Early returns

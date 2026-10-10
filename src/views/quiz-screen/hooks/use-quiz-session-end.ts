@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import { useQuizSessionStore } from '../../../shared/lib/session-store'
-import { calculateScore } from '../../../shared/lib/scoring'
 import { checkAnswer, countCorrect } from '../utils/answer-utils'
 
 export function useQuizSessionEnd(currentQuestion: { id: string; correctOptionIds: readonly string[] } | null) {
@@ -28,16 +27,11 @@ export function useQuizSessionEnd(currentQuestion: { id: string; correctOptionId
       0,
       store.currentIndex,
     )
-    const score = calculateScore(
-      store.config.difficulty,
-      store.timeRemaining ?? 0,
-      store.streak,
-    )
     const elapsed = store.sessionStartTime
       ? Math.floor((Date.now() - store.sessionStartTime) / 1000)
       : 0
 
-    store.finishSession(score, elapsed, prevCorrect + (currentCorrect ? 1 : 0))
+    store.finishSession(store.score, elapsed, prevCorrect + (currentCorrect ? 1 : 0))
     navigate({ to: '/results' })
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isSessionEnded, navigated])
