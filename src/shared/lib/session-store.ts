@@ -47,9 +47,11 @@ export function getBlitzTimeLimit(questionCount: number): number {
 interface QuizSessionStore extends QuizSession {
   // Preserved after session finishes (for /results screen)
   finishedSession: SessionResult | null
+  sessionStartTime: number | null
 
   // Actions
   startLoading: () => void
+  startSessionTimer: () => void
   loadQuestions: (questions: Question[], config: QuizConfig) => void
   startPlaying: () => void
   startTimer: (timeRemaining: number) => void
@@ -288,6 +290,7 @@ function sessionReducer(
 export const useQuizSessionStore = create<QuizSessionStore>((set) => ({
   ...createInitialState(DEFAULT_CONFIG),
   finishedSession: null,
+  sessionStartTime: null,
 
   startLoading: () =>
     set((s) => ({ ...sessionReducer(s, { type: 'START_LOADING' }) })),
@@ -386,4 +389,6 @@ export const useQuizSessionStore = create<QuizSessionStore>((set) => ({
       ...sessionReducer(s, { type: 'RESET' }),
       finishedSession: null,
     })),
+  startSessionTimer: () =>
+    set({ sessionStartTime: Date.now() }),
 }))
