@@ -167,8 +167,15 @@ export function QuizScreen() {
   // ---------------------------------------------------------------------------
 
   const sessionEndDeps = `${store.status}-${store.currentIndex}-${store.questions.length}-${store.score}`
+  const sessionEndDepsRef = useRef<string | null>(null)
 
   useEffect(() => {
+    // Guard: skip if the dependency string hasn't actually changed.
+    // `store` is a Zustand snapshot whose object reference changes on every
+    // render; without this guard the effect would re-run endlessly.
+    if (sessionEndDepsRef.current === sessionEndDeps) return
+    sessionEndDepsRef.current = sessionEndDeps
+
     const isFinished = store.status === 'finished'
     const isAllAnswered =
       store.status === 'answered' &&
