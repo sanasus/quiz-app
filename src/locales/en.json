@@ -4,6 +4,8 @@
     "nav": {
       "home": "Home",
       "setup": "Setup",
+      "quiz": "Quiz",
+      "results": "Results",
       "stats": "Statistics",
       "achievements": "Achievements",
       "settings": "Settings"
