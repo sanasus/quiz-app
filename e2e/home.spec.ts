@@ -3,8 +3,10 @@ import { test, expect } from '@playwright/test'
 test.describe('Home page', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/')
-    // Wait for mock data to load
-    await page.waitForTimeout(1200)
+    // Wait for page to be fully loaded
+    await expect(
+      page.getByRole('heading', { name: '🏠 Welcome to QuizApp!' }),
+    ).toBeVisible()
   })
 
   test('renders welcome heading and start button', async ({ page }) => {
@@ -20,25 +22,25 @@ test.describe('Home page', () => {
   })
 
   test('toggles language between EN and RU', async ({ page }) => {
-    // Initial language is EN (browser detection or fallback)
-    const startBtn = page.getByRole('link', { name: 'Start Quiz' })
-    await expect(startBtn).toBeVisible()
+    // The language toggle is always visible in the header
+    const langBtn = page.getByTestId('lang-toggle')
+    await expect(langBtn).toBeVisible()
 
-    // Click the language toggle button (aria-label="Toggle language", shows "EN"/"RU")
-    // Get the button's bounding box and click with page.mouse to bypass visibility checks
-    const langBtn = page.locator('button[aria-label="Toggle language"]').first()
-    const box = await langBtn.boundingBox()
-    if (box) {
-      await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2)
-    }
+    // Initial language is EN (browser detection or fallback)
+    await expect(
+      page.getByRole('link', { name: 'Start Quiz' }),
+    ).toBeVisible()
+
+    // Click to switch to Russian
+    await langBtn.click()
 
     // After toggle, text should be in Russian
     await expect(
       page.getByRole('link', { name: 'Начать тест' }),
     ).toBeVisible()
 
-    // Toggle back
-    await page.mouse.click(box!.x + box!.width / 2, box!.y + box!.height / 2)
+    // Toggle back to English
+    await langBtn.click()
     await expect(
       page.getByRole('link', { name: 'Start Quiz' }),
     ).toBeVisible()

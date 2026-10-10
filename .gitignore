@@ -36,6 +36,9 @@ Thumbs.db
 # Build output
 coverage
 
+# Playwright test results
+test-results
+
 # Cache
 .vite
 .npm-cache

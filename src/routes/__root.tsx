@@ -31,35 +31,38 @@ export function RootComponent() {
         <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3">
           <h1 className="text-xl font-bold text-primary">{t('app.title')}</h1>
 
-          {/* Desktop nav */}
-          <nav className="hidden items-center gap-1 sm:flex">
-            {routes.map((r) => (
-              <a
-                key={r.path}
-                href={r.path}
-                className="rounded-md px-3 py-1.5 text-sm font-medium text-text-2 transition-colors hover:bg-muted hover:text-text"
-              >
-                {r.label} {t(r.key)}
-              </a>
-            ))}
-          </nav>
+          <div className="flex items-center gap-4">
+            {/* Desktop nav */}
+            <nav className="hidden items-center gap-1 sm:flex">
+              {routes.map((r) => (
+                <a
+                  key={r.path}
+                  href={r.path}
+                  className="rounded-md px-3 py-1.5 text-sm font-medium text-text-2 transition-colors hover:bg-muted hover:text-text"
+                >
+                  {r.label} {t(r.key)}
+                </a>
+              ))}
+            </nav>
 
-          {/* Mobile nav */}
-          <nav className="flex sm:hidden">
-            {/* Language toggle */}
+            {/* Language toggle — visible on all screens */}
             <button
               type="button"
               onClick={toggleLang}
+              data-testid="lang-toggle"
               className="rounded-md border border-border bg-bg px-3 py-1.5 text-xs font-semibold text-text transition-colors hover:bg-muted"
               aria-label="Toggle language"
             >
               {i18n.language === 'ru' ? 'RU' : 'EN'}
             </button>
-          </nav>
+          </div>
         </div>
 
         {/* Mobile bottom nav */}
-        <nav className="flex sm:hidden border-t border-border">
+        <nav
+          className="flex sm:hidden border-t border-border"
+          data-testid="mobile-bottom-nav"
+        >
           {routes.map((r) => (
             <a
               key={r.path}

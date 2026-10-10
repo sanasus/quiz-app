@@ -64,15 +64,16 @@ const CategoryDropdown = ({
   }
 
   // Find display text for collapsed state
-  const displayText = selectedCategory
-    ? (() => {
-        for (const topic of topics) {
-          const cat = topic.categories.find((c) => c.slug === selectedCategory)
-          if (cat) return cat.name
-        }
-        return selectedCategory
-      })()
-    : t('common.category_all')
+  const displayText =
+    selectedCategory === 'all'
+      ? t('common.category_all')
+      : (() => {
+          for (const topic of topics) {
+            const cat = topic.categories.find((c) => c.slug === selectedCategory)
+            if (cat) return cat.name
+          }
+          return selectedCategory ?? t('common.category_all')
+        })()
 
   const handleCategorySelect = (slug: string) => {
     onSelect(slug)

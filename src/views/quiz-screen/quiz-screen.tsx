@@ -82,7 +82,10 @@ export function QuizScreen() {
   // ---------------------------------------------------------------------------
 
   return (
-    <div className="mx-auto max-w-2xl px-4 py-8">
+    <div
+      className="mx-auto max-w-2xl px-4 py-8"
+      data-testid="quiz-screen"
+    >
       <QuizHeader
         progress={progress}
         total={total}
