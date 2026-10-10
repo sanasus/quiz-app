@@ -216,13 +216,19 @@ async function fetchCategories(): Promise<{
 const QUESTIONS_QUERY_KEY = ['quiz', 'questions'] as const
 
 export function useQuizQuestions(config: QuizConfig | null) {
-  return useQuery({
+  const store = useQuizSessionStore()
+
+  // If we're in a repeat session (questions already loaded in store),
+  // skip the API call entirely
+  const isRepeatSession = store.questions.length > 0 && store.status === 'playing'
+
+  const query = useQuery({
     queryKey: [...QUESTIONS_QUERY_KEY, config],
     queryFn: () => {
       if (!config) throw new Error('Quiz config is required')
       return fetchQuestions(config)
     },
-    enabled: config !== null,
+    enabled: config !== null && !isRepeatSession,
     retry: (count, error) => {
       // Don't retry on 401/403
       if (error.message.includes('Invalid or expired')) return false
@@ -231,6 +237,13 @@ export function useQuizQuestions(config: QuizConfig | null) {
     staleTime: 5 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
   })
+
+  // If in a repeat session, return stored questions instead of query data
+  if (isRepeatSession) {
+    return { data: store.questions as Question[], isLoading: false, error: null }
+  }
+
+  return query
 }
 
 // ---------------------------------------------------------------------------

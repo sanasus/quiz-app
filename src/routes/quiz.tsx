@@ -143,6 +143,9 @@ export const QuizScreen = () => {
   useEffect(() => {
     if (!questions || !effectiveConfig) return
 
+    // Skip loading if we're in a repeat session (questions already loaded)
+    if (store.questions.length > 0) return
+
     // Detect config changes via ref to avoid stale query cache issues
     const configKey = `${effectiveConfig.category}-${effectiveConfig.difficulty}-${effectiveConfig.questionCount}-${effectiveConfig.mode}`
     if (prevConfigRef.current === configKey) return
@@ -203,7 +206,7 @@ export const QuizScreen = () => {
     }
   }, [sessionEndDeps, navigate, config])
 
-  if (!effectiveConfig) {
+  if (!effectiveConfig && store.questions.length === 0) {
     navigate({ to: '/setup' })
     return null
   }
