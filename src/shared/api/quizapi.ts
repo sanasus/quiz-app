@@ -15,6 +15,7 @@ import type {
   QuizConfig,
   Topic,
 } from '../types/quiz'
+import { useQuizSessionStore } from '../lib/session-store'
 import { adaptQuestions } from './adapter'
 import {
   categoriesApiResponseSchema,
