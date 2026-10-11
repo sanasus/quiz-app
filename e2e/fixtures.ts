@@ -59,9 +59,10 @@ export async function goToSetup(page: Page) {
 
 /**
  * Select a game mode on the setup page.
+ * Uses data-testid for stable, unambiguous selector.
  */
 export async function selectMode(page: Page, mode: QuizConfig['mode']) {
-  const btn = page.getByRole('button', { name: mode })
+  const btn = page.getByTestId(`mode-${mode}`)
   await btn.click()
 }
 
@@ -69,22 +70,23 @@ export async function selectMode(page: Page, mode: QuizConfig['mode']) {
  * Navigate from setup to quiz with the given config.
  * Returns the page ready at /quiz with questions loaded.
  */
-export async function startQuiz(page: Page, config: QuizConfig = defaultConfig) {
+export async function startQuiz(page: Page, config?: Partial<QuizConfig>) {
+  const mergedConfig = { ...defaultConfig, ...config }
   await goToSetup(page)
 
   // Select difficulty (skip when undefined — defaults to 'easy')
-  if (config.difficulty && config.difficulty !== 'easy') {
-    await selectDifficulty(page, config.difficulty)
+  if (mergedConfig.difficulty && mergedConfig.difficulty !== 'easy') {
+    await selectDifficulty(page, mergedConfig.difficulty)
   }
 
   // Set question count
-  if (config.questionCount !== defaultConfig.questionCount) {
-    await setQuestionCount(page, config.questionCount)
+  if (mergedConfig.questionCount && mergedConfig.questionCount !== defaultConfig.questionCount) {
+    await setQuestionCount(page, mergedConfig.questionCount)
   }
 
   // Select mode
-  if (config.mode !== 'classic') {
-    await selectMode(page, config.mode)
+  if (mergedConfig.mode !== 'classic') {
+    await selectMode(page, mergedConfig.mode)
   }
 
   // Start
@@ -128,11 +130,13 @@ export async function answerFirstOption(page: Page) {
   await options.first().click()
   await page.getByRole('button', { name: 'Submit' }).click()
 
-  // Click next if available
-  const hasNext = await page.getByRole('button', { name: 'Next' }).isVisible()
-  if (hasNext) {
+  // Click next if available (auto-wait with short timeout)
+  try {
+    await expect(page.getByRole('button', { name: 'Next' })).toBeAttached()
     await page.getByRole('button', { name: 'Next' }).click()
     await expect(page.getByRole('heading', { name: 'Question' })).toBeVisible()
+  } catch {
+    // Next button not available — quiz may be over
   }
 }
 

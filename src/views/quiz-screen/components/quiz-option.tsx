@@ -33,6 +33,7 @@ export function QuizOption({
       key={id}
       data-testid={`option-${id}`}
       onClick={onToggle}
+      aria-selected={isSelected}
       className={`w-full rounded-lg border p-4 text-left text-sm transition-all hover:bg-muted ${optionClass}`}
       disabled={disabled}
     >

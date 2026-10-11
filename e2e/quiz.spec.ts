@@ -27,8 +27,8 @@ test.describe('Quiz screen', () => {
     await expect(options.first()).toBeVisible()
     await options.first().click()
 
-    // Selected option should have selected state (bg-primary/10 border-primary)
-    await expect(options.first()).toHaveClass(/bg-primary\/10/)
+    // Selected option should have aria-selected="true"
+    await expect(options.first()).toHaveAttribute('aria-selected', 'true')
   })
 
   test('submitting an answer shows explanation and next button', async ({
@@ -83,17 +83,7 @@ test.describe('Quiz screen', () => {
   })
 
   test('timed mode shows timer', async ({ page }) => {
-    // Go back to setup
-    await page.goto('/setup')
-    await expect(page.getByRole('button', { name: 'All' })).toBeVisible()
-
-    // Select Timed mode
-    await page.getByRole('button', { name: 'Timed' }).click()
-    await page.getByRole('button', { name: 'Start' }).click()
-    await page.waitForURL('/quiz**')
-
-    // Wait for question to appear
-    await expect(page.getByRole('heading', { name: 'Question' })).toBeVisible()
+    await startQuiz(page, { mode: 'timed' })
 
     // Timer shows a number followed by 's' — scope to quiz header area
     const quizHeader = page.locator('div').filter({ hasText: /^Question/ })
@@ -102,14 +92,7 @@ test.describe('Quiz screen', () => {
   })
 
   test('survival mode shows lives', async ({ page }) => {
-    // Go back to setup
-    await page.goto('/setup')
-    await expect(page.getByRole('button', { name: 'All' })).toBeVisible()
-
-    // Select Survival mode
-    await page.getByRole('button', { name: 'Survival' }).click()
-    await page.getByRole('button', { name: 'Start' }).click()
-    await page.waitForURL('/quiz**')
+    await startQuiz(page, { mode: 'survival' })
 
     // Wait for question to appear
     await expect(page.getByRole('heading', { name: 'Question' })).toBeVisible()

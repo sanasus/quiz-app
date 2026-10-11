@@ -45,9 +45,27 @@ test.describe('Navigation', () => {
     // Set mobile viewport
     await page.setViewportSize({ width: 375, height: 667 })
 
-    // Click setup link in bottom nav (scoped to bottom nav)
+    // Verify desktop nav is hidden on mobile
+    const desktopNav = page.getByRole('navigation').filter({
+      has: page.getByRole('link', { name: 'Home' }),
+    })
+    await expect(desktopNav).not.toBeVisible()
+
+    // Click setup link in bottom nav
     const bottomNav = page.getByTestId('mobile-bottom-nav')
+    await expect(bottomNav).toBeVisible()
+
     await bottomNav.getByRole('link', { name: '⚙️' }).first().click()
     await page.waitForURL('/setup')
+    await expect(
+      page.getByRole('heading', { name: 'Quiz Settings' }),
+    ).toBeVisible()
+
+    // Click home link in bottom nav
+    await bottomNav.getByRole('link', { name: '🏠' }).first().click()
+    await page.waitForURL('/')
+    await expect(
+      page.getByRole('heading', { name: '🏠 Welcome to QuizApp!' }),
+    ).toBeVisible()
   })
 })

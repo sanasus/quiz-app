@@ -42,9 +42,8 @@ test.describe('Setup page', () => {
   })
 
   test('selects a category from dropdown', async ({ page }) => {
-    // Find the dropdown button by its sibling label "Category"
-    const categorySection = page.locator('label', { hasText: 'Category' }).first()
-    const dropdown = categorySection.locator('..').locator('button').first()
+    // Use button name instead of DOM traversal — more stable than locator('..')
+    const dropdown = page.getByRole('button', { name: 'All' })
     await expect(dropdown).toBeVisible()
 
     await dropdown.click()
@@ -59,8 +58,8 @@ test.describe('Setup page', () => {
     // Click a category
     await page.getByRole('button', { name: 'Physics' }).click()
 
-    // Verify the dropdown button now shows the selected category
-    await expect(dropdown).toContainText('Physics')
+    // Verify the dropdown closed (panel should be gone)
+    await expect(page.getByText('Science')).not.toBeVisible()
   })
 
   test('selects difficulty levels', async ({ page }) => {

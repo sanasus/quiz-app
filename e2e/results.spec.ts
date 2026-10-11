@@ -3,12 +3,25 @@ import { startQuiz, answerFirstOption, waitForResults } from './fixtures'
 
 test.describe('Results screen', () => {
   test.beforeEach(async ({ page }) => {
-    // Complete a full quiz session to reach results
-    await startQuiz(page)
+    // Reset locale to English (previous tests may have changed it)
+    await page.evaluate(() => {
+      // @ts-expect-error i18n is available on window
+      window.i18n?.changeLanguage('en')
+    })
 
-    // Answer all questions using generic selectors
-    await answerFirstOption(page)
-    await answerFirstOption(page)
+    // Use hard difficulty and answer incorrectly to guarantee mistakes exist
+    await startQuiz(page, { difficulty: 'hard', questionCount: 2 })
+
+    const options = page.locator('[data-testid^="option-"]')
+    await expect(options.first()).toBeVisible()
+    // Answer first option (mock hard questions have second option correct)
+    await options.nth(0).click()
+    await page.getByRole('button', { name: 'Submit' }).click()
+    await page.getByRole('button', { name: 'Next' }).click()
+
+    await expect(options.first()).toBeVisible()
+    await options.nth(0).click()
+    await page.getByRole('button', { name: 'Submit' }).click()
 
     // Wait for results
     await waitForResults(page)
@@ -33,12 +46,11 @@ test.describe('Results screen', () => {
   })
 
   test('shows mistakes list when there are mistakes', async ({ page }) => {
-    // Check if mistakes section exists
+    // Mistakes section should now be visible (guaranteed by beforeEach)
     const mistakesTitle = page.getByRole('heading', { name: 'Mistakes' })
-    if (await mistakesTitle.isVisible()) {
-      await expect(page.getByText('❌')).toBeVisible()
-      await expect(page.getByText('✅')).toBeVisible()
-    }
+    await expect(mistakesTitle).toBeVisible()
+    await expect(page.getByText('❌ O(n)')).toBeVisible()
+    await expect(page.getByText('✅ O(log n)')).toBeVisible()
   })
 
   test('new quiz button navigates to setup', async ({ page }) => {
@@ -53,13 +65,13 @@ test.describe('Results screen', () => {
   })
 
   test('repeat mistakes button navigates to quiz', async ({ page }) => {
+    // Repeat mistakes button should now be visible (guaranteed by beforeEach)
     const repeatBtn = page.getByRole('button', { name: 'Repeat mistakes' })
-    if (await repeatBtn.isVisible()) {
-      await repeatBtn.click()
-      await page.waitForURL('/quiz**')
-      await expect(
-        page.getByRole('heading', { name: 'Question' }),
-      ).toBeVisible()
-    }
+    await expect(repeatBtn).toBeVisible()
+    await repeatBtn.click()
+    await page.waitForURL('/quiz**')
+    await expect(
+      page.getByRole('heading', { name: 'Question' }),
+    ).toBeVisible()
   })
 })

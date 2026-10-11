@@ -1,5 +1,5 @@
 import { type Page, test, expect } from '@playwright/test'
-import { startQuiz, waitForResults, setQuestionCount, selectMode, selectDifficulty } from './fixtures'
+import { startQuiz, waitForResults } from './fixtures'
 
 /**
  * Click the first option button inside the quiz screen.
@@ -77,6 +77,9 @@ test.describe('Blitz mode', () => {
   test('highlights correct and incorrect answers after auto-submit', async ({
     page,
   }) => {
+    // Override setup: use hard difficulty so first option is wrong (triggers red styling)
+    await startQuiz(page, { mode: 'blitz', questionCount: 2, difficulty: 'hard' })
+
     const quizContainer = page.getByTestId('quiz-screen')
     const options = quizContainer.getByRole('button')
 
@@ -111,11 +114,9 @@ test.describe('Blitz mode', () => {
     // Wait for result state
     await expect(page.getByRole('button', { name: 'Next' })).toBeVisible()
 
-    // Explanation should be visible if the question has one
+    // Explanation should be visible (mock data includes explanations)
     const explanation = page.getByRole('heading', { name: 'Explanation' })
-    if (await explanation.isVisible()) {
-      await expect(explanation).toBeVisible()
-    }
+    await expect(explanation).toBeVisible()
   })
 
   // ---------------------------------------------------------------------------
@@ -200,16 +201,9 @@ test.describe('Blitz mode', () => {
   // ---------------------------------------------------------------------------
 
   test('timer shows correct limit for question count', async ({ page }) => {
-    // Navigate to setup
-    await page.goto('/setup')
-    await expect(page.getByRole('button', { name: 'All' })).toBeVisible()
-
-    // Set 5 questions for Blitz (time limit = max(10, 5*3) = 15s)
-    await setQuestionCount(page, 5)
-    await selectMode(page, 'blitz')
-    await page.getByRole('button', { name: 'Start' }).click()
-    await page.waitForURL('/quiz**')
-    await expect(page.getByRole('heading', { name: 'Question' })).toBeVisible()
+    // Navigate to setup with 5 questions in Blitz mode
+    // (time limit = max(10, 5*3) = 15s)
+    await startQuiz(page, { mode: 'blitz', questionCount: 5 })
 
     // Answer all questions to reach results before time runs out
     await completeBlitzQuiz(page, 5)
@@ -220,15 +214,8 @@ test.describe('Blitz mode', () => {
   })
 
   test('works with medium difficulty', async ({ page }) => {
-    // Go back to setup and select medium difficulty
-    await page.goto('/setup')
-    await expect(page.getByRole('button', { name: 'All' })).toBeVisible()
-    await setQuestionCount(page, 3)
-    await selectDifficulty(page, 'medium')
-    await selectMode(page, 'blitz')
-    await page.getByRole('button', { name: 'Start' }).click()
-    await page.waitForURL('/quiz**')
-    await expect(page.getByRole('heading', { name: 'Question' })).toBeVisible()
+    // Start quiz with medium difficulty and blitz mode
+    await startQuiz(page, { mode: 'blitz', difficulty: 'medium', questionCount: 3 })
 
     // Answer questions
     await completeBlitzQuiz(page, 3)

@@ -26,6 +26,7 @@ export const mockQuestions: Question[] = [
     multiple: false,
     category: 'geography',
     difficulty: 'easy',
+    explanation: 'Paris has been the capital of France since the late 12th century.',
   },
   {
     id: 'q2',
@@ -40,6 +41,7 @@ export const mockQuestions: Question[] = [
     multiple: false,
     category: 'science',
     difficulty: 'easy',
+    explanation: 'Mercury is the closest planet to the Sun at about 57.9 million km.',
   },
   {
     id: 'q3',
@@ -54,6 +56,7 @@ export const mockQuestions: Question[] = [
     multiple: false,
     category: 'science',
     difficulty: 'medium',
+    explanation: 'Au comes from the Latin word "aurum" meaning gold.',
   },
   {
     id: 'q4',
@@ -69,6 +72,7 @@ export const mockQuestions: Question[] = [
     multiple: true,
     category: 'technology',
     difficulty: 'medium',
+    explanation: 'React and Vue are JavaScript frameworks. Django and Flask are Python frameworks.',
   },
   {
     id: 'q5',
@@ -83,6 +87,7 @@ export const mockQuestions: Question[] = [
     multiple: false,
     category: 'history',
     difficulty: 'easy',
+    explanation: 'World War II ended in 1945 with the surrender of Germany and Japan.',
   },
   {
     id: 'q6',
@@ -97,6 +102,7 @@ export const mockQuestions: Question[] = [
     multiple: false,
     category: 'geography',
     difficulty: 'easy',
+    explanation: 'The Pacific Ocean covers about 165.25 million square kilometers.',
   },
   {
     id: 'q7',
@@ -111,6 +117,7 @@ export const mockQuestions: Question[] = [
     multiple: false,
     category: 'math',
     difficulty: 'easy',
+    explanation: 'Pi (π) is approximately 3.14159..., so to two decimal places it is 3.14.',
   },
   {
     id: 'q8',
@@ -125,6 +132,7 @@ export const mockQuestions: Question[] = [
     multiple: false,
     category: 'technology',
     difficulty: 'easy',
+    explanation: 'JavaScript is the primary language for web browser development.',
   },
   {
     id: 'q9',
@@ -140,6 +148,7 @@ export const mockQuestions: Question[] = [
     multiple: false,
     category: 'science',
     difficulty: 'medium',
+    explanation: 'The speed of light in a vacuum is approximately 299,792 km/s.',
   },
   {
     id: 'q10',
@@ -154,6 +163,37 @@ export const mockQuestions: Question[] = [
     multiple: false,
     category: 'technology',
     difficulty: 'medium',
+    explanation: 'A Queue follows FIFO: the first element added is the first one removed.',
+  },
+  {
+    id: 'q11',
+    text: 'What is the time complexity of binary search?',
+    options: [
+      { id: 'q11a', text: 'O(n)' },
+      { id: 'q11b', text: 'O(log n)' },
+      { id: 'q11c', text: 'O(n log n)' },
+      { id: 'q11d', text: 'O(n²)' },
+    ],
+    correctOptionIds: ['q11b'],
+    multiple: false,
+    category: 'technology',
+    difficulty: 'hard',
+    explanation: 'Binary search halves the search space each step, giving O(log n) complexity.',
+  },
+  {
+    id: 'q12',
+    text: 'What is the boiling point of water at sea level in Celsius?',
+    options: [
+      { id: 'q12a', text: '90°C' },
+      { id: 'q12b', text: '100°C' },
+      { id: 'q12c', text: '110°C' },
+      { id: 'q12d', text: '120°C' },
+    ],
+    correctOptionIds: ['q12b'],
+    multiple: false,
+    category: 'science',
+    difficulty: 'hard',
+    explanation: 'Water boils at 100°C (212°F) at standard atmospheric pressure (1 atm).',
   },
 ]
 

@@ -116,7 +116,7 @@ const SetupScreen = () => {
         />
 
         {/* Mode */}
-        <div className="group">
+        <div className="group" data-testid="mode-selector">
           <label className="mb-2 block text-sm font-medium text-text-2 group-hover:text-primary transition-colors cursor-default">
             {t('setup.mode')}
           </label>
