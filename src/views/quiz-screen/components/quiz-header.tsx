@@ -28,7 +28,7 @@ export function QuizHeader({
         <p className="text-sm text-text-2">{t('quiz.progress', { current: progress, total })}</p>
       </div>
       <div className="flex items-center gap-4">
-        {mode === 'timed' && timeRemaining !== undefined ? (
+        {(mode === 'timed' || mode === 'blitz') && timeRemaining !== undefined ? (
           <span
             className={`text-lg font-mono font-bold ${
               timeRemaining <= 10 ? 'text-red-400' : 'text-text'

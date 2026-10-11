@@ -9,7 +9,8 @@ export function useQuizSessionEnd(currentQuestion: { id: string; correctOptionId
 
   const isSessionEnded =
     store.status === 'finished' ||
-    (store.status === 'answered' && store.currentIndex >= store.questions.length - 1)
+    (store.status === 'answered' &&
+      store.currentIndex >= store.questions.length - 1)
 
   const [navigated, setNavigated] = useState(false)
 

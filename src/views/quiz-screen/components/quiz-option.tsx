@@ -31,6 +31,7 @@ export function QuizOption({
   return (
     <button
       key={id}
+      data-testid={`option-${id}`}
       onClick={onToggle}
       className={`w-full rounded-lg border p-4 text-left text-sm transition-all hover:bg-muted ${optionClass}`}
       disabled={disabled}

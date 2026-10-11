@@ -32,21 +32,19 @@ const defaultConfig: QuizConfig = {
 
 /**
  * Select a difficulty level button on the setup page.
+ * Uses data-testid for a stable, unambiguous selector.
  */
 export async function selectDifficulty(page: Page, difficulty: QuizConfig['difficulty']) {
-  const btn = page.getByRole('button', { name: difficulty })
+  const btn = page.getByTestId(`difficulty-${difficulty}`)
   await btn.click()
 }
 
 /**
  * Set the question count slider to a specific value.
+ * Uses evaluate to reliably set range input value and dispatch input event.
  */
 export async function setQuestionCount(page: Page, count: number) {
-  const slider = page.locator('input[type="range"]')
-  await slider.evaluate((el, v) => {
-    el.value = String(v)
-    el.dispatchEvent(new Event('input', { bubbles: true }))
-  }, count)
+  await page.locator('input[type="range"]').fill(String(count))
 }
 
 /**
@@ -54,9 +52,8 @@ export async function setQuestionCount(page: Page, count: number) {
  */
 export async function goToSetup(page: Page) {
   await page.goto('/setup')
-  // Wait for dropdown to be interactive — use flexible selector
-  // The button may show "All" or a previously selected category
-  const dropdown = page.locator('button').filter({ hasText: /^(All|Все|Physics|Science|History|Geography|Mathematics|Technology|Literature)/ }).first()
+  // Wait for the category dropdown to be visible
+  const dropdown = page.getByTestId('category-dropdown')
   await expect(dropdown).toBeVisible()
 }
 
@@ -75,8 +72,8 @@ export async function selectMode(page: Page, mode: QuizConfig['mode']) {
 export async function startQuiz(page: Page, config: QuizConfig = defaultConfig) {
   await goToSetup(page)
 
-  // Select difficulty
-  if (config.difficulty !== 'easy') {
+  // Select difficulty (skip when undefined — defaults to 'easy')
+  if (config.difficulty && config.difficulty !== 'easy') {
     await selectDifficulty(page, config.difficulty)
   }
 
@@ -125,9 +122,8 @@ export async function answerQuestion(
  * Scopes to the quiz options container to avoid matching nav buttons.
  */
 export async function answerFirstOption(page: Page) {
-  // Find the quiz container by its test ID
-  const quizContainer = page.getByTestId('quiz-screen')
-  const options = quizContainer.getByRole('button')
+  // Use options-only selector to avoid matching Next/Skip/Submit buttons
+  const options = page.locator('[data-testid^="option-"]')
   await expect(options.first()).toBeVisible()
   await options.first().click()
   await page.getByRole('button', { name: 'Submit' }).click()

@@ -4,15 +4,8 @@ import { useQuizSessionStore, getBlitzTimeLimit } from '../../../shared/lib/sess
 export function useQuizTimers(effectiveConfig: { mode: string; questionCount: number } | null) {
   const store = useQuizSessionStore()
   const timerStartedRef = useRef(false)
-  const sessionStartTimeRef = useRef<number | null>(null)
 
-  useEffect(() => {
-    if (sessionStartTimeRef.current === null) {
-      sessionStartTimeRef.current = Date.now()
-    }
-  }, [])
-
-  // Timed mode: per-question countdown
+  // Timed mode: per-question countdown (10 seconds per question)
   useEffect(() => {
     if (!effectiveConfig || effectiveConfig.mode !== 'timed') {
       timerStartedRef.current = false
@@ -24,9 +17,8 @@ export function useQuizTimers(effectiveConfig: { mode: string; questionCount: nu
     }
     if (timerStartedRef.current) return
 
-    const limit = store.timeRemaining
-    if (limit === undefined || limit === null) return
-
+    const limit = 10 // per-question limit for timed mode
+    store.startTimer(limit)
     timerStartedRef.current = true
 
     const interval = setInterval(() => {
@@ -34,6 +26,8 @@ export function useQuizTimers(effectiveConfig: { mode: string; questionCount: nu
       const remaining = current.timeRemaining
       if (remaining === undefined || remaining <= 1) {
         clearInterval(interval)
+        // Guard against unmount between clearInterval and timeUp
+        if (!timerStartedRef.current) return
         timerStartedRef.current = false
         current.timeUp()
         return
@@ -41,29 +35,43 @@ export function useQuizTimers(effectiveConfig: { mode: string; questionCount: nu
       current.timerTick()
     }, 1000)
 
-    return () => clearInterval(interval)
+    return () => {
+      clearInterval(interval)
+      timerStartedRef.current = false
+    }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [store.status])
 
-  // Blitz mode: track elapsed time
+  // Blitz mode: per-question countdown (10 seconds per question)
+  // Uses the same timerTick pattern as timed mode, but timeUp() resets
+  // the timer instead of ending the session.
   useEffect(() => {
     if (!effectiveConfig || effectiveConfig.mode !== 'blitz') return
     if (store.status !== 'playing') return
+    if (timerStartedRef.current) return
+
+    const limit = getBlitzTimeLimit(effectiveConfig.questionCount)
+    store.startTimer(limit)
+    timerStartedRef.current = true
 
     const interval = setInterval(() => {
-      const elapsed = Math.floor(
-        (Date.now() - sessionStartTimeRef.current!) / 1000,
-      )
-      const limit = getBlitzTimeLimit(effectiveConfig.questionCount)
-      if (elapsed >= limit) {
+      const current = useQuizSessionStore.getState()
+      const remaining = current.timeRemaining
+      if (remaining === undefined || remaining <= 1) {
         clearInterval(interval)
-        store.timeUp()
-      } else {
-        store.setBlitzTimeElapsed(elapsed)
+        // Guard against unmount between clearInterval and timeUp
+        if (!timerStartedRef.current) return
+        timerStartedRef.current = false
+        current.timeUp()
+        return
       }
+      current.timerTick()
     }, 1000)
 
-    return () => clearInterval(interval)
+    return () => {
+      clearInterval(interval)
+      timerStartedRef.current = false
+    }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [effectiveConfig, store.status])
+  }, [store.status])
 }

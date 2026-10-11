@@ -5,7 +5,7 @@
  * delegates rendering to atomic components.
  */
 
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import { useQuizSessionStore } from '../../shared/lib/session-store'
 import { useQuizConfig } from './hooks/use-quiz-config'
 import { useQuizSession } from './hooks/use-quiz-session'
@@ -42,7 +42,17 @@ export function QuizScreen() {
     if (store.mode === 'blitz' && hasSelection && store.status === 'playing') {
       handleSubmit()
     }
-  }, [currentSubmission, store.mode, store.status])
+  }, [currentSubmission, store.mode, store.status, handleSubmit])
+
+  // Reset blitz timer when the question changes
+  const prevQuestionIndexRef = useRef<number>(store.currentIndex)
+  useEffect(() => {
+    if (store.mode !== 'blitz') return
+    if (store.status !== 'playing') return
+    if (prevQuestionIndexRef.current === store.currentIndex) return
+    prevQuestionIndexRef.current = store.currentIndex
+    store.resetBlitzTimer()
+  }, [store.mode, store.status, store.currentIndex, store.resetBlitzTimer])
 
   // ---------------------------------------------------------------------------
   // Early returns

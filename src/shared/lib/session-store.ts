@@ -35,7 +35,7 @@ export function getTimedTimeLimit(questionCount: number): number {
   return questionCount * 10
 }
 
-/** Blitz mode: fixed time limit based on question count. */
+/** Blitz mode: total time limit scales with question count (minimum 10s). */
 export function getBlitzTimeLimit(questionCount: number): number {
   return Math.max(10, questionCount * 3)
 }
@@ -68,7 +68,7 @@ interface QuizSessionStore extends QuizSession {
     correctCount: number,
   ) => void
   loseLife: () => void
-  setBlitzTimeElapsed: (elapsed: number) => void
+  resetBlitzTimer: () => void
   repeatMistakes: (config: QuizConfig) => void
   reset: () => void
 }
@@ -133,11 +133,7 @@ function sessionReducer(
 
     case 'TIMER_TICK': {
       const remaining = (state.timeRemaining ?? 1) - 1
-      // Only blitz mode auto-finishes on tick; timed mode handles timeout in useEffect
       if (remaining <= 0) {
-        if (state.mode === 'blitz') {
-          return { ...state, timeRemaining: 0, status: 'finished' }
-        }
         return { ...state, timeRemaining: 0 }
       }
       return { ...state, timeRemaining: remaining }
@@ -147,9 +143,31 @@ function sessionReducer(
       if (state.mode === 'timed') {
         return { ...state, status: 'finished', timeRemaining: 0 }
       }
-      // For other modes, mark as answered with empty selection
+      // For blitz mode: check if this is the last question
       const currentQ = state.questions[state.currentIndex]
       if (!currentQ) return state
+      const isLastQuestion = state.currentIndex >= state.questions.length - 1
+
+      if (isLastQuestion) {
+        // Auto-finish the session instead of resetting the timer
+        return {
+          ...state,
+          status: 'finished',
+          timeRemaining: 0,
+          answers: {
+            ...state.answers,
+            [currentQ.id]: [],
+          },
+          streak: 0,
+          bestStreak: state.bestStreak,
+          lives:
+            state.mode === 'survival'
+              ? Math.max(0, state.lives - 1)
+              : state.lives,
+        }
+      }
+
+      // Reset timer for non-last questions
       return {
         ...state,
         status: 'answered',
@@ -163,6 +181,7 @@ function sessionReducer(
           state.mode === 'survival'
             ? Math.max(0, state.lives - 1)
             : state.lives,
+        timeRemaining: getBlitzTimeLimit(state.questions.length),
       }
     }
 
@@ -240,10 +259,20 @@ function sessionReducer(
       if (nextIndex >= state.questions.length) {
         return { ...state, status: 'finished' }
       }
+      // Reset timer for the next question (timed: 10s, blitz: scaled limit).
+      // Note: quiz-screen.tsx also calls resetBlitzTimer() on currentIndex
+      // change — that effect is a safety net for timer restart by useQuizTimers.
+      const timeRemaining =
+        state.mode === 'timed'
+          ? 10
+          : state.mode === 'blitz'
+            ? getBlitzTimeLimit(state.questions.length)
+            : undefined
       return {
         ...state,
         currentIndex: nextIndex,
         status: 'playing',
+        ...(timeRemaining !== undefined && { timeRemaining }),
       }
     }
 
@@ -270,6 +299,12 @@ function sessionReducer(
       return {
         ...createInitialState(state.config),
         status: 'idle',
+      }
+
+    case 'RESET_BLITZ_TIMER':
+      return {
+        ...state,
+        timeRemaining: getBlitzTimeLimit(state.questions.length),
       }
 
     case 'UPDATE_CONFIG':
@@ -372,8 +407,8 @@ export const useQuizSessionStore = create<QuizSessionStore>((set) => ({
       }
     }),
   loseLife: () => set((s) => ({ ...sessionReducer(s, { type: 'LOSE_LIFE' }) })),
-  setBlitzTimeElapsed: (elapsed) =>
-    set((s) => ({ ...s, blitzTimeElapsed: elapsed })),
+  resetBlitzTimer: () =>
+    set((s) => ({ ...sessionReducer(s, { type: 'RESET_BLITZ_TIMER' }) })),
   repeatMistakes: (config) =>
     set((s) => {
       const mistakes = s.finishedSession?.mistakes ?? []

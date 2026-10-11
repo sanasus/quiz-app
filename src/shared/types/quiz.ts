@@ -48,8 +48,7 @@ export interface QuizSession {
   mode: QuizMode
   config: QuizConfig
   // Mode-specific timers
-  timeRemaining?: number // timed mode: seconds left on current question
-  blitzTimeElapsed?: number // blitz mode: seconds elapsed since start
+  timeRemaining?: number // timed/blitz mode: seconds left on current question
   // Repeat-mistakes support
   repeatConfig: QuizConfig | null
 }
@@ -97,6 +96,7 @@ export type SessionAction =
       payload: Partial<QuizConfig>
     }
   | { type: 'RESET' }
+  | { type: 'RESET_BLITZ_TIMER' }
 
 // ---------------------------------------------------------------------------
 // Category (from API)

@@ -89,6 +89,7 @@ const CategoryDropdown = ({
       {/* Trigger button (looks like a select) */}
       <button
         type="button"
+        data-testid="category-dropdown"
         onClick={() => setOpen((prev) => !prev)}
         className={`flex w-full items-center gap-2 rounded-lg border-[3px] px-4 py-2.5 text-left text-sm font-bold transition-all cursor-pointer
           ${
