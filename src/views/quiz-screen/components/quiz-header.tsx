@@ -1,9 +1,11 @@
 import { useTranslation } from 'react-i18next'
+import type { QuizMode } from '../../../shared/types/quiz'
+import { getMode } from '../../../features/modes'
 
 export interface QuizHeaderProps {
   progress: number
   total: number
-  mode: 'timed' | 'blitz' | 'survival' | 'classic'
+  mode: QuizMode
   timeRemaining?: number
   lives?: number
   score: number
@@ -18,6 +20,7 @@ export function QuizHeader({
   score,
 }: QuizHeaderProps) {
   const { t } = useTranslation()
+  const modeDef = getMode(mode)
 
   return (
     <div className="mb-6 flex items-center justify-between">
@@ -28,7 +31,7 @@ export function QuizHeader({
         <p className="text-sm text-text-2">{t('quiz.progress', { current: progress, total })}</p>
       </div>
       <div className="flex items-center gap-4">
-        {(mode === 'timed' || mode === 'blitz') && timeRemaining !== undefined ? (
+        {modeDef.headerType === 'timer' && timeRemaining !== undefined ? (
           <span
             className={`text-lg font-mono font-bold ${
               timeRemaining <= 10 ? 'text-red-400' : 'text-text'
@@ -37,7 +40,7 @@ export function QuizHeader({
             {timeRemaining}s
           </span>
         ) : null}
-        {mode === 'survival' ? (
+        {modeDef.headerType === 'lives' ? (
           <span className="text-lg text-red-400">
             {'❤️'.repeat(lives ?? 0)}
           </span>

@@ -12,6 +12,7 @@ import type {
   SessionAction,
   SessionResult,
 } from '../types/quiz'
+import { getMode } from '../../features/modes'
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -119,6 +120,7 @@ function sessionReducer(
         bestStreak: 0,
         lives: DEFAULT_LIVES,
         timeSpent: 0,
+        timeRemaining: undefined,
       }
     }
 
@@ -140,49 +142,8 @@ function sessionReducer(
     }
 
     case 'TIME_UP': {
-      if (state.mode === 'timed') {
-        return { ...state, status: 'finished', timeRemaining: 0 }
-      }
-      // For blitz mode: check if this is the last question
-      const currentQ = state.questions[state.currentIndex]
-      if (!currentQ) return state
-      const isLastQuestion = state.currentIndex >= state.questions.length - 1
-
-      if (isLastQuestion) {
-        // Auto-finish the session instead of resetting the timer
-        return {
-          ...state,
-          status: 'finished',
-          timeRemaining: 0,
-          answers: {
-            ...state.answers,
-            [currentQ.id]: [],
-          },
-          streak: 0,
-          bestStreak: state.bestStreak,
-          lives:
-            state.mode === 'survival'
-              ? Math.max(0, state.lives - 1)
-              : state.lives,
-        }
-      }
-
-      // Reset timer for non-last questions
-      return {
-        ...state,
-        status: 'answered',
-        answers: {
-          ...state.answers,
-          [currentQ.id]: [],
-        },
-        streak: 0,
-        bestStreak: state.bestStreak,
-        lives:
-          state.mode === 'survival'
-            ? Math.max(0, state.lives - 1)
-            : state.lives,
-        timeRemaining: getBlitzTimeLimit(state.questions.length),
-      }
+      const mode = getMode(state.mode)
+      return { ...state, ...mode.onTimeUp(state) }
     }
 
     case 'SELECT_OPTION': {
@@ -226,31 +187,41 @@ function sessionReducer(
         question.correctOptionIds.length === selected.length &&
         question.correctOptionIds.every((id) => selected.includes(id))
 
-      return {
+      const base: QuizSession = {
         ...state,
         status: 'answered',
         score: state.score + (isCorrect ? action.payload.scoreDelta : 0),
-        streak: isCorrect ? state.streak + 1 : 0,
-        bestStreak: isCorrect
-          ? Math.max(state.bestStreak, state.streak + 1)
-          : state.bestStreak,
-        lives: isCorrect
-          ? state.lives
-          : Math.max(0, state.lives - 1),
+      }
+
+      if (isCorrect) {
+        return {
+          ...base,
+          streak: state.streak + 1,
+          bestStreak: Math.max(state.bestStreak, state.streak + 1),
+          ...getMode(state.mode).onCorrectAnswer(base),
+        }
+      }
+
+      return {
+        ...base,
+        streak: 0,
+        bestStreak: state.bestStreak,
+        ...getMode(state.mode).onWrongAnswer({
+          ...base,
+          streak: 0,
+          bestStreak: state.bestStreak,
+        }),
       }
     }
 
     case 'SKIP_QUESTION': {
-      // Skip: no score, streak reset, lose life in survival
+      const mode = getMode(state.mode)
       return {
         ...state,
         status: 'answered',
         streak: 0,
         bestStreak: state.bestStreak,
-        lives:
-          state.mode === 'survival'
-            ? Math.max(0, state.lives - 1)
-            : state.lives,
+        ...mode.onSkip(state),
       }
     }
 
@@ -259,20 +230,10 @@ function sessionReducer(
       if (nextIndex >= state.questions.length) {
         return { ...state, status: 'finished' }
       }
-      // Reset timer for the next question (timed: 10s, blitz: scaled limit).
-      // Note: quiz-screen.tsx also calls resetBlitzTimer() on currentIndex
-      // change — that effect is a safety net for timer restart by useQuizTimers.
-      const timeRemaining =
-        state.mode === 'timed'
-          ? 10
-          : state.mode === 'blitz'
-            ? getBlitzTimeLimit(state.questions.length)
-            : undefined
+      const mode = getMode(state.mode)
       return {
         ...state,
-        currentIndex: nextIndex,
-        status: 'playing',
-        ...(timeRemaining !== undefined && { timeRemaining }),
+        ...mode.onQuestionAdvance(state),
       }
     }
 

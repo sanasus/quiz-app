@@ -10,8 +10,10 @@ import { useQuizSessionStore } from '../../shared/lib/session-store'
 import { useQuizConfig } from './hooks/use-quiz-config'
 import { useQuizSession } from './hooks/use-quiz-session'
 import { useQuizTimers } from './hooks/use-quiz-timers'
+import { useTotalTimer } from './hooks/use-total-timer'
 import { useQuizSubmission } from './hooks/use-quiz-submission'
 import { useQuizSessionEnd } from './hooks/use-quiz-session-end'
+import { getMode } from '../../features/modes'
 import { QuizHeader } from './components/quiz-header'
 import { QuizQuestion } from './components/quiz-question'
 import { QuizOptions } from './components/quiz-options'
@@ -25,6 +27,7 @@ export function QuizScreen() {
 
   const result = useQuizSession(effectiveConfig)
   useQuizTimers(effectiveConfig)
+  useTotalTimer(effectiveConfig)
 
   const {
     currentSubmission,
@@ -35,24 +38,27 @@ export function QuizScreen() {
     hasSelection,
   } = useQuizSubmission(result.currentQuestion)
 
+  const mode = getMode(store.mode)
+
   useQuizSessionEnd(result.currentQuestion)
 
-  // Blitz mode: auto-submit when selection changes
+  // Auto-submit when selection changes (blitz mode)
   useEffect(() => {
-    if (store.mode === 'blitz' && hasSelection && store.status === 'playing') {
-      handleSubmit()
-    }
-  }, [currentSubmission, store.mode, store.status, handleSubmit])
+    if (!mode.autoSubmitOnSelection) return
+    if (!hasSelection) return
+    if (store.status !== 'playing') return
+    handleSubmit()
+  }, [hasSelection, store.status, handleSubmit, mode.autoSubmitOnSelection])
 
-  // Reset blitz timer when the question changes
+  // Reset timer when the question changes (blitz mode only)
   const prevQuestionIndexRef = useRef<number>(store.currentIndex)
   useEffect(() => {
-    if (store.mode !== 'blitz') return
+    if (mode.timerBehavior !== 'per-question') return
     if (store.status !== 'playing') return
     if (prevQuestionIndexRef.current === store.currentIndex) return
     prevQuestionIndexRef.current = store.currentIndex
     store.resetBlitzTimer()
-  }, [store.mode, store.status, store.currentIndex, store.resetBlitzTimer])
+  }, [mode.timerBehavior, store.status, store.currentIndex, store.resetBlitzTimer])
 
   // ---------------------------------------------------------------------------
   // Early returns

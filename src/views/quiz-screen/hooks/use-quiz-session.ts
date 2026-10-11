@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react'
-import { useQuizSessionStore, getBlitzTimeLimit, getTimedTimeLimit } from '../../../shared/lib/session-store'
+import { useQuizSessionStore } from '../../../shared/lib/session-store'
 import { useQuizQuestions } from '../../../shared/api/quizapi'
 import type { QuizConfig, Question } from '../../../shared/types/quiz'
 
@@ -26,14 +26,6 @@ export function useQuizSession(effectiveConfig: QuizConfig | null): QuizSessionR
 
     store.reset()
     store.loadQuestions(questions, effectiveConfig)
-
-    if (effectiveConfig.mode === 'timed') {
-      const timeLimit = getTimedTimeLimit(effectiveConfig.questionCount)
-      store.startTimer(timeLimit)
-    } else if (effectiveConfig.mode === 'blitz') {
-      const timeLimit = getBlitzTimeLimit(effectiveConfig.questionCount)
-      store.startTimer(timeLimit)
-    }
 
     store.startPlaying()
     store.startSessionTimer()

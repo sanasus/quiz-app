@@ -12,23 +12,12 @@ import { useNavigate, createFileRoute } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
 import { useQuizSessionStore } from '../shared/lib/session-store'
 import { useCategories, useMetadata } from '../shared/api/quizapi'
-import type { QuizMode } from '../shared/types/quiz'
 import CategoryDropdown from '../shared/ui/category-dropdown'
 import DifficultySelector from '../shared/ui/difficulty-selector'
 import QuestionCountSlider from '../shared/ui/question-count-slider'
 import ModeSelector from '../shared/ui/mode-selector'
 import StartButton from '../shared/ui/start-button'
-
-// ---------------------------------------------------------------------------
-// Game modes — these are application logic, not API data
-// ---------------------------------------------------------------------------
-
-const MODES: { value: QuizMode; labelKey: string }[] = [
-  { value: 'classic', labelKey: 'setup.classic' },
-  { value: 'timed', labelKey: 'setup.timed' },
-  { value: 'blitz', labelKey: 'setup.blitz' },
-  { value: 'survival', labelKey: 'setup.survival' },
-] as const
+import { MODE_IDS } from '../features/modes'
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -61,6 +50,12 @@ const SetupScreen = () => {
   const difficulties = (metadata?.difficulties ?? []).map((d) => ({
     value: apiDifficultyToInternal(d),
     labelKey: `setup.${apiDifficultyToInternal(d)}` as `setup.${'easy' | 'medium' | 'hard'}`,
+  }))
+
+  // Mode labels — derived from registry for i18n
+  const MODE_LABELS = MODE_IDS.map((m) => ({
+    value: m,
+    labelKey: `setup.${m}` as `setup.${'classic' | 'timed' | 'blitz' | 'survival'}`,
   }))
 
   const handleStart = () => {
@@ -121,7 +116,7 @@ const SetupScreen = () => {
             {t('setup.mode')}
           </label>
           <ModeSelector
-            modes={MODES}
+            modes={MODE_LABELS}
             selectedMode={config.mode}
             onSelect={(mode) => store.updateConfig({ mode })}
           />
