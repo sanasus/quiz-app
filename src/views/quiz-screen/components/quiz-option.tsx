@@ -1,3 +1,5 @@
+import { memo } from 'react'
+
 export interface QuizOptionProps {
   id: string
   text: string
@@ -5,10 +7,10 @@ export interface QuizOptionProps {
   isCorrect: boolean
   showResult: boolean
   disabled: boolean
-  onToggle: () => void
+  onToggle: (optionId: string) => void
 }
 
-export function QuizOption({
+export const QuizOption = memo(function QuizOption({
   id,
   text,
   isSelected,
@@ -30,9 +32,8 @@ export function QuizOption({
 
   return (
     <button
-      key={id}
       data-testid={`option-${id}`}
-      onClick={onToggle}
+      onClick={() => onToggle(id)}
       aria-selected={isSelected}
       className={`w-full rounded-lg border p-4 text-left text-sm transition-all hover:bg-muted ${optionClass}`}
       disabled={disabled}
@@ -51,4 +52,4 @@ export function QuizOption({
       </div>
     </button>
   )
-}
+})

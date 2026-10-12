@@ -1,3 +1,4 @@
+import { memo } from 'react'
 import { useTranslation } from 'react-i18next'
 
 export interface QuizActionsProps {
@@ -9,7 +10,7 @@ export interface QuizActionsProps {
   onNext: () => void
 }
 
-export function QuizActions({
+export const QuizActions = memo(function QuizActions({
   streak,
   status,
   hasSelection,
@@ -55,4 +56,4 @@ export function QuizActions({
       </div>
     </div>
   )
-}
+})

@@ -1,3 +1,4 @@
+import { useEffect, useMemo } from 'react'
 import { useNavigate, useSearch } from '@tanstack/react-router'
 import { useQuizSessionStore } from '../../../shared/lib/session-store'
 import { quizConfigSchema } from '../../../routes/-index'
@@ -11,16 +12,22 @@ export interface QuizConfigResult {
 export function useQuizConfig(): QuizConfigResult {
   const navigate = useNavigate()
   const search = useSearch({ from: '/quiz' })
-  const configResult = quizConfigSchema.safeParse(search)
-  const config = configResult.success ? configResult.data : null
-  const store = useQuizSessionStore()
+  const repeatConfig = useQuizSessionStore((s) => s.repeatConfig)
 
-  const effectiveConfig = config ?? store.repeatConfig
+  // Parse once per `search` change so `effectiveConfig` stays
+  // referentially stable — downstream effect deps don't churn per render.
+  const config = useMemo(() => {
+    const parsed = quizConfigSchema.safeParse(search)
+    return parsed.success ? parsed.data : null
+  }, [search])
 
-  if (!effectiveConfig) {
-    navigate({ to: '/setup' })
-    return { effectiveConfig: null, needsRedirect: true }
-  }
+  const effectiveConfig = config ?? repeatConfig
+  const needsRedirect = effectiveConfig === null
 
-  return { effectiveConfig, needsRedirect: false }
+  // Navigation is a side effect — never do it during render.
+  useEffect(() => {
+    if (needsRedirect) navigate({ to: '/setup' })
+  }, [needsRedirect, navigate])
+
+  return { effectiveConfig, needsRedirect }
 }

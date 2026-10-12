@@ -1,3 +1,4 @@
+import { memo } from 'react'
 import { QuizOption } from './quiz-option'
 
 export interface QuizOptionsProps {
@@ -8,35 +9,32 @@ export interface QuizOptionsProps {
   onToggle: (optionId: string) => void
 }
 
-export function QuizOptions({
+export const QuizOptions = memo(function QuizOptions({
   options,
   correctOptionIds,
   selectedIds,
   status,
   onToggle,
 }: QuizOptionsProps) {
-  const showResult = status === 'answered'
+  const answered = status === 'answered'
+  // Set lookups instead of per-option Array.includes (js-set-map-lookups)
   const correctSet = new Set(correctOptionIds)
+  const selectedSet = new Set(selectedIds)
 
   return (
     <div className="space-y-3">
-      {options.map((option) => {
-        const isSelected = selectedIds.includes(option.id)
-        const isCorrect = correctSet.has(option.id)
-
-        return (
-          <QuizOption
-            key={option.id}
-            id={option.id}
-            text={option.text}
-            isSelected={isSelected}
-            isCorrect={isCorrect}
-            showResult={showResult}
-            disabled={status === 'answered'}
-            onToggle={() => onToggle(option.id)}
-          />
-        )
-      })}
+      {options.map((option) => (
+        <QuizOption
+          key={option.id}
+          id={option.id}
+          text={option.text}
+          isSelected={selectedSet.has(option.id)}
+          isCorrect={correctSet.has(option.id)}
+          showResult={answered}
+          disabled={answered}
+          onToggle={onToggle}
+        />
+      ))}
     </div>
   )
-}
+})

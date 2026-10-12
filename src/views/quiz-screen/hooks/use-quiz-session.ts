@@ -4,14 +4,14 @@ import { useQuizQuestions } from '../../../shared/api/quizapi'
 import type { QuizConfig, Question } from '../../../shared/types/quiz'
 
 export interface QuizSessionResult {
-  store: ReturnType<typeof useQuizSessionStore>
-  effectiveConfig: QuizConfig | null
   currentQuestion: Question | null
   loadingState: 'loading' | 'ready'
   error: Error | null
 }
 
-export function useQuizSession(effectiveConfig: QuizConfig | null): QuizSessionResult {
+export function useQuizSession(
+  effectiveConfig: QuizConfig | null,
+): QuizSessionResult {
   const store = useQuizSessionStore()
   const prevConfigRef = useRef<string | null>(null)
   const { data: questions, error } = useQuizQuestions(effectiveConfig)
@@ -29,26 +29,17 @@ export function useQuizSession(effectiveConfig: QuizConfig | null): QuizSessionR
 
     store.startPlaying()
     store.startSessionTimer()
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [questions, effectiveConfig, store.questions.length])
 
-  const currentQuestion = store.questions[store.currentIndex]
+  const currentQuestion: Question | null =
+    store.questions[store.currentIndex] ?? null
 
-  if (!currentQuestion) {
-    return {
-      store,
-      effectiveConfig,
-      currentQuestion: null,
-      loadingState: 'loading',
-      error: null,
-    }
-  }
-
+  // `error` is returned in both branches: otherwise a failed initial fetch
+  // would be indistinguishable from loading (error UI never reachable).
   return {
-    store,
-    effectiveConfig,
     currentQuestion,
-    loadingState: 'ready',
+    loadingState: currentQuestion ? 'ready' : 'loading',
     error,
   }
 }

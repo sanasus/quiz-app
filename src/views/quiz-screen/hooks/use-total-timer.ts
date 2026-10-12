@@ -1,18 +1,13 @@
-import { useEffect, useRef } from 'react'
+import { useEffect } from 'react'
 import { useQuizSessionStore } from '../../../shared/lib/session-store'
+import { startTimerInterval } from '../utils/timer-interval'
 import { getMode } from '../../../features/modes'
 import type { QuizMode } from '../../../shared/types/quiz'
 
-export function useTotalTimer(effectiveConfig: { mode: string; questionCount: number } | null) {
+export function useTotalTimer(
+  effectiveConfig: { mode: string; questionCount: number } | null,
+) {
   const store = useQuizSessionStore()
-  const startedSessionRef = useRef<string | null>(null)
-
-  // Reset "started" flag when config changes (new session)
-  const sessionKey = effectiveConfig ? `${effectiveConfig.mode}-${effectiveConfig.questionCount}` : null
-  if (startedSessionRef.current !== sessionKey) {
-    startedSessionRef.current = sessionKey
-    // Will be set below if needed
-  }
 
   useEffect(() => {
     if (!effectiveConfig) return
@@ -22,32 +17,27 @@ export function useTotalTimer(effectiveConfig: { mode: string; questionCount: nu
     // Only total-timer modes need this effect
     if (mode.timerBehavior !== 'total') return
 
-    // Timer already running?
-    if (store.timeRemaining !== undefined) return
+    // Wait until questions are loaded: LOAD_QUESTIONS clears
+    // `timeRemaining`, so a timer started at mount would read `undefined`
+    // on its next tick and instantly fire timeUp — ending the session
+    // before it even starts.
+    if (store.questions.length === 0) return
 
-    const rawLimit = mode.timerLimit
-    const timeLimit = typeof rawLimit === 'function'
-      ? rawLimit(effectiveConfig.questionCount)
-      : rawLimit
+    // Already counting down? Keep ticking. Only start when the countdown
+    // is missing (fresh session or remount with a preserved countdown).
+    if (store.timeRemaining === undefined) {
+      const rawLimit = mode.timerLimit
+      const timeLimit =
+        typeof rawLimit === 'function'
+          ? rawLimit(effectiveConfig.questionCount)
+          : rawLimit
 
-    if (timeLimit === null) return
+      if (timeLimit === null) return
 
-    store.startTimer(timeLimit)
-
-    const interval = setInterval(() => {
-      const current = useQuizSessionStore.getState()
-      const remaining = current.timeRemaining
-      if (remaining === undefined || remaining <= 1) {
-        clearInterval(interval)
-        current.timeUp()
-        return
-      }
-      current.timerTick()
-    }, 1000)
-
-    return () => {
-      clearInterval(interval)
+      store.startTimer(timeLimit)
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [effectiveConfig?.mode])
+
+    return startTimerInterval(() => true)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [effectiveConfig?.mode, store.questions.length])
 }

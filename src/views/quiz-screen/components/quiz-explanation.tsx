@@ -1,10 +1,13 @@
+import { memo } from 'react'
 import { useTranslation } from 'react-i18next'
 
 export interface QuizExplanationProps {
   explanation: string
 }
 
-export function QuizExplanation({ explanation }: QuizExplanationProps) {
+export const QuizExplanation = memo(function QuizExplanation({
+  explanation,
+}: QuizExplanationProps) {
   const { t } = useTranslation()
 
   return (
@@ -15,4 +18,4 @@ export function QuizExplanation({ explanation }: QuizExplanationProps) {
       <p className="text-sm text-text-2">{explanation}</p>
     </div>
   )
-}
+})

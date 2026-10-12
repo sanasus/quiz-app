@@ -20,10 +20,35 @@ import { QuizOptions } from './components/quiz-options'
 import { QuizExplanation } from './components/quiz-explanation'
 import { QuizActions } from './components/quiz-actions'
 
+// Static states hoisted to module level (rendering-hoist-jsx) so the
+// orchestrator's early returns stay one-liners.
+function QuizLoading() {
+  return (
+    <div className="flex min-h-[60vh] items-center justify-center">
+      <div className="text-lg text-text-2">Loading...</div>
+    </div>
+  )
+}
+
+function QuizError({ message }: { message: string }) {
+  return (
+    <div className="flex min-h-[60vh] flex-col items-center justify-center gap-4">
+      <p className="text-red-400">Error: {message}</p>
+      <button
+        onClick={() => window.location.reload()}
+        className="rounded-lg bg-primary px-4 py-2 text-white"
+      >
+        Retry
+      </button>
+    </div>
+  )
+}
+
 export function QuizScreen() {
   // All hooks called unconditionally (before any early returns)
   const store = useQuizSessionStore()
   const { effectiveConfig } = useQuizConfig()
+  const mode = getMode(store.mode)
 
   const result = useQuizSession(effectiveConfig)
   useQuizTimers(effectiveConfig)
@@ -31,34 +56,27 @@ export function QuizScreen() {
 
   const {
     currentSubmission,
-    setCurrentSubmission,
     handleSubmit,
     handleSkip,
     handleNext,
+    handleToggle,
     hasSelection,
-  } = useQuizSubmission(result.currentQuestion)
-
-  const mode = getMode(store.mode)
+  } = useQuizSubmission(result.currentQuestion, mode.autoSubmitOnSelection)
 
   useQuizSessionEnd(result.currentQuestion)
 
-  // Auto-submit when selection changes (blitz mode)
-  useEffect(() => {
-    if (!mode.autoSubmitOnSelection) return
-    if (!hasSelection) return
-    if (store.status !== 'playing') return
-    handleSubmit()
-  }, [hasSelection, store.status, handleSubmit, mode.autoSubmitOnSelection])
-
-  // Reset timer when the question changes (blitz mode only)
-  const prevQuestionIndexRef = useRef<number>(store.currentIndex)
+  // Reset timer when the question changes (blitz mode only).
+  // Narrowed to primitive deps so the effect doesn't re-run on unrelated
+  // store updates (rerender-dependencies).
+  const { status, currentIndex, resetBlitzTimer } = store
+  const prevQuestionIndexRef = useRef<number>(currentIndex)
   useEffect(() => {
     if (mode.timerBehavior !== 'per-question') return
-    if (store.status !== 'playing') return
-    if (prevQuestionIndexRef.current === store.currentIndex) return
-    prevQuestionIndexRef.current = store.currentIndex
-    store.resetBlitzTimer()
-  }, [mode.timerBehavior, store.status, store.currentIndex, store.resetBlitzTimer])
+    if (status !== 'playing') return
+    if (prevQuestionIndexRef.current === currentIndex) return
+    prevQuestionIndexRef.current = currentIndex
+    resetBlitzTimer()
+  }, [mode.timerBehavior, status, currentIndex, resetBlitzTimer])
 
   // ---------------------------------------------------------------------------
   // Early returns
@@ -68,28 +86,17 @@ export function QuizScreen() {
     return null
   }
 
-  if (result.loadingState === 'loading' || !result.currentQuestion) {
-    return (
-      <div className="flex min-h-[60vh] items-center justify-center">
-        <div className="text-lg text-text-2">Loading...</div>
-      </div>
-    )
-  }
-
+  // Error before loading: a failed initial fetch must show the retry UI,
+  // not an endless "Loading...".
   if (result.error) {
-    return (
-      <div className="flex min-h-[60vh] flex-col items-center justify-center gap-4">
-        <p className="text-red-400">Error: {result.error.message}</p>
-        <button
-          onClick={() => window.location.reload()}
-          className="rounded-lg bg-primary px-4 py-2 text-white"
-        >
-          Retry
-        </button>
-      </div>
-    )
+    return <QuizError message={result.error.message} />
   }
 
+  if (result.loadingState === 'loading' || !result.currentQuestion) {
+    return <QuizLoading />
+  }
+
+  const question = result.currentQuestion
   const progress = store.currentIndex + 1
   const total = store.questions.length
 
@@ -98,10 +105,7 @@ export function QuizScreen() {
   // ---------------------------------------------------------------------------
 
   return (
-    <div
-      className="mx-auto max-w-2xl px-4 py-8"
-      data-testid="quiz-screen"
-    >
+    <div className="mx-auto max-w-2xl px-4 py-8" data-testid="quiz-screen">
       <QuizHeader
         progress={progress}
         total={total}
@@ -111,27 +115,18 @@ export function QuizScreen() {
         score={store.score}
       />
 
-      <QuizQuestion
-        text={result.currentQuestion.text}
-        description={result.currentQuestion.description}
-      />
+      <QuizQuestion text={question.text} description={question.description} />
 
       <QuizOptions
-        options={result.currentQuestion.options}
-        correctOptionIds={result.currentQuestion.correctOptionIds}
+        options={question.options}
+        correctOptionIds={question.correctOptionIds}
         selectedIds={currentSubmission}
         status={store.status}
-        onToggle={(optionId) => {
-          setCurrentSubmission((prev) =>
-            prev.includes(optionId)
-              ? prev.filter((id) => id !== optionId)
-              : [...prev, optionId],
-          )
-        }}
+        onToggle={handleToggle}
       />
 
-      {store.status === 'answered' && result.currentQuestion.explanation ? (
-        <QuizExplanation explanation={result.currentQuestion.explanation} />
+      {store.status === 'answered' && question.explanation ? (
+        <QuizExplanation explanation={question.explanation} />
       ) : null}
 
       <QuizActions

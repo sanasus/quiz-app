@@ -1,23 +1,30 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import { useQuizSessionStore } from '../../../shared/lib/session-store'
 import { checkAnswer, countCorrect } from '../utils/answer-utils'
 
-export function useQuizSessionEnd(currentQuestion: { id: string; correctOptionIds: readonly string[] } | null) {
+export function useQuizSessionEnd(
+  currentQuestion: { id: string; correctOptionIds: readonly string[] } | null,
+) {
   const navigate = useNavigate()
-  const store = useQuizSessionStore()
 
-  const isSessionEnded =
-    store.status === 'finished' ||
-    (store.status === 'answered' &&
-      store.currentIndex >= store.questions.length - 1)
+  // Subscribe to a derived boolean, not the raw values — the effect only
+  // cares about the transition (rerender-derived-state).
+  const isSessionEnded = useQuizSessionStore(
+    (s) =>
+      s.status === 'finished' ||
+      (s.status === 'answered' && s.currentIndex >= s.questions.length - 1),
+  )
 
-  const [navigated, setNavigated] = useState(false)
+  // One-shot guard: a ref avoids a state update (and an extra render)
+  // purely to prevent the effect from running twice (use-ref-transient).
+  const navigatedRef = useRef(false)
 
   useEffect(() => {
-    if (!isSessionEnded || navigated || !currentQuestion) return
-    setNavigated(true)
+    if (!isSessionEnded || navigatedRef.current || !currentQuestion) return
+    navigatedRef.current = true
 
+    const store = useQuizSessionStore.getState()
     const currentCorrect = checkAnswer(
       currentQuestion.correctOptionIds,
       store.answers[currentQuestion.id] ?? [],
@@ -32,8 +39,11 @@ export function useQuizSessionEnd(currentQuestion: { id: string; correctOptionId
       ? Math.floor((Date.now() - store.sessionStartTime) / 1000)
       : 0
 
-    store.finishSession(store.score, elapsed, prevCorrect + (currentCorrect ? 1 : 0))
+    store.finishSession(
+      store.score,
+      elapsed,
+      prevCorrect + (currentCorrect ? 1 : 0),
+    )
     navigate({ to: '/results' })
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isSessionEnded, navigated])
+  }, [isSessionEnded, currentQuestion, navigate])
 }
