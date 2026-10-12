@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test'
-import { goToSetup, selectDifficulty, selectMode } from './fixtures'
+import { goToSetup } from './fixtures'
 
 test.describe('Setup page', () => {
   test.beforeEach(async ({ page }) => {

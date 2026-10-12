@@ -1,5 +1,9 @@
 import { test, expect } from '@playwright/test'
-import { goToSetup, answerFirstOption, waitForResults, startNewQuiz } from './fixtures'
+import {
+  answerFirstOption,
+  waitForResults,
+  startNewQuiz,
+} from './fixtures'
 
 /**
  * Full end-to-end flow:

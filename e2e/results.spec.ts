@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test'
-import { startQuiz, answerFirstOption, waitForResults } from './fixtures'
+import { startQuiz, waitForResults } from './fixtures'
 
 test.describe('Results screen', () => {
   test.beforeEach(async ({ page }) => {

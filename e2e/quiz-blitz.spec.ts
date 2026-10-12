@@ -124,8 +124,6 @@ test.describe('Blitz mode', () => {
   // ---------------------------------------------------------------------------
 
   test('progresses through questions', async ({ page }) => {
-    const quizContainer = page.getByTestId('quiz-screen')
-
     // Answer first question
     await clickFirstOption(page)
     await page.getByRole('button', { name: 'Next' }).click()
