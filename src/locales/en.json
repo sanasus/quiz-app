@@ -15,7 +15,8 @@
     "welcome": "Welcome to QuizApp!",
     "start": "Start Quiz",
     "last_results": "Last Results",
-    "level": "Level"
+    "level": "Level",
+    "xp_progress": "XP progress"
   },
   "setup": {
     "title": "Quiz Settings",
@@ -66,10 +67,23 @@
     "by_category": "By Category",
     "by_difficulty": "By Difficulty",
     "history": "History",
-    "reset": "Reset Statistics"
+    "reset": "Reset Statistics",
+    "reset_confirm": "Statistics, achievements and XP will be deleted. This action cannot be undone.",
+    "empty": "No data yet. Take your first quiz!",
+    "chart_title": "Accuracy Over Time",
+    "chart_oldest": "Older",
+    "chart_latest": "Newer",
+    "play_days": "Active days",
+    "xp_unit": "XP",
+    "xp_progress": "XP progress"
   },
   "achievements": {
     "title": "Achievements",
+    "unlocked": "New achievement!",
+    "unlocked_on": "Unlocked {{date}}",
+    "locked": "Not unlocked yet",
+    "unlocked_count": "{{unlocked}} of {{total}}",
+    "xp_progress": "XP progress",
     "first_blood": "First Blood",
     "first_blood_desc": "Complete your first session",
     "streak_10": "Streak 10",
@@ -83,7 +97,7 @@
     "expert": "Category Expert",
     "expert_desc": "50 correct answers in one category",
     "persistent": "Persistent",
-    "persistent_desc": "Play N days in a row"
+    "persistent_desc": "Play 7 days in a row"
   },
   "settings": {
     "title": "Settings",

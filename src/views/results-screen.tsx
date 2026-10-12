@@ -2,14 +2,34 @@
  * /results — Session results with score, accuracy, and repeat-mistakes.
  */
 
+import { useCallback, useState } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
 import { useQuizSessionStore } from '../shared/lib/session-store'
+import { useSessionMetrics } from '../features/meta/use-session-metrics'
+import {
+  AchievementToast,
+  type AchievementToastItem,
+} from '../shared/ui/achievement-toast'
 
 export function ResultsScreen() {
   const { t } = useTranslation()
   const navigate = useNavigate()
   const store = useQuizSessionStore()
+
+  // Fold the finished session into stats/achievements/XP exactly once.
+  const metrics = useSessionMetrics()
+
+  // Toast queue: starts from what the metrics hook unlocked; items are
+  // removed as they are dismissed (or auto-expire in the toast itself).
+  const [dismissed, setDismissed] = useState<string[]>([])
+  const toasts: AchievementToastItem[] = (metrics?.newAchievements ?? [])
+    .filter((a) => !dismissed.includes(a.id))
+    .map((a) => ({ ...a, toastKey: a.id }))
+
+  const dismissToast = useCallback((toastKey: string) => {
+    setDismissed((prev) => [...prev, toastKey])
+  }, [])
 
   // The route's beforeLoad guard redirects to /setup without a finished
   // session; this is only a render-time safety net.
@@ -63,6 +83,14 @@ export function ResultsScreen() {
           {result.score}
         </div>
         <div className="text-text-2">{t('results.score')}</div>
+        {metrics && (
+          <div
+            data-testid="result-xp"
+            className="mt-2 text-lg font-bold text-warning"
+          >
+            +{metrics.xpGained} XP
+          </div>
+        )}
       </div>
 
       {/* Stats grid */}
@@ -162,6 +190,9 @@ export function ResultsScreen() {
           {t('results.new_quiz')}
         </button>
       </div>
+
+      {/* Achievement unlock toasts */}
+      <AchievementToast toasts={toasts} onDismiss={dismissToast} />
     </div>
   )
 }
