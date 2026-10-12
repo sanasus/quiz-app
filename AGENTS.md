@@ -37,6 +37,18 @@ Run `typecheck` before committing — `noUnusedLocals` and `noUnusedParameters` 
 - Run single file: `npm run test src/shared/api/adapter.test.ts`
 - Run single test: `npm run test -- -t "test name"`
 - E2E: `npm run e2e` — Playwright against `localhost:5173` (dev server auto-started with mock data)
+- E2E tests carry tags: `@smoke`, `@slow`, `@mobile`, `@i18n` — filter with
+  `npm run e2e -- --grep '@smoke'` (quote `@` in PowerShell)
+
+## E2E rules
+- Before writing or modifying anything under `e2e/` or `playwright.config.ts`,
+  load the `playwright-best-practices` skill (skill tool) and follow it —
+  locators, assertions, waiting, structure, tags. Do not improvise Playwright
+  patterns. Shared helpers live in `e2e/fixtures.ts` (`startQuiz`,
+  `completeQuiz`, `optionLocator`, `waitForResults`) — reuse them instead of
+  writing new flows inline.
+- Prefer user-facing locators (roles, labels); use `data-testid`/`data-state`
+  only when no accessible hook exists. Never assert on CSS classes or timings.
 
 ## Formatting / Linting
 - Prettier: no semicolons, single quotes, trailing comma all, 80 char, LF, `arrowParens: always`
