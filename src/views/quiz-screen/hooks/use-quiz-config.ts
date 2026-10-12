@@ -1,16 +1,14 @@
-import { useEffect, useMemo } from 'react'
-import { useNavigate, useSearch } from '@tanstack/react-router'
+import { useMemo } from 'react'
+import { useSearch } from '@tanstack/react-router'
 import { useQuizSessionStore } from '../../../shared/lib/session-store'
 import { quizConfigSchema } from '../../../shared/lib/quiz-config-schema'
 import type { QuizConfig } from '../../../shared/types/quiz'
 
 export interface QuizConfigResult {
   effectiveConfig: QuizConfig | null
-  needsRedirect: boolean
 }
 
 export function useQuizConfig(): QuizConfigResult {
-  const navigate = useNavigate()
   const search = useSearch({ from: '/quiz' })
   const repeatConfig = useQuizSessionStore((s) => s.repeatConfig)
 
@@ -21,13 +19,7 @@ export function useQuizConfig(): QuizConfigResult {
     return parsed.success ? parsed.data : null
   }, [search])
 
-  const effectiveConfig = config ?? repeatConfig
-  const needsRedirect = effectiveConfig === null
-
-  // Navigation is a side effect — never do it during render.
-  useEffect(() => {
-    if (needsRedirect) navigate({ to: '/setup' })
-  }, [needsRedirect, navigate])
-
-  return { effectiveConfig, needsRedirect }
+  // Invalid config without a repeat session never renders: the route's
+  // beforeLoad guard redirects to /setup first.
+  return { effectiveConfig: config ?? repeatConfig }
 }
