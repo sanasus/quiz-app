@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useQuizSessionStore } from '../../../shared/lib/session-store'
 import { calculateScore } from '../../../shared/lib/scoring'
 import type { Question } from '../../../shared/types/quiz'
@@ -19,6 +19,16 @@ export function useQuizSubmission(
 ) {
   const [currentSubmission, setCurrentSubmission] = useState<string[]>([])
 
+  // Wall-clock start of the current question: the speed bonus is based
+  // on the time actually spent answering, not on the remaining timer.
+  // Stamped in an effect (Date.now is impure during render); unset ref
+  // is treated as "just started".
+  const questionStartRef = useRef<number>(0)
+  const questionId = currentQuestion?.id
+  useEffect(() => {
+    questionStartRef.current = Date.now()
+  }, [questionId])
+
   const submitSelection = useCallback(
     (selection: readonly string[]) => {
       if (!currentQuestion) return
@@ -33,12 +43,12 @@ export function useQuizSubmission(
         currentQuestion.correctOptionIds,
         selectedOptionIds,
       )
+      const elapsedSec =
+        questionStartRef.current > 0
+          ? Math.max(0, (Date.now() - questionStartRef.current) / 1000)
+          : 0
       const scoreDelta = isCorrect
-        ? calculateScore(
-            store.config.difficulty,
-            store.timeRemaining ?? 0,
-            store.streak,
-          )
+        ? calculateScore(store.config.difficulty, elapsedSec, store.streak)
         : 0
       store.submitAnswer(scoreDelta)
     },
