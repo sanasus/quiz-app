@@ -5,6 +5,8 @@ export interface QuizActionsProps {
   streak: number
   status: string
   hasSelection: boolean
+  /** The next question batch is loading — Next waits for it. */
+  nextDisabled?: boolean
   onSkip: () => void
   onSubmit: () => void
   onNext: () => void
@@ -14,6 +16,7 @@ export const QuizActions = memo(function QuizActions({
   streak,
   status,
   hasSelection,
+  nextDisabled = false,
   onSkip,
   onSubmit,
   onNext,
@@ -48,9 +51,10 @@ export const QuizActions = memo(function QuizActions({
         {status === 'answered' ? (
           <button
             onClick={onNext}
-            className="rounded-lg bg-primary px-6 py-2 text-sm font-semibold text-white transition-colors hover:bg-primary/90"
+            disabled={nextDisabled}
+            className="rounded-lg bg-primary px-6 py-2 text-sm font-semibold text-white transition-colors hover:bg-primary/90 disabled:cursor-wait disabled:opacity-60"
           >
-            {t('quiz.next')}
+            {nextDisabled ? t('quiz.loading_next') : t('quiz.next')}
           </button>
         ) : null}
       </div>

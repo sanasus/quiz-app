@@ -54,6 +54,7 @@ function makeSession(overrides: Partial<QuizSession> = {}): QuizSession {
       questionCount: 2,
       mode: 'classic',
     },
+    questionsExhausted: false,
     repeatConfig: null,
     ...overrides,
   }
@@ -272,5 +273,19 @@ describe('SurvivalMode', () => {
     const state = makeSession({ lives: 3, mode: 'survival' })
     const delta = SurvivalMode.onCorrectAnswer(state)
     expect(delta.lives).toBeUndefined()
+  })
+
+  it('onQuestionAdvance increments index while lives remain', () => {
+    const state = makeSession({ lives: 1, currentIndex: 0, mode: 'survival' })
+    const delta = SurvivalMode.onQuestionAdvance(state)
+    expect(delta.currentIndex).toBe(1)
+    expect(delta.status).toBe('playing')
+  })
+
+  it('onQuestionAdvance ends the session at 0 lives', () => {
+    const state = makeSession({ lives: 0, currentIndex: 1, mode: 'survival' })
+    const delta = SurvivalMode.onQuestionAdvance(state)
+    expect(delta.status).toBe('finished')
+    expect(delta.currentIndex).toBeUndefined()
   })
 })

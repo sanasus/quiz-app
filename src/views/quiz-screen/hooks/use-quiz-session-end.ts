@@ -1,6 +1,9 @@
 import { useEffect, useRef } from 'react'
 import { useNavigate } from '@tanstack/react-router'
-import { useQuizSessionStore } from '../../../shared/lib/session-store'
+import {
+  canLoadMoreQuestions,
+  useQuizSessionStore,
+} from '../../../shared/lib/session-store'
 import { checkAnswer, countCorrect } from '../utils/answer-utils'
 
 export function useQuizSessionEnd(
@@ -10,10 +13,14 @@ export function useQuizSessionEnd(
 
   // Subscribe to a derived boolean, not the raw values — the effect only
   // cares about the transition (rerender-derived-state).
+  // Answering the last loaded question only ends the session when no
+  // further survival batch can arrive.
   const isSessionEnded = useQuizSessionStore(
     (s) =>
       s.status === 'finished' ||
-      (s.status === 'answered' && s.currentIndex >= s.questions.length - 1),
+      (s.status === 'answered' &&
+        s.currentIndex >= s.questions.length - 1 &&
+        !canLoadMoreQuestions(s)),
   )
 
   // One-shot guard: a ref avoids a state update (and an extra render)

@@ -655,6 +655,16 @@ curl -X GET \
 
 Фильтры case-insensitive.
 
+> **Как это использует QuizApp (режим «Выживание», порционная
+> подгрузка):** живой API вызывается с `random=true` и **без** `offset`
+> --- перемешанные выдачи не дают устойчивой пагинации, поэтому
+> дубликаты между батчами отсекаются на клиенте по `id` (см.
+> `addQuestionBatch` в `src/shared/lib/session-store.ts`). `offset`
+> применяется только в моке (`mock-questions.ts`), где один и тот же
+> пул режется на не пересекающиеся слайсы: начальная порция ---
+> `getInitialFetchLimit` (`min(10, questionCount)`), далее батчи по
+> `SURVIVAL_BATCH_SIZE = 10`.
+
 ### Пример
 
 ``` bash

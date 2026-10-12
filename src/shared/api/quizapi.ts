@@ -39,6 +39,31 @@ const USE_MOCK = import.meta.env.VITE_USE_MOCK_DATA === 'true'
 
 const API_BASE = 'https://quizapi.io/api/v1'
 
+/**
+ * Survival loads questions in batches of this size instead of fetching
+ * the whole configured count up front (plan, Этап 3).
+ */
+export const SURVIVAL_BATCH_SIZE = 10
+
+/**
+ * How many questions are fetched up front. Survival loads only the
+ * first batch; every other mode loads the full configured count.
+ */
+export function getInitialFetchLimit(config: QuizConfig): number {
+  if (config.mode !== 'survival') return config.questionCount
+  return Math.min(SURVIVAL_BATCH_SIZE, config.questionCount)
+}
+
+interface FetchQuestionsOptions {
+  /** Batch size to request (defaults to the initial fetch limit). */
+  limit?: number
+  /**
+   * Pool offset (mock only — the live API is queried with random=true
+   * and no offset; duplicates are deduplicated client-side).
+   */
+  offset?: number
+}
+
 /** Read the API key from Vite env. */
 function getApiKey(): string {
   const key = import.meta.env.VITE_QUIZAPI_KEY
@@ -50,16 +75,19 @@ function getApiKey(): string {
   return key
 }
 
-async function fetchQuestions(config: QuizConfig): Promise<Question[]> {
-  if (USE_MOCK)
-    return fetchMockQuestions(
-      config.questionCount,
-      config.difficulty,
-      config.category,
-    )
+async function fetchQuestions(
+  config: QuizConfig,
+  options: FetchQuestionsOptions = {},
+): Promise<Question[]> {
+  const limit = options.limit ?? getInitialFetchLimit(config)
+  const offset = options.offset ?? 0
+
+  if (USE_MOCK) {
+    return fetchMockQuestions(limit, config.difficulty, config.category, offset)
+  }
 
   const params = new URLSearchParams({
-    limit: String(config.questionCount),
+    limit: String(limit),
     difficulty: config.difficulty.toUpperCase(),
     random: 'true',
   })
@@ -251,6 +279,38 @@ export function useQuizQuestions(config: QuizConfig | null) {
   }
 
   return query
+}
+
+/**
+ * Fetch one survival question batch.
+ *
+ * The offset is the number of questions already loaded, so each key
+ * fetches a distinct slice of the pool. Disabled outside the survival
+ * prefetch window — see useQuestionFeed.
+ */
+export function useQuestionBatch(
+  config: QuizConfig | null,
+  offset: number,
+  enabled: boolean,
+) {
+  return useQuery({
+    queryKey: [...QUESTIONS_QUERY_KEY, 'batch', config, offset],
+    queryFn: () => {
+      if (!config) throw new Error('Quiz config is required')
+      return fetchQuestions(config, {
+        limit: SURVIVAL_BATCH_SIZE,
+        offset,
+      })
+    },
+    enabled: enabled && config !== null,
+    retry: (count, error) => {
+      // Don't retry on 401/403
+      if (error.message.includes('Invalid or expired')) return false
+      return count < 2
+    },
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
+  })
 }
 
 // ---------------------------------------------------------------------------

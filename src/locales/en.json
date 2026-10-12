@@ -39,6 +39,7 @@
     "submit": "Submit",
     "skip": "Skip",
     "next": "Next",
+    "loading_next": "Loading…",
     "time_remaining": "Time remaining",
     "lives": "Lives",
     "score": "Score: {{score}}",

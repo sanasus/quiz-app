@@ -7,9 +7,10 @@ export async function fetchMockQuestions(
   count: number,
   difficulty: string,
   category: string,
+  offset = 0,
 ): Promise<Question[]> {
   await mockDelay()
-  return generateMockQuestions(count, difficulty, category)
+  return generateMockQuestions(count, difficulty, category, offset)
 }
 
 export const mockQuestions: Question[] = [
@@ -213,6 +214,7 @@ export function generateMockQuestions(
   count: number,
   difficulty: string,
   category: string,
+  offset = 0,
 ): Question[] {
   let filtered = mockQuestions
 
@@ -240,5 +242,8 @@ export function generateMockQuestions(
     return hashA - hashB
   })
 
-  return shuffled.slice(0, count)
+  // Offset lets survival fetch batches as non-overlapping slices of the
+  // same pool; running past the pool returns fewer (or zero) questions,
+  // which the caller reports as "exhausted".
+  return shuffled.slice(offset, offset + count)
 }

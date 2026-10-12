@@ -69,6 +69,10 @@ interface QuizSessionStore extends QuizSession {
     correctCount: number,
   ) => void
   loseLife: () => void
+  /** Append a fetched question batch (survival batch loading). */
+  appendQuestions: (questions: Question[]) => void
+  /** No further question batches will arrive (fetch error / pool empty). */
+  markQuestionsExhausted: () => void
   resetBlitzTimer: () => void
   repeatMistakes: (config: QuizConfig) => void
   reset: () => void
@@ -91,7 +95,54 @@ function createInitialState(config: QuizConfig): QuizSession {
     timeSpent: 0,
     mode: config.mode,
     config,
+    questionsExhausted: false,
     repeatConfig: null,
+  }
+}
+
+/**
+ * Whether another question batch may still arrive (survival batch loading).
+ *
+ * Pure — used by the reducer, the session-end hook and the UI to decide
+ * between "wait for the next batch" and "finish the session".
+ */
+export function canLoadMoreQuestions(state: QuizSession): boolean {
+  return (
+    state.mode === 'survival' &&
+    state.repeatConfig === null &&
+    !state.questionsExhausted &&
+    state.questions.length < state.config.questionCount
+  )
+}
+
+/**
+ * Append a question batch to the session.
+ *
+ * Pure: deduplicates by id, caps at the configured question count and
+ * reports how many questions were actually added (0 = pool exhausted).
+ */
+export function addQuestionBatch(
+  state: QuizSession,
+  incoming: readonly Question[],
+): { session: QuizSession; added: number } {
+  // No active session (reset / idle) — ignore stale batches.
+  if (state.questions.length === 0) return { session: state, added: 0 }
+
+  const existingIds = new Set(state.questions.map((q) => q.id))
+  const cap = state.config.questionCount
+  const additions: Question[] = []
+
+  for (const q of incoming) {
+    if (state.questions.length + additions.length >= cap) break
+    if (existingIds.has(q.id)) continue
+    additions.push(q)
+  }
+
+  if (additions.length === 0) return { session: state, added: 0 }
+
+  return {
+    session: { ...state, questions: [...state.questions, ...additions] },
+    added: additions.length,
   }
 }
 
@@ -121,6 +172,7 @@ function sessionReducer(
         lives: DEFAULT_LIVES,
         timeSpent: 0,
         timeRemaining: undefined,
+        questionsExhausted: false,
       }
     }
 
@@ -226,16 +278,45 @@ function sessionReducer(
     }
 
     case 'NEXT_QUESTION': {
+      const mode = getMode(state.mode)
+      const delta = mode.onQuestionAdvance(state)
       const nextIndex = state.currentIndex + 1
+
+      // A mode may end the session while advancing (survival: 0 lives).
+      // Checked before the batch-wait branch so a fatal answer ends the
+      // run immediately, even with a pending question batch.
+      if (delta.status === 'finished') {
+        return { ...state, ...delta }
+      }
+
       if (nextIndex >= state.questions.length) {
+        // Survival batch loading: the next question may still be on its
+        // way — wait instead of finishing the session.
+        if (canLoadMoreQuestions(state)) return state
         return { ...state, status: 'finished' }
       }
-      const mode = getMode(state.mode)
+
       return {
         ...state,
-        ...mode.onQuestionAdvance(state),
+        ...delta,
       }
     }
+
+    case 'APPEND_QUESTIONS': {
+      // Stale batch (session reset / idle) — ignore entirely.
+      if (state.questions.length === 0) return state
+
+      const { session, added } = addQuestionBatch(
+        state,
+        action.payload.questions,
+      )
+      // Nothing new in the batch — no further batches will arrive.
+      if (added === 0) return { ...session, questionsExhausted: true }
+      return session
+    }
+
+    case 'MARK_QUESTIONS_EXHAUSTED':
+      return { ...state, questionsExhausted: true }
 
     case 'FINISH_SESSION':
       return {
@@ -337,8 +418,13 @@ export const useQuizSessionStore = create<QuizSessionStore>((set) => ({
     })),
   finishSession: (score, timeSpent, correctCount) =>
     set((s) => {
+      // Only questions the user actually attempted (0..currentIndex):
+      // survival may end with a partially loaded pool, timed mode may
+      // run out of time mid-session — unattempted questions don't count.
+      const attempted = s.questions.slice(0, s.currentIndex + 1)
+
       const mistakes: SessionResult['mistakes'] = []
-      for (const q of s.questions) {
+      for (const q of attempted) {
         const selected = s.answers[q.id] ?? []
         const isCorrect =
           q.correctOptionIds.length === selected.length &&
@@ -351,8 +437,8 @@ export const useQuizSessionStore = create<QuizSessionStore>((set) => ({
       const result: SessionResult = {
         score,
         correctCount,
-        incorrectCount: s.questions.length - correctCount,
-        totalQuestions: s.questions.length,
+        incorrectCount: attempted.length - correctCount,
+        totalQuestions: attempted.length,
         timeSpent,
         mode: s.mode,
         difficulty: s.config.difficulty,
@@ -369,6 +455,17 @@ export const useQuizSessionStore = create<QuizSessionStore>((set) => ({
       }
     }),
   loseLife: () => set((s) => ({ ...sessionReducer(s, { type: 'LOSE_LIFE' }) })),
+  appendQuestions: (questions) =>
+    set((s) => ({
+      ...sessionReducer(s, {
+        type: 'APPEND_QUESTIONS',
+        payload: { questions },
+      }),
+    })),
+  markQuestionsExhausted: () =>
+    set((s) => ({
+      ...sessionReducer(s, { type: 'MARK_QUESTIONS_EXHAUSTED' }),
+    })),
   resetBlitzTimer: () =>
     set((s) => ({ ...sessionReducer(s, { type: 'RESET_BLITZ_TIMER' }) })),
   repeatMistakes: (config) =>

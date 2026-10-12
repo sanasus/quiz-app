@@ -49,6 +49,8 @@ export interface QuizSession {
   config: QuizConfig
   // Mode-specific timers
   timeRemaining?: number // timed/blitz mode: seconds left on current question
+  // Survival batch loading: no more question batches will arrive
+  questionsExhausted: boolean
   // Repeat-mistakes support
   repeatConfig: QuizConfig | null
 }
@@ -86,6 +88,8 @@ export type SessionAction =
       payload: { score: number; timeSpent: number; correctCount: number }
     }
   | { type: 'LOSE_LIFE' }
+  | { type: 'APPEND_QUESTIONS'; payload: { questions: Question[] } }
+  | { type: 'MARK_QUESTIONS_EXHAUSTED' }
   | {
       type: 'REPEAT_MISTAKES'
       payload: { questions: Question[]; config: QuizConfig }

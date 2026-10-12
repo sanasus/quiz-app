@@ -39,6 +39,7 @@
     "submit": "Ответить",
     "skip": "Пропустить",
     "next": "Далее",
+    "loading_next": "Загрузка…",
     "time_remaining": "Оставшееся время",
     "lives": "Жизни",
     "score": "Очки: {{score}}",

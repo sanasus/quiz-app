@@ -49,10 +49,12 @@ export const SurvivalMode: GameMode = {
     }
   },
 
-  onQuestionAdvance: (state: QuizSession): Partial<QuizSession> => ({
-    currentIndex: state.currentIndex + 1,
-    status: 'playing',
-  }),
+  onQuestionAdvance: (state: QuizSession): Partial<QuizSession> => {
+    // 0 lives = run over: end the session instead of advancing, even if
+    // more question batches are still loading.
+    if (state.lives <= 0) return { status: 'finished' }
+    return { currentIndex: state.currentIndex + 1, status: 'playing' }
+  },
 
   onSkip: (state: QuizSession): Partial<QuizSession> => ({
     status: 'answered',
