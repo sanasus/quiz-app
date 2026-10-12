@@ -11,6 +11,9 @@
     "preview": "vite preview",
     "test": "vitest",
     "e2e": "playwright test",
+    "e2e:smoke": "playwright test --grep \"@smoke\"",
+    "e2e:ui": "playwright test --ui",
+    "e2e:report": "playwright show-report",
     "typecheck": "tsc -b"
   },
   "dependencies": {
