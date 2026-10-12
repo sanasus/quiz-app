@@ -55,9 +55,7 @@ test.describe('Quiz screen', () => {
     await skipBtn.click()
 
     // Next button should appear
-    await expect(
-      page.getByRole('button', { name: 'Next' }),
-    ).toBeVisible()
+    await expect(page.getByRole('button', { name: 'Next' })).toBeVisible()
   })
 
   test('completing all questions navigates to results', async ({ page }) => {
@@ -69,9 +67,7 @@ test.describe('Quiz screen', () => {
 
     // Should navigate to results
     await page.waitForURL('/results**')
-    await expect(
-      page.getByRole('heading', { name: 'Results' }),
-    ).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Results' })).toBeVisible()
   })
 
   test('shows score and streak in header', async ({ page }) => {

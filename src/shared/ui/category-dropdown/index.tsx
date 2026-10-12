@@ -69,7 +69,9 @@ const CategoryDropdown = ({
       ? t('common.category_all')
       : (() => {
           for (const topic of topics) {
-            const cat = topic.categories.find((c) => c.slug === selectedCategory)
+            const cat = topic.categories.find(
+              (c) => c.slug === selectedCategory,
+            )
             if (cat) return cat.name
           }
           return selectedCategory ?? t('common.category_all')

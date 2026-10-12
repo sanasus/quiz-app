@@ -1,4 +1,4 @@
-import type {ApiMetadata} from "../types/quiz.ts";
+import type { ApiMetadata } from '../types/quiz.ts'
 
 /** Mock data delay in ms. */
 const MOCK_DELAY = 800

@@ -308,8 +308,7 @@ export const useQuizSessionStore = create<QuizSessionStore>((set) => ({
     })),
   timerTick: () =>
     set((s) => ({ ...sessionReducer(s, { type: 'TIMER_TICK' }) })),
-  timeUp: () =>
-    set((s) => ({ ...sessionReducer(s, { type: 'TIME_UP' }) })),
+  timeUp: () => set((s) => ({ ...sessionReducer(s, { type: 'TIME_UP' }) })),
   selectOption: (optionId) =>
     set((s) => {
       const question = s.questions[s.currentIndex]
@@ -322,7 +321,9 @@ export const useQuizSessionStore = create<QuizSessionStore>((set) => ({
       }
     }),
   submitAnswer: (scoreDelta) =>
-    set((s) => ({ ...sessionReducer(s, { type: 'SUBMIT_ANSWER', payload: { scoreDelta } }) })),
+    set((s) => ({
+      ...sessionReducer(s, { type: 'SUBMIT_ANSWER', payload: { scoreDelta } }),
+    })),
   skipQuestion: () =>
     set((s) => ({ ...sessionReducer(s, { type: 'SKIP_QUESTION' }) })),
   nextQuestion: () =>
@@ -385,6 +386,5 @@ export const useQuizSessionStore = create<QuizSessionStore>((set) => ({
       ...sessionReducer(s, { type: 'RESET' }),
       finishedSession: null,
     })),
-  startSessionTimer: () =>
-    set({ sessionStartTime: Date.now() }),
+  startSessionTimer: () => set({ sessionStartTime: Date.now() }),
 }))

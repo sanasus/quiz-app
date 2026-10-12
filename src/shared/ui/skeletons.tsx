@@ -3,14 +3,10 @@
  */
 
 export const Skeleton = ({ className = '' }: { className?: string }) => (
-  <div
-    className={`animate-pulse rounded-lg bg-primary/10 ${className}`}
-  />
+  <div className={`animate-pulse rounded-lg bg-primary/10 ${className}`} />
 )
 
-export const CategorySkeleton = () => (
-  <Skeleton className="h-11 w-full" />
-)
+export const CategorySkeleton = () => <Skeleton className="h-11 w-full" />
 
 export const DifficultySkeleton = () => (
   <div className="flex gap-2">

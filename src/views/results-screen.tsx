@@ -76,11 +76,15 @@ export function ResultsScreen() {
       {/* Stats grid */}
       <div className="mb-6 grid grid-cols-2 gap-4 sm:grid-cols-4">
         <div className="rounded-xl bg-surface p-4 text-center shadow-sm">
-          <div className="text-2xl font-bold text-success">{result.correctCount}</div>
+          <div className="text-2xl font-bold text-success">
+            {result.correctCount}
+          </div>
           <div className="text-xs text-text-2">{t('results.correct')}</div>
         </div>
         <div className="rounded-xl bg-surface p-4 text-center shadow-sm">
-          <div className="text-2xl font-bold text-danger">{result.incorrectCount}</div>
+          <div className="text-2xl font-bold text-danger">
+            {result.incorrectCount}
+          </div>
           <div className="text-xs text-text-2">{t('results.incorrect')}</div>
         </div>
         <div className="rounded-xl bg-surface p-4 text-center shadow-sm">
@@ -88,7 +92,9 @@ export function ResultsScreen() {
           <div className="text-xs text-text-2">{t('results.accuracy')}</div>
         </div>
         <div className="rounded-xl bg-surface p-4 text-center shadow-sm">
-          <div className="text-2xl font-bold text-text">{formatTime(result.timeSpent)}</div>
+          <div className="text-2xl font-bold text-text">
+            {formatTime(result.timeSpent)}
+          </div>
           <div className="text-xs text-text-2">{t('results.time_spent')}</div>
         </div>
       </div>
@@ -105,10 +111,24 @@ export function ResultsScreen() {
                 <p className="mb-1 font-medium text-text">{m.question.text}</p>
                 <div className="flex flex-col gap-1 text-sm">
                   <span className="text-danger">
-                    ❌ {m.selectedOptionIds.map((id) => m.question.options.find((o) => o.id === id)?.text ?? id).join(', ')}
+                    ❌{' '}
+                    {m.selectedOptionIds
+                      .map(
+                        (id) =>
+                          m.question.options.find((o) => o.id === id)?.text ??
+                          id,
+                      )
+                      .join(', ')}
                   </span>
                   <span className="text-success">
-                    ✅ {m.question.correctOptionIds.map((id) => m.question.options.find((o) => o.id === id)?.text ?? id).join(', ')}
+                    ✅{' '}
+                    {m.question.correctOptionIds
+                      .map(
+                        (id) =>
+                          m.question.options.find((o) => o.id === id)?.text ??
+                          id,
+                      )
+                      .join(', ')}
                   </span>
                 </div>
               </div>

@@ -6,7 +6,9 @@ test.describe('Setup page', () => {
     await goToSetup(page)
   })
 
-  test('renders setup title and all configuration sections', async ({ page }) => {
+  test('renders setup title and all configuration sections', async ({
+    page,
+  }) => {
     // Title
     await expect(
       page.getByRole('heading', { name: 'Quiz Settings' }),
@@ -19,9 +21,7 @@ test.describe('Setup page', () => {
     await expect(page.getByText('Mode')).toBeVisible()
 
     // Start button
-    await expect(
-      page.getByRole('button', { name: 'Start' }),
-    ).toBeVisible()
+    await expect(page.getByRole('button', { name: 'Start' })).toBeVisible()
   })
 
   test('shows category dropdown with topics and categories', async ({
@@ -108,8 +108,6 @@ test.describe('Setup page', () => {
 
     // Should navigate to /quiz and show first question
     await page.waitForURL('/quiz**')
-    await expect(
-      page.getByRole('heading', { name: 'Question' }),
-    ).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Question' })).toBeVisible()
   })
 })

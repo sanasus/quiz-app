@@ -27,22 +27,16 @@ test.describe('Home page', () => {
     await expect(langBtn).toBeVisible()
 
     // Initial language is EN (browser detection or fallback)
-    await expect(
-      page.getByRole('link', { name: 'Start Quiz' }),
-    ).toBeVisible()
+    await expect(page.getByRole('link', { name: 'Start Quiz' })).toBeVisible()
 
     // Click to switch to Russian
     await langBtn.click()
 
     // After toggle, text should be in Russian
-    await expect(
-      page.getByRole('link', { name: 'Начать тест' }),
-    ).toBeVisible()
+    await expect(page.getByRole('link', { name: 'Начать тест' })).toBeVisible()
 
     // Toggle back to English
     await langBtn.click()
-    await expect(
-      page.getByRole('link', { name: 'Start Quiz' }),
-    ).toBeVisible()
+    await expect(page.getByRole('link', { name: 'Start Quiz' })).toBeVisible()
   })
 })

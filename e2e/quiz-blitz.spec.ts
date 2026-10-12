@@ -78,7 +78,11 @@ test.describe('Blitz mode', () => {
     page,
   }) => {
     // Override setup: use hard difficulty so first option is wrong (triggers red styling)
-    await startQuiz(page, { mode: 'blitz', questionCount: 2, difficulty: 'hard' })
+    await startQuiz(page, {
+      mode: 'blitz',
+      questionCount: 2,
+      difficulty: 'hard',
+    })
 
     const quizContainer = page.getByTestId('quiz-screen')
     const options = quizContainer.getByRole('button')
@@ -191,7 +195,9 @@ test.describe('Blitz mode', () => {
 
     // Should return to setup
     await page.waitForURL('/setup')
-    await expect(page.getByRole('heading', { name: 'Quiz Settings' })).toBeVisible()
+    await expect(
+      page.getByRole('heading', { name: 'Quiz Settings' }),
+    ).toBeVisible()
   })
 
   // ---------------------------------------------------------------------------
@@ -213,7 +219,11 @@ test.describe('Blitz mode', () => {
 
   test('works with medium difficulty', async ({ page }) => {
     // Start quiz with medium difficulty and blitz mode
-    await startQuiz(page, { mode: 'blitz', difficulty: 'medium', questionCount: 3 })
+    await startQuiz(page, {
+      mode: 'blitz',
+      difficulty: 'medium',
+      questionCount: 3,
+    })
 
     // Answer questions
     await completeBlitzQuiz(page, 3)

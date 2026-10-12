@@ -20,8 +20,7 @@ export const BlitzMode: GameMode = {
     const currentQ = state.questions[state.currentIndex]
     if (!currentQ) return {}
 
-    const isLastQuestion =
-      state.currentIndex >= state.questions.length - 1
+    const isLastQuestion = state.currentIndex >= state.questions.length - 1
 
     if (isLastQuestion) {
       return {

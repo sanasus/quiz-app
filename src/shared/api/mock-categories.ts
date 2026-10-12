@@ -57,7 +57,12 @@ export const mockCategories = {
       ],
     },
   ],
-  flatCategories: [] as { id: string; name: string; slug: string; quizCount: number }[],
+  flatCategories: [] as {
+    id: string
+    name: string
+    slug: string
+    quizCount: number
+  }[],
 } as const
 
 // Build flat list

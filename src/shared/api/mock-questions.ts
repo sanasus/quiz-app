@@ -26,7 +26,8 @@ export const mockQuestions: Question[] = [
     multiple: false,
     category: 'geography',
     difficulty: 'easy',
-    explanation: 'Paris has been the capital of France since the late 12th century.',
+    explanation:
+      'Paris has been the capital of France since the late 12th century.',
   },
   {
     id: 'q2',
@@ -41,7 +42,8 @@ export const mockQuestions: Question[] = [
     multiple: false,
     category: 'science',
     difficulty: 'easy',
-    explanation: 'Mercury is the closest planet to the Sun at about 57.9 million km.',
+    explanation:
+      'Mercury is the closest planet to the Sun at about 57.9 million km.',
   },
   {
     id: 'q3',
@@ -72,7 +74,8 @@ export const mockQuestions: Question[] = [
     multiple: true,
     category: 'technology',
     difficulty: 'medium',
-    explanation: 'React and Vue are JavaScript frameworks. Django and Flask are Python frameworks.',
+    explanation:
+      'React and Vue are JavaScript frameworks. Django and Flask are Python frameworks.',
   },
   {
     id: 'q5',
@@ -87,7 +90,8 @@ export const mockQuestions: Question[] = [
     multiple: false,
     category: 'history',
     difficulty: 'easy',
-    explanation: 'World War II ended in 1945 with the surrender of Germany and Japan.',
+    explanation:
+      'World War II ended in 1945 with the surrender of Germany and Japan.',
   },
   {
     id: 'q6',
@@ -102,7 +106,8 @@ export const mockQuestions: Question[] = [
     multiple: false,
     category: 'geography',
     difficulty: 'easy',
-    explanation: 'The Pacific Ocean covers about 165.25 million square kilometers.',
+    explanation:
+      'The Pacific Ocean covers about 165.25 million square kilometers.',
   },
   {
     id: 'q7',
@@ -117,7 +122,8 @@ export const mockQuestions: Question[] = [
     multiple: false,
     category: 'math',
     difficulty: 'easy',
-    explanation: 'Pi (π) is approximately 3.14159..., so to two decimal places it is 3.14.',
+    explanation:
+      'Pi (π) is approximately 3.14159..., so to two decimal places it is 3.14.',
   },
   {
     id: 'q8',
@@ -132,7 +138,8 @@ export const mockQuestions: Question[] = [
     multiple: false,
     category: 'technology',
     difficulty: 'easy',
-    explanation: 'JavaScript is the primary language for web browser development.',
+    explanation:
+      'JavaScript is the primary language for web browser development.',
   },
   {
     id: 'q9',
@@ -148,7 +155,8 @@ export const mockQuestions: Question[] = [
     multiple: false,
     category: 'science',
     difficulty: 'medium',
-    explanation: 'The speed of light in a vacuum is approximately 299,792 km/s.',
+    explanation:
+      'The speed of light in a vacuum is approximately 299,792 km/s.',
   },
   {
     id: 'q10',
@@ -163,7 +171,8 @@ export const mockQuestions: Question[] = [
     multiple: false,
     category: 'technology',
     difficulty: 'medium',
-    explanation: 'A Queue follows FIFO: the first element added is the first one removed.',
+    explanation:
+      'A Queue follows FIFO: the first element added is the first one removed.',
   },
   {
     id: 'q11',
@@ -178,7 +187,8 @@ export const mockQuestions: Question[] = [
     multiple: false,
     category: 'technology',
     difficulty: 'hard',
-    explanation: 'Binary search halves the search space each step, giving O(log n) complexity.',
+    explanation:
+      'Binary search halves the search space each step, giving O(log n) complexity.',
   },
   {
     id: 'q12',
@@ -193,7 +203,8 @@ export const mockQuestions: Question[] = [
     multiple: false,
     category: 'science',
     difficulty: 'hard',
-    explanation: 'Water boils at 100°C (212°F) at standard atmospheric pressure (1 atm).',
+    explanation:
+      'Water boils at 100°C (212°F) at standard atmospheric pressure (1 atm).',
   },
 ]
 
@@ -207,7 +218,12 @@ export function generateMockQuestions(
 
   if (difficulty !== 'easy') {
     filtered = filtered.filter((q) => {
-      const levels: Record<string, number> = { easy: 0, medium: 1, hard: 2, expert: 3 }
+      const levels: Record<string, number> = {
+        easy: 0,
+        medium: 1,
+        hard: 2,
+        expert: 3,
+      }
       return levels[q.difficulty] >= levels[difficulty]
     })
   }

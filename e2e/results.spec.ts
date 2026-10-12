@@ -70,8 +70,6 @@ test.describe('Results screen', () => {
     await expect(repeatBtn).toBeVisible()
     await repeatBtn.click()
     await page.waitForURL('/quiz**')
-    await expect(
-      page.getByRole('heading', { name: 'Question' }),
-    ).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Question' })).toBeVisible()
   })
 })

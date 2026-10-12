@@ -51,7 +51,12 @@ function getApiKey(): string {
 }
 
 async function fetchQuestions(config: QuizConfig): Promise<Question[]> {
-  if (USE_MOCK) return fetchMockQuestions(config.questionCount, config.difficulty, config.category)
+  if (USE_MOCK)
+    return fetchMockQuestions(
+      config.questionCount,
+      config.difficulty,
+      config.category,
+    )
 
   const params = new URLSearchParams({
     limit: String(config.questionCount),
@@ -137,9 +142,7 @@ async function fetchMetadata(): Promise<ApiMetadata> {
   const parseResult = metadataApiResponseSchema.safeParse(json)
 
   if (!parseResult.success) {
-    throw new Error(
-      `Invalid metadata response: ${parseResult.error.message}`,
-    )
+    throw new Error(`Invalid metadata response: ${parseResult.error.message}`)
   }
 
   return parseResult.data.data
@@ -172,9 +175,7 @@ async function fetchCategories(): Promise<{
   const parseResult = categoriesApiResponseSchema.safeParse(json)
 
   if (!parseResult.success) {
-    throw new Error(
-      `Invalid categories response: ${parseResult.error.message}`,
-    )
+    throw new Error(`Invalid categories response: ${parseResult.error.message}`)
   }
 
   const topics: Topic[] = parseResult.data.data
@@ -221,7 +222,8 @@ export function useQuizQuestions(config: QuizConfig | null) {
 
   // If we're in a repeat session (questions already loaded in store),
   // skip the API call entirely
-  const isRepeatSession = store.questions.length > 0 && store.status === 'playing'
+  const isRepeatSession =
+    store.questions.length > 0 && store.status === 'playing'
 
   const query = useQuery({
     queryKey: [...QUESTIONS_QUERY_KEY, config],
@@ -241,7 +243,11 @@ export function useQuizQuestions(config: QuizConfig | null) {
 
   // If in a repeat session, return stored questions instead of query data
   if (isRepeatSession) {
-    return { data: store.questions as Question[], isLoading: false, error: null }
+    return {
+      data: store.questions as Question[],
+      isLoading: false,
+      error: null,
+    }
   }
 
   return query

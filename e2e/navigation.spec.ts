@@ -24,9 +24,7 @@ test.describe('Navigation', () => {
 
     // Stats
     await page.getByRole('link', { name: '📊 Statistics' }).click()
-    await expect(
-      page.getByRole('heading', { name: '📊 Stats' }),
-    ).toBeVisible()
+    await expect(page.getByRole('heading', { name: '📊 Stats' })).toBeVisible()
 
     // Achievements
     await page.getByRole('link', { name: '🏅 Achievements' }).click()

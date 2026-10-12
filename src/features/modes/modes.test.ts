@@ -31,7 +31,14 @@ function makeSession(overrides: Partial<QuizSession> = {}): QuizSession {
         multiple: false,
         difficulty: 'easy',
       },
-      { id: 'q2', text: 'Question 2', options: [], correctOptionIds: [], multiple: false, difficulty: 'easy' },
+      {
+        id: 'q2',
+        text: 'Question 2',
+        options: [],
+        correctOptionIds: [],
+        multiple: false,
+        difficulty: 'easy',
+      },
     ],
     currentIndex: 0,
     answers: {},
@@ -41,7 +48,12 @@ function makeSession(overrides: Partial<QuizSession> = {}): QuizSession {
     lives: 3,
     timeSpent: 30,
     mode: 'classic',
-    config: { category: 'all', difficulty: 'easy', questionCount: 2, mode: 'classic' },
+    config: {
+      category: 'all',
+      difficulty: 'easy',
+      questionCount: 2,
+      mode: 'classic',
+    },
     repeatConfig: null,
     ...overrides,
   }
@@ -147,8 +159,22 @@ describe('BlitzMode', () => {
       mode: 'blitz',
       currentIndex: 1,
       questions: [
-        { id: 'q1', text: '', options: [], correctOptionIds: [], multiple: false, difficulty: 'easy' },
-        { id: 'q2', text: '', options: [], correctOptionIds: [], multiple: false, difficulty: 'easy' },
+        {
+          id: 'q1',
+          text: '',
+          options: [],
+          correctOptionIds: [],
+          multiple: false,
+          difficulty: 'easy',
+        },
+        {
+          id: 'q2',
+          text: '',
+          options: [],
+          correctOptionIds: [],
+          multiple: false,
+          difficulty: 'easy',
+        },
       ],
     })
     const delta = BlitzMode.onTimeUp(state)
@@ -206,8 +232,22 @@ describe('SurvivalMode', () => {
       mode: 'survival',
       currentIndex: 1,
       questions: [
-        { id: 'q1', text: '', options: [], correctOptionIds: [], multiple: false, difficulty: 'easy' },
-        { id: 'q2', text: '', options: [], correctOptionIds: [], multiple: false, difficulty: 'easy' },
+        {
+          id: 'q1',
+          text: '',
+          options: [],
+          correctOptionIds: [],
+          multiple: false,
+          difficulty: 'easy',
+        },
+        {
+          id: 'q2',
+          text: '',
+          options: [],
+          correctOptionIds: [],
+          multiple: false,
+          difficulty: 'easy',
+        },
       ],
     })
     const delta = SurvivalMode.onTimeUp(state)

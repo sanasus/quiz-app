@@ -1,9 +1,5 @@
 import { test, expect } from '@playwright/test'
-import {
-  answerFirstOption,
-  waitForResults,
-  startNewQuiz,
-} from './fixtures'
+import { answerFirstOption, waitForResults, startNewQuiz } from './fixtures'
 
 /**
  * Full end-to-end flow:
@@ -17,9 +13,7 @@ test('full e2e flow: setup → quiz → results → new quiz', async ({ page }) 
   ).toBeVisible()
 
   // 2. Navigate to setup
-  await page
-    .getByRole('link', { name: 'Start Quiz' })
-    .click()
+  await page.getByRole('link', { name: 'Start Quiz' }).click()
   await expect(
     page.getByRole('heading', { name: 'Quiz Settings' }),
   ).toBeVisible()
@@ -32,9 +26,7 @@ test('full e2e flow: setup → quiz → results → new quiz', async ({ page }) 
   await page.waitForURL('/quiz**')
 
   // 5. Verify quiz loaded
-  await expect(
-    page.getByRole('heading', { name: 'Question' }),
-  ).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Question' })).toBeVisible()
 
   // 6. Answer all questions using generic selectors
   for (let i = 0; i < 2; i++) {

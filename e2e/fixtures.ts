@@ -34,7 +34,10 @@ const defaultConfig: QuizConfig = {
  * Select a difficulty level button on the setup page.
  * Uses data-testid for a stable, unambiguous selector.
  */
-export async function selectDifficulty(page: Page, difficulty: QuizConfig['difficulty']) {
+export async function selectDifficulty(
+  page: Page,
+  difficulty: QuizConfig['difficulty'],
+) {
   const btn = page.getByTestId(`difficulty-${difficulty}`)
   await btn.click()
 }
@@ -80,7 +83,10 @@ export async function startQuiz(page: Page, config?: Partial<QuizConfig>) {
   }
 
   // Set question count
-  if (mergedConfig.questionCount && mergedConfig.questionCount !== defaultConfig.questionCount) {
+  if (
+    mergedConfig.questionCount &&
+    mergedConfig.questionCount !== defaultConfig.questionCount
+  ) {
     await setQuestionCount(page, mergedConfig.questionCount)
   }
 
@@ -166,7 +172,9 @@ export async function waitForResults(page: Page) {
 export async function startNewQuiz(page: Page) {
   await page.getByRole('button', { name: 'New Quiz' }).click()
   await page.waitForURL('/setup')
-  await expect(page.getByRole('heading', { name: 'Quiz Settings' })).toBeVisible()
+  await expect(
+    page.getByRole('heading', { name: 'Quiz Settings' }),
+  ).toBeVisible()
   return page
 }
 
