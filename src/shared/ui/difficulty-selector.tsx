@@ -36,6 +36,7 @@ const DifficultySelector = ({
           key={d.value}
           type="button"
           data-testid={`difficulty-${d.value}`}
+          aria-pressed={selectedDifficulty === d.value}
           onClick={() => onSelect(d.value)}
           className={`flex-1 rounded-lg border-[3px] px-3 py-2 text-sm font-bold transition-all
             ${

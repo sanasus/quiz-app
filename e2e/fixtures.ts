@@ -1,17 +1,15 @@
-import { type Page, test as base, expect } from '@playwright/test'
+import { type Page, expect } from '@playwright/test'
 
 /**
- * Shared fixtures for quiz e2e tests.
+ * Shared helpers for quiz e2e tests.
  *
- * Usage:
- *   import { test, goToQuiz } from './fixtures'
+ * Plain functions — specs import them directly:
  *
- *   test('something', async ({ goToQuiz }) => {
- *     const page = await goToQuiz()
- *   })
+ *   import { startQuiz, completeQuiz, waitForResults } from './fixtures'
  *
- * Or use standalone helpers directly:
- *   import { goToSetup, startQuiz, answerQuestion } from './fixtures'
+ * Locale is deterministic: playwright.config.ts pins `locale: 'en-US'`,
+ * so i18n detection (querystring → localStorage → navigator) always
+ * resolves to English regardless of the host machine.
  */
 
 // ── Quiz config helpers ──────────────────────────────────────────────────────
@@ -31,75 +29,68 @@ const defaultConfig: QuizConfig = {
 }
 
 /**
- * Select a difficulty level button on the setup page.
- * Uses data-testid for a stable, unambiguous selector.
+ * Answer options only — excludes Skip/Submit/Next action buttons.
+ * Single source of truth for scoping quiz option interactions.
+ */
+export function optionLocator(page: Page) {
+  return page.locator('[data-testid^="option-"]')
+}
+
+/**
+ * Select a difficulty level on the setup page.
  */
 export async function selectDifficulty(
   page: Page,
   difficulty: QuizConfig['difficulty'],
 ) {
-  const btn = page.getByTestId(`difficulty-${difficulty}`)
-  await btn.click()
+  await page.getByTestId(`difficulty-${difficulty}`).click()
 }
 
 /**
- * Set the question count slider to a specific value.
- * Uses evaluate to reliably set range input value and dispatch input event.
+ * Set the question count slider. `fill()` sets the value and dispatches
+ * the input event React listens to.
  */
 export async function setQuestionCount(page: Page, count: number) {
   await page.locator('input[type="range"]').fill(String(count))
 }
 
 /**
- * Navigate to setup page and wait for it to be ready.
+ * Navigate to the setup page and wait for it to be ready.
  */
 export async function goToSetup(page: Page) {
   await page.goto('/setup')
-  // Wait for the category dropdown to be visible
-  const dropdown = page.getByTestId('category-dropdown')
-  await expect(dropdown).toBeVisible()
+  await expect(page.getByTestId('category-dropdown')).toBeVisible()
 }
 
 /**
  * Select a game mode on the setup page.
- * Uses data-testid for stable, unambiguous selector.
  */
 export async function selectMode(page: Page, mode: QuizConfig['mode']) {
-  const btn = page.getByTestId(`mode-${mode}`)
-  await btn.click()
+  await page.getByTestId(`mode-${mode}`).click()
 }
 
 /**
- * Navigate from setup to quiz with the given config.
- * Returns the page ready at /quiz with questions loaded.
+ * Navigate from setup to the quiz with the given config.
+ * Returns the page ready at /quiz with the first question loaded.
  */
 export async function startQuiz(page: Page, config?: Partial<QuizConfig>) {
   const mergedConfig = { ...defaultConfig, ...config }
   await goToSetup(page)
 
-  // Select difficulty (skip when undefined — defaults to 'easy')
-  if (mergedConfig.difficulty && mergedConfig.difficulty !== 'easy') {
+  if (mergedConfig.difficulty !== defaultConfig.difficulty) {
     await selectDifficulty(page, mergedConfig.difficulty)
   }
 
-  // Set question count
-  if (
-    mergedConfig.questionCount &&
-    mergedConfig.questionCount !== defaultConfig.questionCount
-  ) {
+  if (mergedConfig.questionCount !== defaultConfig.questionCount) {
     await setQuestionCount(page, mergedConfig.questionCount)
   }
 
-  // Select mode
-  if (mergedConfig.mode !== 'classic') {
+  if (mergedConfig.mode !== defaultConfig.mode) {
     await selectMode(page, mergedConfig.mode)
   }
 
-  // Start
   await page.getByRole('button', { name: 'Start' }).click()
-  await page.waitForURL('/quiz**')
-
-  // Wait for questions to load
+  await expect(page).toHaveURL(/\/quiz/)
   await expect(page.getByRole('heading', { name: 'Question' })).toBeVisible()
 
   return page
@@ -107,118 +98,90 @@ export async function startQuiz(page: Page, config?: Partial<QuizConfig>) {
 
 // ── Answer helpers ───────────────────────────────────────────────────────────
 
-/**
- * Answer a question: select an option, submit, then click Next if available.
- * Uses specific option name (not generic).
- */
-export async function answerQuestion(
-  page: Page,
-  optionName: string,
-  expectNext = true,
-) {
-  await page.getByRole('button', { name: optionName }).click()
-  await page.getByRole('button', { name: 'Submit' }).click()
-
-  if (expectNext) {
-    await expect(page.getByRole('button', { name: 'Next' })).toBeVisible()
-    await page.getByRole('button', { name: 'Next' }).click()
-  }
+export interface AnswerOptions {
+  /**
+   * Click Next after answering. Set to `false` on the last question —
+   * the quiz finishes itself and navigates to /results automatically.
+   */
+  next?: boolean
+  /** Blitz auto-submits on selection, so there is no Submit button. */
+  autoSubmit?: boolean
 }
 
 /**
- * Answer the first visible option and click Next.
- * Scopes to the quiz options container to avoid matching nav buttons.
+ * Select the first visible answer option.
  */
-export async function answerFirstOption(page: Page) {
-  // Use options-only selector to avoid matching Next/Skip/Submit buttons
-  const options = page.locator('[data-testid^="option-"]')
+export async function selectFirstOption(page: Page) {
+  const options = optionLocator(page)
   await expect(options.first()).toBeVisible()
   await options.first().click()
-  await page.getByRole('button', { name: 'Submit' }).click()
+}
 
-  // Click next if available (auto-wait with short timeout)
-  try {
-    await expect(page.getByRole('button', { name: 'Next' })).toBeAttached()
-    await page.getByRole('button', { name: 'Next' }).click()
+/**
+ * Answer the first option: select it, submit (unless the mode
+ * auto-submits) and optionally advance to the next question.
+ */
+export async function answerFirstOption(
+  page: Page,
+  { next = true, autoSubmit = false }: AnswerOptions = {},
+) {
+  await selectFirstOption(page)
+
+  if (!autoSubmit) {
+    await page.getByRole('button', { name: 'Submit' }).click()
+  }
+
+  if (next) {
+    const nextBtn = page.getByRole('button', { name: 'Next' })
+    await expect(nextBtn).toBeVisible()
+    await nextBtn.click()
     await expect(page.getByRole('heading', { name: 'Question' })).toBeVisible()
-  } catch {
-    // Next button not available — quiz may be over
   }
 }
 
 /**
- * Skip the current question.
+ * Answer every question with the first option. After the last question
+ * the quiz auto-navigates to /results — assert it with `waitForResults`.
+ */
+export async function completeQuiz(
+  page: Page,
+  questionCount: number,
+  options: Omit<AnswerOptions, 'next'> = {},
+) {
+  for (let i = 0; i < questionCount; i++) {
+    await answerFirstOption(page, { ...options, next: i < questionCount - 1 })
+  }
+}
+
+/**
+ * Skip the current question and advance to the next one.
  */
 export async function skipQuestion(page: Page) {
   await page.getByRole('button', { name: 'Skip' }).click()
-  await expect(page.getByRole('button', { name: 'Next' })).toBeVisible()
-  await page.getByRole('button', { name: 'Next' }).click()
+  const nextBtn = page.getByRole('button', { name: 'Next' })
+  await expect(nextBtn).toBeVisible()
+  await nextBtn.click()
 }
 
 // ── Results helpers ──────────────────────────────────────────────────────────
 
 /**
- * Navigate to results page (expecting it to be ready).
+ * Wait until the results page is loaded and ready.
  */
 export async function waitForResults(page: Page) {
-  await page.waitForURL('/results**')
+  await expect(page).toHaveURL(/\/results/)
   await expect(page.getByRole('heading', { name: 'Results' })).toBeVisible()
   return page
 }
 
 /**
- * Click "New Quiz" and wait for setup.
+ * Click "New Quiz" on the results page and wait for setup.
  */
 export async function startNewQuiz(page: Page) {
   await page.getByRole('button', { name: 'New Quiz' }).click()
-  await page.waitForURL('/setup')
+  await expect(page).toHaveURL(/\/setup/)
   await expect(
     page.getByRole('heading', { name: 'Quiz Settings' }),
   ).toBeVisible()
   return page
 }
-
-// ── Test fixture ─────────────────────────────────────────────────────────────
-
-const test_ = base.extend<{
-  /** Navigate to setup and wait for it to be ready. */
-  goToSetup: () => Promise<void>
-  /** Start a quiz with the given config (or defaults). */
-  startQuiz: (config?: QuizConfig) => Promise<Page>
-  /** Answer a question and click Next. */
-  answerQuestion: (option: string, expectNext?: boolean) => Promise<void>
-  /** Answer the first visible option and click Next. */
-  answerFirstOption: () => Promise<void>
-  /** Skip the current question and go to Next. */
-  skipQuestion: () => Promise<void>
-  /** Wait for results page to be visible. */
-  waitForResults: () => Promise<Page>
-  /** Click "New Quiz" and wait for setup. */
-  startNewQuiz: () => Promise<Page>
-}>({
-  goToSetup: async ({ page }, use) => {
-    await use(() => goToSetup(page))
-  },
-  startQuiz: async ({ page }, use) => {
-    await use((config?: QuizConfig) => startQuiz(page, config))
-  },
-  answerQuestion: async ({ page }, use) => {
-    await use((option: string, expectNext = true) =>
-      answerQuestion(page, option, expectNext),
-    )
-  },
-  answerFirstOption: async ({ page }, use) => {
-    await use(() => answerFirstOption(page))
-  },
-  skipQuestion: async ({ page }, use) => {
-    await use(() => skipQuestion(page))
-  },
-  waitForResults: async ({ page }, use) => {
-    await use(() => waitForResults(page))
-  },
-  startNewQuiz: async ({ page }, use) => {
-    await use(() => startNewQuiz(page))
-  },
-})
-
-export { test_ as test }

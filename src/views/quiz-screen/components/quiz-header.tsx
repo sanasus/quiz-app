@@ -35,6 +35,8 @@ export function QuizHeader({
       <div className="flex items-center gap-4">
         {modeDef.headerType === 'timer' && timeRemaining !== undefined ? (
           <span
+            data-testid="quiz-timer"
+            aria-label={t('quiz.time_remaining')}
             className={`text-lg font-mono font-bold ${
               timeRemaining <= 10 ? 'text-red-400' : 'text-text'
             }`}
@@ -43,7 +45,11 @@ export function QuizHeader({
           </span>
         ) : null}
         {modeDef.headerType === 'lives' ? (
-          <span className="text-lg text-red-400">
+          <span
+            data-testid="quiz-lives"
+            aria-label={t('quiz.lives')}
+            className="text-lg text-red-400"
+          >
             {'❤️'.repeat(lives ?? 0)}
           </span>
         ) : null}

@@ -20,11 +20,14 @@ export const QuizOption = memo(function QuizOption({
   onToggle,
 }: QuizOptionProps) {
   let optionClass = 'border-border bg-bg text-text'
+  let dataState: 'correct' | 'incorrect' | undefined
   if (showResult) {
     if (isCorrect) {
       optionClass = 'border-green-500 bg-green-500/10 text-green-400'
-    } else if (isSelected && !isCorrect) {
+      dataState = 'correct'
+    } else if (isSelected) {
       optionClass = 'border-red-500 bg-red-500/10 text-red-400'
+      dataState = 'incorrect'
     }
   } else if (isSelected) {
     optionClass = 'border-primary bg-primary/10 text-primary'
@@ -33,6 +36,7 @@ export const QuizOption = memo(function QuizOption({
   return (
     <button
       data-testid={`option-${id}`}
+      data-state={dataState}
       onClick={() => onToggle(id)}
       aria-selected={isSelected}
       className={`w-full rounded-lg border p-4 text-left text-sm transition-all hover:bg-muted ${optionClass}`}

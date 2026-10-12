@@ -38,6 +38,7 @@ coverage
 
 # Playwright test results
 test-results
+playwright-report
 
 # Cache
 .vite
@@ -51,3 +52,6 @@ acl-recovery/
 # Agent/OpenCode artifacts
 .agents/
 skills-lock.json
+
+# Local OpenCode pairing helper
+pair.bat

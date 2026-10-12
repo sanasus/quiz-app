@@ -1,30 +1,13 @@
-import { type Page, test, expect } from '@playwright/test'
-import { startQuiz, waitForResults } from './fixtures'
+import { test, expect } from '@playwright/test'
+import {
+  completeQuiz,
+  optionLocator,
+  startNewQuiz,
+  startQuiz,
+  waitForResults,
+} from './fixtures'
 
-/**
- * Click the first option button inside the quiz screen.
- * Uses Playwright's native .click() which properly triggers React's
- * synthetic event system (proven by the passing "auto-submits answer" test).
- */
-async function clickFirstOption(page: Page) {
-  // Use options-only selector to avoid matching Next/Skip/Submit buttons
-  const options = page.locator('[data-testid^="option-"]')
-  await expect(options.first()).toBeVisible()
-  await options.first().click()
-}
-
-/**
- * Complete all questions in a Blitz quiz and navigate to results.
- */
-async function completeBlitzQuiz(page: Page, count: number) {
-  for (let i = 1; i < count; i++) {
-    await clickFirstOption(page)
-    await page.getByRole('button', { name: 'Next' }).click()
-  }
-  await clickFirstOption(page)
-}
-
-test.describe('Blitz mode', () => {
+test.describe('Blitz mode', { tag: ['@slow'] }, () => {
   test.beforeEach(async ({ page }) => {
     await startQuiz(page, { mode: 'blitz', questionCount: 3 })
   })
@@ -33,115 +16,43 @@ test.describe('Blitz mode', () => {
   // Timer and header
   // ---------------------------------------------------------------------------
 
-  test('displays score in header', async ({ page }) => {
+  test('displays score and streak in header', async ({ page }) => {
     await expect(page.getByText(/Score:/)).toBeVisible()
-  })
-
-  test('displays streak in header', async ({ page }) => {
     await expect(page.getByText(/🔥/)).toBeVisible()
   })
-
-  // Blitz mode displays a visible per-question countdown timer.
 
   // ---------------------------------------------------------------------------
   // Auto-submit behavior
   // ---------------------------------------------------------------------------
 
-  test('auto-submits answer on option selection', async ({ page }) => {
-    const quizContainer = page.getByTestId('quiz-screen')
-    const options = quizContainer.getByRole('button')
-
-    // Click first option — no Submit button should appear
-    await options.first().click()
-
-    // Submit button should NOT be visible in Blitz mode
-    const submitBtn = page.getByRole('button', { name: 'Submit' })
-    await expect(submitBtn).not.toBeVisible()
-
-    // Next button should appear after auto-submit
-    const nextBtn = page.getByRole('button', { name: 'Next' })
-    await expect(nextBtn).toBeVisible()
-  })
-
-  test('no Submit button in Blitz mode', async ({ page }) => {
-    const quizContainer = page.getByTestId('quiz-screen')
-    const options = quizContainer.getByRole('button')
-    await expect(options.first()).toBeVisible()
-    await options.first().click()
-
-    // Verify Submit button is absent
-    const submitBtn = page.getByRole('button', { name: 'Submit' })
-    await expect(submitBtn).not.toBeVisible()
-  })
-
-  test('highlights correct and incorrect answers after auto-submit', async ({
+  test('auto-submits on selection without a Submit button', async ({
     page,
   }) => {
-    // Override setup: use hard difficulty so first option is wrong (triggers red styling)
-    await startQuiz(page, {
-      mode: 'blitz',
-      questionCount: 2,
-      difficulty: 'hard',
-    })
+    const options = optionLocator(page)
+    await expect(options.first()).toBeVisible()
 
-    const quizContainer = page.getByTestId('quiz-screen')
-    const options = quizContainer.getByRole('button')
-
-    // Click first option — auto-submit triggers
+    // Clicking an option auto-submits: Submit disappears, Next appears
     await options.first().click()
-
-    // Wait for result state
+    await expect(page.getByRole('button', { name: 'Submit' })).not.toBeVisible()
     await expect(page.getByRole('button', { name: 'Next' })).toBeVisible()
-
-    // Correct answer should have green styling (✓ checkmark)
-    const correctOption = quizContainer
-      .locator('button')
-      .filter({ has: page.locator('span.text-green-400') })
-      .first()
-    await expect(correctOption).toBeVisible()
-
-    // Incorrect selected answer should have red styling (✗ checkmark)
-    const incorrectOption = quizContainer
-      .locator('button')
-      .filter({ has: page.locator('span.text-red-400') })
-      .first()
-    await expect(incorrectOption).toBeVisible()
   })
 
   test('shows explanation after auto-submit', async ({ page }) => {
-    const quizContainer = page.getByTestId('quiz-screen')
-    const options = quizContainer.getByRole('button')
+    const options = optionLocator(page)
+    await expect(options.first()).toBeVisible()
 
-    // Click first option — auto-submit triggers
     await options.first().click()
-
-    // Wait for result state
     await expect(page.getByRole('button', { name: 'Next' })).toBeVisible()
 
-    // Explanation should be visible (mock data includes explanations)
-    const explanation = page.getByRole('heading', { name: 'Explanation' })
-    await expect(explanation).toBeVisible()
+    // Mock data includes explanations
+    await expect(
+      page.getByRole('heading', { name: 'Explanation' }),
+    ).toBeVisible()
   })
 
   // ---------------------------------------------------------------------------
   // Question progression
   // ---------------------------------------------------------------------------
-
-  test('progresses through questions', async ({ page }) => {
-    // Answer first question
-    await clickFirstOption(page)
-    await page.getByRole('button', { name: 'Next' }).click()
-
-    // Answer second question
-    await clickFirstOption(page)
-    await page.getByRole('button', { name: 'Next' }).click()
-
-    // Answer third question
-    await clickFirstOption(page)
-
-    // Should navigate to results
-    await waitForResults(page)
-  })
 
   test('skip button is available in Blitz mode', async ({ page }) => {
     const skipBtn = page.getByRole('button', { name: 'Skip' })
@@ -156,80 +67,74 @@ test.describe('Blitz mode', () => {
   // Results
   // ---------------------------------------------------------------------------
 
-  test('shows results after completing all questions', async ({ page }) => {
-    // Answer all 3 questions
-    await completeBlitzQuiz(page, 3)
-
-    // Should navigate to results
+  test('completes all questions and navigates to results', async ({ page }) => {
+    await completeQuiz(page, 3, { autoSubmit: true })
     await waitForResults(page)
-    await expect(page.getByRole('heading', { name: 'Results' })).toBeVisible()
   })
 
   test('results show correct score for Blitz mode', async ({ page }) => {
-    // Answer all 3 questions
-    await completeBlitzQuiz(page, 3)
-
-    // Should navigate to results
+    await completeQuiz(page, 3, { autoSubmit: true })
     await waitForResults(page)
 
-    // Score card should be visible
+    // Score card and stats labels should be visible
     await expect(page.getByText('Score')).toBeVisible()
-
-    // Correct/incorrect counts should be visible
     await expect(page.getByText('Correct', { exact: true })).toBeVisible()
     await expect(page.getByText('Incorrect', { exact: true })).toBeVisible()
-
-    // Accuracy percentage should be visible
     await expect(page.getByText('Accuracy')).toBeVisible()
   })
 
   test('New Quiz button works from results in Blitz mode', async ({ page }) => {
-    // Answer all 3 questions
-    await completeBlitzQuiz(page, 3)
+    await completeQuiz(page, 3, { autoSubmit: true })
+    await startNewQuiz(page)
+  })
+})
 
-    // Navigate to results
-    await waitForResults(page)
+// Own describe: these tests configure their own quiz, so they don't share
+// the 3-question beforeEach above (avoids a redundant setup round-trip).
+test.describe('Blitz answer feedback', { tag: ['@slow'] }, () => {
+  test('highlights correct and incorrect answers after auto-submit', async ({
+    page,
+  }) => {
+    // Hard difficulty: the first option is wrong in mock data (red highlight)
+    await startQuiz(page, {
+      mode: 'blitz',
+      questionCount: 2,
+      difficulty: 'hard',
+    })
 
-    // Click New Quiz
-    await page.getByRole('button', { name: 'New Quiz' }).click()
+    const options = optionLocator(page)
+    await expect(options.first()).toBeVisible()
+    await options.first().click()
+    await expect(page.getByRole('button', { name: 'Next' })).toBeVisible()
 
-    // Should return to setup
-    await page.waitForURL('/setup')
+    const quizScreen = page.getByTestId('quiz-screen')
     await expect(
-      page.getByRole('heading', { name: 'Quiz Settings' }),
+      quizScreen.locator('[data-state="correct"]').first(),
+    ).toBeVisible()
+    await expect(
+      quizScreen.locator('[data-state="incorrect"]').first(),
     ).toBeVisible()
   })
+})
 
-  // ---------------------------------------------------------------------------
-  // Blitz mode with custom settings
-  // ---------------------------------------------------------------------------
-
-  test('timer shows correct limit for question count', async ({ page }) => {
-    // Navigate to setup with 5 questions in Blitz mode
-    // (time limit = max(10, 5*3) = 15s)
+test.describe('Blitz custom settings', { tag: ['@slow'] }, () => {
+  test('timer starts at the limit for the question count', async ({ page }) => {
+    // getBlitzTimeLimit(5) = max(10, 5 * 3) = 15s (allow one tick of drift)
     await startQuiz(page, { mode: 'blitz', questionCount: 5 })
+    await expect(page.getByTestId('quiz-timer')).toHaveText(/^1[0-5]s$/)
 
-    // Answer all questions to reach results before time runs out
-    await completeBlitzQuiz(page, 5)
-
-    // Should navigate to results (proving the quiz was playable)
+    // Answer all questions before time runs out
+    await completeQuiz(page, 5, { autoSubmit: true })
     await waitForResults(page)
-    await expect(page.getByRole('heading', { name: 'Results' })).toBeVisible()
   })
 
   test('works with medium difficulty', async ({ page }) => {
-    // Start quiz with medium difficulty and blitz mode
     await startQuiz(page, {
       mode: 'blitz',
       difficulty: 'medium',
       questionCount: 3,
     })
-
-    // Answer questions
-    await completeBlitzQuiz(page, 3)
-
-    // Should navigate to results
+    await completeQuiz(page, 3, { autoSubmit: true })
     await waitForResults(page)
-    await expect(page.getByRole('heading', { name: 'Results' })).toBeVisible()
   })
 })

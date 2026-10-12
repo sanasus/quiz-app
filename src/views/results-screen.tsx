@@ -67,7 +67,10 @@ export function ResultsScreen() {
 
       {/* Score card */}
       <div className="mb-6 rounded-xl bg-surface p-6 text-center shadow-md">
-        <div className="mb-2 text-5xl font-extrabold text-primary">
+        <div
+          data-testid="result-score"
+          className="mb-2 text-5xl font-extrabold text-primary"
+        >
           {result.score}
         </div>
         <div className="text-text-2">{t('results.score')}</div>
@@ -76,23 +79,37 @@ export function ResultsScreen() {
       {/* Stats grid */}
       <div className="mb-6 grid grid-cols-2 gap-4 sm:grid-cols-4">
         <div className="rounded-xl bg-surface p-4 text-center shadow-sm">
-          <div className="text-2xl font-bold text-success">
+          <div
+            data-testid="result-correct"
+            className="text-2xl font-bold text-success"
+          >
             {result.correctCount}
           </div>
           <div className="text-xs text-text-2">{t('results.correct')}</div>
         </div>
         <div className="rounded-xl bg-surface p-4 text-center shadow-sm">
-          <div className="text-2xl font-bold text-danger">
+          <div
+            data-testid="result-incorrect"
+            className="text-2xl font-bold text-danger"
+          >
             {result.incorrectCount}
           </div>
           <div className="text-xs text-text-2">{t('results.incorrect')}</div>
         </div>
         <div className="rounded-xl bg-surface p-4 text-center shadow-sm">
-          <div className="text-2xl font-bold text-text">{accuracy}%</div>
+          <div
+            data-testid="result-accuracy"
+            className="text-2xl font-bold text-text"
+          >
+            {accuracy}%
+          </div>
           <div className="text-xs text-text-2">{t('results.accuracy')}</div>
         </div>
         <div className="rounded-xl bg-surface p-4 text-center shadow-sm">
-          <div className="text-2xl font-bold text-text">
+          <div
+            data-testid="result-time"
+            className="text-2xl font-bold text-text"
+          >
             {formatTime(result.timeSpent)}
           </div>
           <div className="text-xs text-text-2">{t('results.time_spent')}</div>

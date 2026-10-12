@@ -26,6 +26,7 @@ const ModeSelector = ({ modes, selectedMode, onSelect }: ModeSelectorProps) => {
           key={m.value}
           type="button"
           data-testid={`mode-${m.value}`}
+          aria-pressed={selectedMode === m.value}
           onClick={() => onSelect(m.value)}
           className={`flex-1 rounded-lg border-[3px] px-3 py-2 text-sm font-bold transition-all
             ${

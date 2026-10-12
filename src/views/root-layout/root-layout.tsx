@@ -33,7 +33,10 @@ export function RootLayout() {
 
           <div className="flex items-center gap-4">
             {/* Desktop nav */}
-            <nav className="hidden items-center gap-1 sm:flex">
+            <nav
+              data-testid="desktop-nav"
+              className="hidden items-center gap-1 sm:flex"
+            >
               {routes.map((r) => (
                 <a
                   key={r.path}
@@ -67,6 +70,7 @@ export function RootLayout() {
             <a
               key={r.path}
               href={r.path}
+              aria-label={t(r.key)}
               className="flex flex-1 flex-col items-center justify-center py-2 text-xs text-text-3 transition-colors hover:text-text"
             >
               <span className="text-base">{r.label}</span>

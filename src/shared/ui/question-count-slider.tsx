@@ -32,7 +32,10 @@ const QuestionCountSlider = ({
         onChange={(e) => onChange(Number(e.target.value))}
         className="w-full accent-primary hover:accent-primary-active cursor-pointer"
       />
-      <div className="mt-1 text-center text-lg font-bold text-primary">
+      <div
+        data-testid="question-count-value"
+        className="mt-1 text-center text-lg font-bold text-primary"
+      >
         {value}
       </div>
     </div>
