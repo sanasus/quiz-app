@@ -440,6 +440,8 @@ export const useQuizSessionStore = create<QuizSessionStore>((set) => ({
         incorrectCount: attempted.length - correctCount,
         totalQuestions: attempted.length,
         timeSpent,
+        bestStreak: s.bestStreak,
+        finishedAt: Date.now(),
         mode: s.mode,
         difficulty: s.config.difficulty,
         category: s.config.category,

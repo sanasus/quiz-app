@@ -279,6 +279,7 @@ describe('finishSession', () => {
       currentIndex: 4,
       status: 'answered',
       answers,
+      bestStreak: 4,
     })
     useQuizSessionStore.getState().finishSession(80, 42, 4)
 
@@ -286,6 +287,8 @@ describe('finishSession', () => {
     expect(result?.totalQuestions).toBe(5)
     expect(result?.correctCount).toBe(4)
     expect(result?.incorrectCount).toBe(1)
+    expect(result?.bestStreak).toBe(4)
+    expect(result?.finishedAt).toBeGreaterThan(0)
     expect(result?.mistakes).toHaveLength(1)
     expect(result?.mistakes[0].question.id).toBe('q5')
   })

@@ -147,6 +147,10 @@ export interface SessionResult {
   incorrectCount: number
   totalQuestions: number
   timeSpent: number
+  /** Longest correct-answer streak within the session. */
+  bestStreak: number
+  /** Epoch ms when the session finished (distinguishes repeat sessions). */
+  finishedAt: number
   mode: QuizMode
   difficulty: 'easy' | 'medium' | 'hard'
   category: string
