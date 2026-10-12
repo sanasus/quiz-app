@@ -1,6 +1,10 @@
+/**
+ * /achievements — Achievements screen.
+ */
+
 import { createFileRoute } from '@tanstack/react-router'
-import { AchievementsStub } from './-index.tsx'
+import { AchievementsScreen } from '../views/achievements-screen'
 
 export const Route = createFileRoute('/achievements')({
-  component: AchievementsStub,
+  component: AchievementsScreen,
 })

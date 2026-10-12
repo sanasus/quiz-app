@@ -1,7 +1,7 @@
 import { useEffect, useMemo } from 'react'
 import { useNavigate, useSearch } from '@tanstack/react-router'
 import { useQuizSessionStore } from '../../../shared/lib/session-store'
-import { quizConfigSchema } from '../../../routes/-index'
+import { quizConfigSchema } from '../../../shared/lib/quiz-config-schema'
 import type { QuizConfig } from '../../../shared/types/quiz'
 
 export interface QuizConfigResult {
