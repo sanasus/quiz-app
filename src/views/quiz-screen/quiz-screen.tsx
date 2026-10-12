@@ -14,6 +14,7 @@ import { useTotalTimer } from './hooks/use-total-timer'
 import { useQuizSubmission } from './hooks/use-quiz-submission'
 import { useQuizSessionEnd } from './hooks/use-quiz-session-end'
 import { useQuestionFeed } from './hooks/use-question-feed'
+import { useDevAnswerHint } from './hooks/use-dev-answer-hint'
 import { getMode } from '../../features/modes'
 import { QuizHeader } from './components/quiz-header'
 import { QuizQuestion } from './components/quiz-question'
@@ -66,6 +67,7 @@ export function QuizScreen() {
 
   useQuizSessionEnd(result.currentQuestion)
   const { waitingForBatch } = useQuestionFeed(effectiveConfig)
+  useDevAnswerHint(result.currentQuestion)
 
   // Reset timer when the question changes (blitz mode only).
   // Narrowed to primitive deps so the effect doesn't re-run on unrelated
