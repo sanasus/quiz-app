@@ -182,25 +182,25 @@ export async function startNewQuiz(page: Page) {
 
 const test_ = base.extend<{
   /** Navigate to setup and wait for it to be ready. */
-  goToSetup: () => Promise<Page>
+  goToSetup: () => Promise<void>
   /** Start a quiz with the given config (or defaults). */
   startQuiz: (config?: QuizConfig) => Promise<Page>
   /** Answer a question and click Next. */
-  answerQuestion: (option: string, expectNext?: boolean) => Promise<Page>
+  answerQuestion: (option: string, expectNext?: boolean) => Promise<void>
   /** Answer the first visible option and click Next. */
   answerFirstOption: () => Promise<void>
   /** Skip the current question and go to Next. */
-  skipQuestion: () => Promise<Page>
+  skipQuestion: () => Promise<void>
   /** Wait for results page to be visible. */
   waitForResults: () => Promise<Page>
   /** Click "New Quiz" and wait for setup. */
   startNewQuiz: () => Promise<Page>
 }>({
   goToSetup: async ({ page }, use) => {
-    await use(goToSetup(page))
+    await use(() => goToSetup(page))
   },
   startQuiz: async ({ page }, use) => {
-    await use(startQuiz(page))
+    await use((config?: QuizConfig) => startQuiz(page, config))
   },
   answerQuestion: async ({ page }, use) => {
     await use((option: string, expectNext = true) =>
