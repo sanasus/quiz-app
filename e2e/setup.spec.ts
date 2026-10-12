@@ -56,7 +56,9 @@ test.describe('Setup page', () => {
 
     // Panel closes (topic buttons unmount) and the trigger shows the
     // selected category
-    await expect(page.getByRole('button', { name: 'Science' })).not.toBeVisible()
+    await expect(
+      page.getByRole('button', { name: 'Science' }),
+    ).not.toBeVisible()
     await expect(dropdown).toContainText('Physics')
   })
 
@@ -85,6 +87,19 @@ test.describe('Setup page', () => {
 
     // The count display mirrors the slider value
     await expect(page.getByTestId('question-count-value')).toHaveText('2')
+  })
+
+  test('question count slider is hidden in survival mode', async ({ page }) => {
+    const slider = page.locator('input[type="range"]')
+    await expect(slider).toBeVisible()
+
+    // Survival ignores the setting — the slider disappears...
+    await page.getByTestId('mode-survival').click()
+    await expect(slider).toBeHidden()
+
+    // ...and comes back when another mode is selected
+    await page.getByTestId('mode-classic').click()
+    await expect(slider).toBeVisible()
   })
 
   test('mode selector shows all game modes', async ({ page }) => {

@@ -103,23 +103,25 @@ function createInitialState(config: QuizConfig): QuizSession {
 /**
  * Whether another question batch may still arrive (survival batch loading).
  *
- * Pure — used by the reducer, the session-end hook and the UI to decide
- * between "wait for the next batch" and "finish the session".
+ * The question-count setting does NOT apply to survival: batches keep
+ * arriving until the API runs out of questions. Pure — used by the
+ * reducer, the session-end hook and the UI to decide between "wait for
+ * the next batch" and "finish the session".
  */
 export function canLoadMoreQuestions(state: QuizSession): boolean {
   return (
     state.mode === 'survival' &&
     state.repeatConfig === null &&
-    !state.questionsExhausted &&
-    state.questions.length < state.config.questionCount
+    !state.questionsExhausted
   )
 }
 
 /**
  * Append a question batch to the session.
  *
- * Pure: deduplicates by id, caps at the configured question count and
- * reports how many questions were actually added (0 = pool exhausted).
+ * Pure: deduplicates by id (including within the batch) and reports
+ * how many questions were actually added (0 = pool exhausted). No cap
+ * by questionCount — survival runs until the API runs out.
  */
 export function addQuestionBatch(
   state: QuizSession,
@@ -128,13 +130,11 @@ export function addQuestionBatch(
   // No active session (reset / idle) — ignore stale batches.
   if (state.questions.length === 0) return { session: state, added: 0 }
 
-  const existingIds = new Set(state.questions.map((q) => q.id))
-  const cap = state.config.questionCount
+  const seen = new Set(state.questions.map((q) => q.id))
   const additions: Question[] = []
-
   for (const q of incoming) {
-    if (state.questions.length + additions.length >= cap) break
-    if (existingIds.has(q.id)) continue
+    if (seen.has(q.id)) continue
+    seen.add(q.id)
     additions.push(q)
   }
 

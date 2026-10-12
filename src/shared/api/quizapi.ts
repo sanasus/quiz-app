@@ -46,12 +46,14 @@ const API_BASE = 'https://quizapi.io/api/v1'
 export const SURVIVAL_BATCH_SIZE = 10
 
 /**
- * How many questions are fetched up front. Survival loads only the
- * first batch; every other mode loads the full configured count.
+ * How many questions are fetched up front. Survival ignores the
+ * question-count setting entirely: it always starts with the first
+ * batch, then pulls batches of SURVIVAL_BATCH_SIZE until the API runs
+ * out. Every other mode loads the full configured count.
  */
 export function getInitialFetchLimit(config: QuizConfig): number {
-  if (config.mode !== 'survival') return config.questionCount
-  return Math.min(SURVIVAL_BATCH_SIZE, config.questionCount)
+  if (config.mode === 'survival') return SURVIVAL_BATCH_SIZE
+  return config.questionCount
 }
 
 interface FetchQuestionsOptions {

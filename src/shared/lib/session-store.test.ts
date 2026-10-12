@@ -33,10 +33,12 @@ const pool: Question[] = Array.from({ length: 10 }, (_, i) =>
   makeQuestion(`q${i + 1}`),
 )
 
+// questionCount is deliberately below the pool size: the setting must
+// not affect survival at all (first batch of 10, then until the API runs out).
 const survivalConfig: QuizConfig = {
   category: 'all',
   difficulty: 'easy',
-  questionCount: 20,
+  questionCount: 2,
   mode: 'survival',
 }
 
@@ -69,7 +71,7 @@ beforeEach(() => {
 // ---------------------------------------------------------------------------
 
 describe('canLoadMoreQuestions', () => {
-  it('allows batches while the survival pool is short of questionCount', () => {
+  it('allows batches while the pool is not exhausted', () => {
     expect(canLoadMoreQuestions(makeSession())).toBe(true)
   })
 
@@ -78,11 +80,11 @@ describe('canLoadMoreQuestions', () => {
     expect(canLoadMoreQuestions(session)).toBe(false)
   })
 
-  it('stops once questionCount questions are loaded', () => {
+  it('ignores questionCount: keeps loading past it', () => {
     const session = makeSession({
       config: { ...survivalConfig, questionCount: 10 },
     })
-    expect(canLoadMoreQuestions(session)).toBe(false)
+    expect(canLoadMoreQuestions(session)).toBe(true)
   })
 
   it('never batches outside survival mode', () => {
@@ -117,13 +119,23 @@ describe('addQuestionBatch', () => {
     expect(session.questions).toHaveLength(10)
   })
 
-  it('caps at the configured question count', () => {
+  it('ignores questionCount and appends the whole batch', () => {
     const state = makeSession({
       config: { ...survivalConfig, questionCount: 11 },
     })
     const { session, added } = addQuestionBatch(state, [
       makeQuestion('new1'),
       makeQuestion('new2'),
+    ])
+
+    expect(added).toBe(2)
+    expect(session.questions).toHaveLength(12)
+  })
+
+  it('deduplicates within a single batch too', () => {
+    const { session, added } = addQuestionBatch(makeSession(), [
+      makeQuestion('new1'),
+      makeQuestion('new1'),
     ])
 
     expect(added).toBe(1)

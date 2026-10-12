@@ -662,8 +662,9 @@ curl -X GET \
 > `addQuestionBatch` в `src/shared/lib/session-store.ts`). `offset`
 > применяется только в моке (`mock-questions.ts`), где один и тот же
 > пул режется на не пересекающиеся слайсы: начальная порция ---
-> `getInitialFetchLimit` (`min(10, questionCount)`), далее батчи по
-> `SURVIVAL_BATCH_SIZE = 10`.
+> `getInitialFetchLimit` (для «Выживания» всегда 10, настройка
+> количества вопросов не действует), далее батчи по
+> `SURVIVAL_BATCH_SIZE = 10`, пока пул не кончится.
 
 ### Пример
 

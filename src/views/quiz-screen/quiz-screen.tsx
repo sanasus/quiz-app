@@ -100,12 +100,10 @@ export function QuizScreen() {
 
   const question = result.currentQuestion
   const progress = store.currentIndex + 1
-  // Survival reports the configured target: the pool loads in batches,
-  // so `questions.length` undercounts until the last batch arrives.
-  const total =
-    store.mode === 'survival' && !store.repeatConfig
-      ? store.config.questionCount
-      : store.questions.length
+  // Total grows with the loaded pool: survival's question-count setting
+  // is ignored (it batches until the API runs out), so configured count
+  // would be meaningless here.
+  const total = store.questions.length
 
   // ---------------------------------------------------------------------------
   // Render

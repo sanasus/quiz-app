@@ -109,11 +109,15 @@ export function SetupScreen() {
           />
         </div>
 
-        {/* Question count */}
-        <QuestionCountSlider
-          value={config.questionCount}
-          onChange={(count) => store.updateConfig({ questionCount: count })}
-        />
+        {/* Question count — does not apply to survival (it loads the
+            first batch of 10 and keeps batching until the API runs
+            out), so the setting is hidden for that mode */}
+        {config.mode !== 'survival' ? (
+          <QuestionCountSlider
+            value={config.questionCount}
+            onChange={(count) => store.updateConfig({ questionCount: count })}
+          />
+        ) : null}
 
         {/* Mode */}
         <div className="group" data-testid="mode-selector">

@@ -95,5 +95,11 @@ test.describe('Quiz screen', () => {
 
     // Lives show as heart emojis (❤️)
     await expect(page.getByTestId('quiz-lives')).toHaveText(/❤️+/)
+
+    // The question-count setting does not apply to survival: it always
+    // starts with the first batch of 10 questions (the default count is 2)
+    await expect(
+      page.getByRole('heading', { name: 'Question 1/10', exact: true }),
+    ).toBeVisible()
   })
 })
