@@ -23,8 +23,16 @@ i18n
       caches: ['localStorage'],
     },
   })
+  .then(() => {
+    // Keep <html lang> in sync so screen readers pick the right voice.
+    document.documentElement.lang = i18n.resolvedLanguage ?? 'en'
+  })
   .catch(() => {
     // i18n init errors are non-fatal for Chunk 0 stubs
   })
+
+i18n.on('languageChanged', (lng) => {
+  document.documentElement.lang = lng
+})
 
 export default i18n

@@ -31,16 +31,16 @@ export const QuizOption = memo(function QuizOption({
   let animate: 'idle' | 'shake' | 'pop' = 'idle'
   if (showResult) {
     if (isCorrect) {
-      optionClass = 'border-success bg-success/10 text-success'
+      optionClass = 'border-success bg-success/10 text-success-ink'
       dataState = 'correct'
       animate = 'pop'
     } else if (isSelected) {
-      optionClass = 'border-danger bg-danger/10 text-danger'
+      optionClass = 'border-danger bg-danger/10 text-danger-ink'
       dataState = 'incorrect'
       animate = 'shake'
     }
   } else if (isSelected) {
-    optionClass = 'border-primary bg-primary/10 text-primary'
+    optionClass = 'border-primary bg-primary/10 text-primary-ink'
   }
 
   const animateProps = motionEnabled
@@ -55,26 +55,35 @@ export const QuizOption = memo(function QuizOption({
       }
     : {}
 
+  // Hover feedback only while the option is still interactive — after the
+  // answer it would otherwise override the result tint.
+  const hoverClass = disabled ? '' : 'hover:bg-muted'
+
   return (
     <motion.button
       data-testid={`option-${id}`}
       data-state={dataState}
       onClick={() => onToggle(id)}
       aria-selected={isSelected}
-      className={`w-full rounded-lg border p-4 text-left text-sm transition-all hover:bg-muted ${optionClass}`}
+      role="option"
+      className={`w-full rounded-lg border p-4 text-left text-sm transition-colors disabled:cursor-not-allowed disabled:opacity-75 ${hoverClass} ${optionClass}`}
       disabled={disabled}
       {...animateProps}
     >
       <div className="flex items-center gap-3">
-        <span className="flex h-6 w-6 items-center justify-center rounded-full border border-border text-xs">
+        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-border text-xs">
           {id.toUpperCase()}
         </span>
-        <span>{text}</span>
+        <span className="min-w-0 break-words">{text}</span>
         {showResult && isCorrect ? (
-          <span className="ml-auto text-success">✓</span>
+          <span className="ml-auto text-success-ink" aria-hidden="true">
+            ✓
+          </span>
         ) : null}
         {showResult && isSelected && !isCorrect ? (
-          <span className="ml-auto text-danger">✗</span>
+          <span className="ml-auto text-danger-ink" aria-hidden="true">
+            ✗
+          </span>
         ) : null}
       </div>
     </motion.button>

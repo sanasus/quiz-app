@@ -28,10 +28,10 @@ const ModeSelector = ({ modes, selectedMode, onSelect }: ModeSelectorProps) => {
           data-testid={`mode-${m.value}`}
           aria-pressed={selectedMode === m.value}
           onClick={() => onSelect(m.value)}
-          className={`flex-1 rounded-lg border-[3px] px-3 py-2 text-sm font-bold transition-all
+          className={`flex-1 rounded-lg border-[3px] px-3 py-2 text-sm font-bold transition-[transform,box-shadow,background-color,border-color,color]
             ${
               selectedMode === m.value
-                ? 'border-primary ring-2 ring-primary/30 bg-primary/20 text-primary scale-[1.03] cursor-pointer'
+                ? 'border-primary ring-2 ring-primary/30 bg-primary/20 text-primary-ink scale-[1.03] cursor-pointer'
                 : 'border-border bg-bg text-text-2 hover:border-primary/50 hover:bg-primary/5 hover:text-text cursor-pointer active:scale-[0.98]'
             }`}
         >

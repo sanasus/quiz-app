@@ -4,6 +4,7 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#f6f4ff" />
     <title>QuizApp</title>
     <script>
       // Apply the persisted theme before first paint (no flash of the
@@ -19,6 +20,8 @@
           var root = document.documentElement
           root.dataset.theme = dark ? 'dark' : 'light'
           root.style.colorScheme = root.dataset.theme
+          var meta = document.querySelector('meta[name="theme-color"]')
+          if (meta) meta.setAttribute('content', dark ? '#0f0d1a' : '#f6f4ff')
           if (stored.state && stored.state.animations === false) {
             root.dataset.motion = 'off'
           }

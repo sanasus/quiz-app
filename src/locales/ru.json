@@ -1,9 +1,12 @@
 {
   "app": {
     "title": "QuizApp",
+    "skip_to_content": "Перейти к содержимому",
+    "language_current": "Текущий язык: {{code}}",
+    "footer": "QuizApp · Powered by QuizAPI",
     "nav": {
       "home": "Главная",
-      "setup": "Настройки",
+      "setup": "Настройка",
       "quiz": "Тест",
       "results": "Результаты",
       "stats": "Статистика",
@@ -118,10 +121,11 @@
     "theme_hint": "Системная тема следует настройкам устройства."
   },
   "common": {
-    "loading": "Загрузка...",
+    "loading": "Загрузка…",
     "error": "Ошибка",
     "not_found": "Страница не найдена",
     "retry": "Повторить",
+    "close": "Закрыть",
     "cancel": "Отмена",
     "confirm": "Подтвердить",
     "back": "Назад",

@@ -92,16 +92,22 @@ const CategoryDropdown = ({
       <button
         type="button"
         data-testid="category-dropdown"
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        aria-labelledby="category-label category-value"
         onClick={() => setOpen((prev) => !prev)}
-        className={`flex w-full items-center gap-2 rounded-lg border-[3px] px-4 py-2.5 text-left text-sm font-bold transition-all cursor-pointer
+        className={`flex w-full items-center gap-2 rounded-lg border-[3px] px-4 py-2.5 text-left text-sm font-bold transition-colors cursor-pointer
           ${
             open
-              ? 'border-primary ring-2 ring-primary/20 bg-primary/5 text-primary'
+              ? 'border-primary ring-2 ring-primary/20 bg-primary/5 text-primary-ink'
               : 'border-border bg-bg text-text hover:border-primary/50 hover:bg-primary/5 active:scale-[0.99]'
           }`}
       >
-        <span className="flex-1 truncate">{displayText}</span>
+        <span id="category-value" className="flex-1 truncate">
+          {displayText}
+        </span>
         <span
+          aria-hidden="true"
           className={`text-xs text-text-2 transition-transform duration-200 ${open ? 'rotate-180' : ''}`}
         >
           ▼
@@ -110,7 +116,7 @@ const CategoryDropdown = ({
 
       {/* Dropdown panel */}
       {open && (
-        <div className="absolute z-50 mt-1 w-full rounded-xl border border-border bg-surface shadow-xl transition-all animate-in">
+        <div className="absolute z-50 mt-1 w-full rounded-xl border border-border bg-surface shadow-xl animate-in">
           {/* "All" option at top */}
           <button
             type="button"
@@ -121,7 +127,7 @@ const CategoryDropdown = ({
             className={`flex w-full items-center gap-2 px-4 py-2.5 text-sm font-bold transition-colors cursor-pointer
               ${
                 selectedCategory === null
-                  ? 'bg-primary/10 text-primary'
+                  ? 'bg-primary/10 text-primary-ink'
                   : 'text-text-2 hover:bg-primary/5'
               }`}
           >
@@ -132,7 +138,7 @@ const CategoryDropdown = ({
           <div className="border-t border-border" />
 
           {/* Topics as accordion inside dropdown */}
-          <div className="max-h-[60vh] overflow-y-auto p-2">
+          <div className="max-h-[60vh] overflow-y-auto overscroll-contain p-2">
             {topics.map((topic) => {
               const isExpanded = expandedTopicId === topic.id
 
@@ -146,6 +152,7 @@ const CategoryDropdown = ({
                   >
                     <span className="flex-1 text-left">{topic.name}</span>
                     <span
+                      aria-hidden="true"
                       className={`text-xs transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`}
                     >
                       ▼
@@ -163,16 +170,16 @@ const CategoryDropdown = ({
                             key={cat.id}
                             type="button"
                             onClick={() => handleCategorySelect(cat.slug)}
-                            className={`flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-all cursor-pointer
+                            className={`flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors cursor-pointer
                               ${
                                 isSelected
-                                  ? 'bg-primary/20 text-primary border-2 border-primary'
+                                  ? 'bg-primary/20 text-primary-ink border-2 border-primary'
                                   : 'text-text-2 hover:bg-primary/5 hover:text-text border-2 border-transparent'
                               }`}
                           >
                             <span className="truncate">{cat.name}</span>
                             {cat.quizCount != null && (
-                              <span className="ml-auto text-xs text-text-2/50 shrink-0">
+                              <span className="ml-auto text-xs text-text-3 shrink-0">
                                 {cat.quizCount}
                               </span>
                             )}

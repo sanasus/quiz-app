@@ -148,7 +148,7 @@ export function StatsScreen() {
             <div className="rounded-xl bg-surface p-4 text-center shadow-sm">
               <div
                 data-testid="stats-best-score"
-                className="text-2xl font-bold text-warning"
+                className="text-2xl font-bold text-warning-text"
               >
                 {stats.bestScore}
               </div>
@@ -175,7 +175,7 @@ export function StatsScreen() {
               aria-label={t('stats.xp_progress')}
             >
               <div
-                className="h-full rounded-full bg-primary transition-all"
+                className="h-full rounded-full bg-primary transition-[width]"
                 style={{
                   width: `${Math.min(100, (progress.into / progress.need) * 100)}%`,
                 }}

@@ -82,10 +82,13 @@ export function SetupScreen() {
         {t('setup.title')}
       </h1>
 
-      <div className="flex flex-col gap-6 rounded-xl bg-surface p-6 shadow-md transition-all hover:shadow-lg">
+      <div className="flex flex-col gap-6 rounded-xl bg-surface p-6 shadow-md transition-shadow hover:shadow-lg">
         {/* Category — custom dropdown */}
         <div className="group">
-          <label className="mb-2 block text-sm font-medium text-text-2 group-hover:text-primary transition-colors cursor-default">
+          <label
+            id="category-label"
+            className="mb-2 block text-sm font-medium text-text-2 group-hover:text-primary transition-colors cursor-default"
+          >
             {t('setup.category')}
           </label>
           <CategoryDropdown
@@ -97,8 +100,11 @@ export function SetupScreen() {
         </div>
 
         {/* Difficulty */}
-        <div className="group">
-          <label className="mb-2 block text-sm font-medium text-text-2 group-hover:text-primary transition-colors cursor-default">
+        <div className="group" role="group" aria-labelledby="difficulty-label">
+          <label
+            id="difficulty-label"
+            className="mb-2 block text-sm font-medium text-text-2 group-hover:text-primary transition-colors cursor-default"
+          >
             {t('setup.difficulty')}
           </label>
           <DifficultySelector
@@ -120,8 +126,16 @@ export function SetupScreen() {
         ) : null}
 
         {/* Mode */}
-        <div className="group" data-testid="mode-selector">
-          <label className="mb-2 block text-sm font-medium text-text-2 group-hover:text-primary transition-colors cursor-default">
+        <div
+          className="group"
+          data-testid="mode-selector"
+          role="group"
+          aria-labelledby="mode-label"
+        >
+          <label
+            id="mode-label"
+            className="mb-2 block text-sm font-medium text-text-2 group-hover:text-primary transition-colors cursor-default"
+          >
             {t('setup.mode')}
           </label>
           <ModeSelector

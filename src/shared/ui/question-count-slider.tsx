@@ -21,10 +21,14 @@ const QuestionCountSlider = ({
 
   return (
     <div className="group">
-      <label className="mb-2 block text-sm font-medium text-text-2 group-hover:text-primary transition-colors cursor-default">
+      <label
+        htmlFor="question-count"
+        className="mb-2 block text-sm font-medium text-text-2 group-hover:text-primary transition-colors cursor-default"
+      >
         {t('setup.question_count')}
       </label>
       <input
+        id="question-count"
         type="range"
         min={min}
         max={max}
@@ -34,7 +38,7 @@ const QuestionCountSlider = ({
       />
       <div
         data-testid="question-count-value"
-        className="mt-1 text-center text-lg font-bold text-primary"
+        className="mt-1 text-center text-lg font-bold text-primary-ink"
       >
         {value}
       </div>

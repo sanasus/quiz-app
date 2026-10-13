@@ -1,6 +1,9 @@
 {
   "app": {
     "title": "QuizApp",
+    "skip_to_content": "Skip to content",
+    "language_current": "Current language: {{code}}",
+    "footer": "QuizApp · Powered by QuizAPI",
     "nav": {
       "home": "Home",
       "setup": "Setup",
@@ -118,10 +121,11 @@
     "theme_hint": "The system theme follows your device setting."
   },
   "common": {
-    "loading": "Loading...",
+    "loading": "Loading…",
     "error": "Error",
     "not_found": "Page not found",
     "retry": "Retry",
+    "close": "Close",
     "cancel": "Cancel",
     "confirm": "Confirm",
     "back": "Back",

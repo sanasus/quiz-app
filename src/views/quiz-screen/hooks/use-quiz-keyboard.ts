@@ -30,6 +30,9 @@ function isFormControl(target: EventTarget | null): boolean {
     tag === 'TEXTAREA' ||
     tag === 'SELECT' ||
     tag === 'BUTTON' ||
+    tag === 'A' ||
+    tag === 'LABEL' ||
+    tag === 'SUMMARY' ||
     target.isContentEditable
   )
 }

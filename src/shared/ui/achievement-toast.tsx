@@ -1,10 +1,15 @@
 /**
  * Achievement toast — animated unlock notification with aria-live.
+ *
+ * Animations honor the global /settings toggle (useMotionEnabled), the
+ * toast can be dismissed manually, and the auto-dismiss timer pauses
+ * while the pointer or keyboard focus is inside it.
  */
 
-import { useEffect } from 'react'
-import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
+import { useEffect, useState } from 'react'
+import { AnimatePresence, motion } from 'motion/react'
 import { useTranslation } from 'react-i18next'
+import { useMotionEnabled } from '../lib/use-motion-enabled'
 import type { Achievement } from '../types/meta'
 
 export interface AchievementToastItem extends Achievement {
@@ -25,15 +30,18 @@ export function AchievementToast({
   duration = 5000,
 }: AchievementToastProps) {
   const { t } = useTranslation()
-  const reducedMotion = useReducedMotion()
+  const motionEnabled = useMotionEnabled()
+  const [paused, setPaused] = useState(false)
 
+  // Restart the countdown whenever the queue or the pause state changes:
+  // pausing clears the timers, resuming schedules a fresh full window.
   useEffect(() => {
-    if (toasts.length === 0) return
+    if (toasts.length === 0 || paused) return
     const timers = toasts.map((toast) =>
       setTimeout(() => onDismiss(toast.toastKey), duration),
     )
     return () => timers.forEach(clearTimeout)
-  }, [toasts, onDismiss, duration])
+  }, [toasts, onDismiss, duration, paused])
 
   return (
     <div
@@ -41,23 +49,27 @@ export function AchievementToast({
       role="status"
       aria-live="polite"
       aria-atomic="false"
+      onMouseEnter={() => setPaused(true)}
+      onMouseLeave={() => setPaused(false)}
+      onFocus={() => setPaused(true)}
+      onBlur={() => setPaused(false)}
     >
       <AnimatePresence>
         {toasts.map((toast) => (
           <motion.div
             key={toast.toastKey}
             initial={
-              reducedMotion
-                ? { opacity: 0 }
-                : { opacity: 0, y: -24, scale: 0.95 }
+              motionEnabled
+                ? { opacity: 0, y: -24, scale: 0.95 }
+                : { opacity: 0 }
             }
             animate={
-              reducedMotion ? { opacity: 1 } : { opacity: 1, y: 0, scale: 1 }
+              motionEnabled ? { opacity: 1, y: 0, scale: 1 } : { opacity: 1 }
             }
             exit={
-              reducedMotion
-                ? { opacity: 0 }
-                : { opacity: 0, y: -16, scale: 0.95 }
+              motionEnabled
+                ? { opacity: 0, y: -16, scale: 0.95 }
+                : { opacity: 0 }
             }
             transition={{ type: 'spring', stiffness: 400, damping: 28 }}
             className="pointer-events-auto flex w-full max-w-sm items-center gap-3 rounded-xl border-2 border-warning bg-surface p-4 shadow-lg"
@@ -65,7 +77,7 @@ export function AchievementToast({
             <span aria-hidden="true" className="text-3xl">
               {toast.icon}
             </span>
-            <div className="min-w-0">
+            <div className="min-w-0 flex-1">
               <p className="text-xs uppercase tracking-wide text-text-2">
                 {t('achievements.unlocked')}
               </p>
@@ -76,6 +88,14 @@ export function AchievementToast({
                 {t(toast.descriptionKey)}
               </p>
             </div>
+            <button
+              type="button"
+              aria-label={t('common.close')}
+              onClick={() => onDismiss(toast.toastKey)}
+              className="shrink-0 rounded-md p-1.5 text-text-3 transition-colors hover:bg-muted hover:text-text"
+            >
+              <span aria-hidden="true">✕</span>
+            </button>
           </motion.div>
         ))}
       </AnimatePresence>

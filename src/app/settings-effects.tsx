@@ -19,6 +19,9 @@ export function SettingsEffects() {
       const root = document.documentElement
       root.dataset.theme = resolved
       root.style.colorScheme = resolved
+
+      const meta = document.querySelector('meta[name="theme-color"]')
+      meta?.setAttribute('content', resolved === 'dark' ? '#0f0d1a' : '#f6f4ff')
     }
 
     apply()

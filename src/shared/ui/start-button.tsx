@@ -17,7 +17,7 @@ const StartButton = ({ loading, onClick }: StartButtonProps) => {
       type="button"
       onClick={onClick}
       disabled={loading}
-      className={`mt-2 w-full rounded-lg bg-primary px-6 py-3 text-lg font-bold text-on-primary shadow-md transition-all cursor-pointer
+      className={`mt-2 w-full rounded-lg bg-primary px-6 py-3 text-lg font-bold text-on-primary shadow-md transition-[transform,box-shadow,background-color,opacity] cursor-pointer
         ${
           loading
             ? 'opacity-50 cursor-not-allowed'
@@ -26,7 +26,7 @@ const StartButton = ({ loading, onClick }: StartButtonProps) => {
     >
       {loading ? (
         <span className="flex items-center justify-center gap-2">
-          <span className="inline-block h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent" />
+          <span className="inline-block h-5 w-5 animate-spin rounded-full border-2 border-on-primary border-t-transparent" />
           {t('setup.start')}
         </span>
       ) : (

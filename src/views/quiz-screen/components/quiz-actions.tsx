@@ -25,10 +25,15 @@ export const QuizActions = memo(function QuizActions({
   const { t } = useTranslation()
 
   return (
-    <div className="flex items-center justify-between">
+    <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
       <div className="flex items-center gap-3">
         <span className="text-sm text-text-3">
-          {t('quiz.streak')}: <AnimatedNumber value={streak} duration={400} />{' '}
+          {t('quiz.streak')}:{' '}
+          <AnimatedNumber
+            value={streak}
+            duration={400}
+            className="tabular-nums"
+          />{' '}
           🔥
         </span>
       </div>
@@ -44,7 +49,7 @@ export const QuizActions = memo(function QuizActions({
             <button
               onClick={onSubmit}
               disabled={!hasSelection}
-              className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-on-primary transition-colors hover:bg-primary/90 disabled:opacity-50"
+              className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-on-primary transition-colors hover:bg-primary-hover disabled:opacity-50"
             >
               {t('quiz.submit')}
             </button>
@@ -54,7 +59,7 @@ export const QuizActions = memo(function QuizActions({
           <button
             onClick={onNext}
             disabled={nextDisabled}
-            className="rounded-lg bg-primary px-6 py-2 text-sm font-semibold text-on-primary transition-colors hover:bg-primary/90 disabled:cursor-wait disabled:opacity-60"
+            className="rounded-lg bg-primary px-6 py-2 text-sm font-semibold text-on-primary transition-colors hover:bg-primary-hover disabled:cursor-wait disabled:opacity-60"
           >
             {nextDisabled ? t('quiz.loading_next') : t('quiz.next')}
           </button>

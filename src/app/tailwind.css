@@ -7,18 +7,24 @@
   --color-primary: #6c5ce7;
   --color-primary-hover: #5a4bd1;
   --color-on-primary: #ffffff;
+  /* Darker variants for text on light tints (AA on bg-primary/10). */
+  --color-primary-ink: #5a4bd1;
 
   --color-success: #00875e;
   --color-success-hover: #006b4b;
   --color-on-success: #ffffff;
+  --color-success-ink: #006b4b;
 
   --color-warning: #fdcb6e;
   --color-warning-hover: #f5b93f;
   --color-on-warning: #3a2a00;
+  /* Yellow fails as text on light surfaces — always use this for text. */
+  --color-warning-text: #8a5a00;
 
   --color-danger: #cf3b34;
   --color-danger-hover: #b32f28;
   --color-on-danger: #ffffff;
+  --color-danger-ink: #b32f28;
 
   --color-info: #0b6ec7;
   --color-info-hover: #0a5ea8;
@@ -92,18 +98,22 @@
   --color-primary: #a29bfe;
   --color-primary-hover: #8f86f7;
   --color-on-primary: #1b1440;
+  --color-primary-ink: #a29bfe;
 
   --color-success: #55efc4;
   --color-success-hover: #2ed3ab;
   --color-on-success: #06261d;
+  --color-success-ink: #55efc4;
 
   --color-warning: #ffeaa7;
   --color-warning-hover: #f5dc8a;
   --color-on-warning: #3a2a00;
+  --color-warning-text: #ffeaa7;
 
   --color-danger: #fab1a0;
   --color-danger-hover: #f79482;
   --color-on-danger: #3a1410;
+  --color-danger-ink: #fab1a0;
 
   --color-info: #74b9ff;
   --color-info-hover: #5aa8f8;
@@ -142,14 +152,9 @@
   }
 
   html {
-    font-size: 16px;
     -webkit-text-size-adjust: 100%;
-  }
-
-  @media (max-width: 768px) {
-    html {
-      font-size: 15px;
-    }
+    /* Keep the sticky header from covering the focused element. */
+    scroll-padding-top: 6rem;
   }
 
   body {

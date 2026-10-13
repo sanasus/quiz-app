@@ -88,13 +88,17 @@ export function ResultsScreen() {
           data-testid="result-score"
           className="mb-2 text-5xl font-extrabold text-primary"
         >
-          <AnimatedNumber value={result.score} from={0} />
+          <AnimatedNumber
+            value={result.score}
+            from={0}
+            className="tabular-nums"
+          />
         </div>
         <div className="text-text-2">{t('results.score')}</div>
         {metrics && (
           <div
             data-testid="result-xp"
-            className="mt-2 text-lg font-bold text-warning"
+            className="mt-2 text-lg font-bold text-warning-text"
           >
             +{metrics.xpGained} XP
           </div>
@@ -108,7 +112,11 @@ export function ResultsScreen() {
             data-testid="result-correct"
             className="text-2xl font-bold text-success"
           >
-            <AnimatedNumber value={result.correctCount} from={0} />
+            <AnimatedNumber
+              value={result.correctCount}
+              from={0}
+              className="tabular-nums"
+            />
           </div>
           <div className="text-xs text-text-2">{t('results.correct')}</div>
         </div>
@@ -117,7 +125,11 @@ export function ResultsScreen() {
             data-testid="result-incorrect"
             className="text-2xl font-bold text-danger"
           >
-            <AnimatedNumber value={result.incorrectCount} from={0} />
+            <AnimatedNumber
+              value={result.incorrectCount}
+              from={0}
+              className="tabular-nums"
+            />
           </div>
           <div className="text-xs text-text-2">{t('results.incorrect')}</div>
         </div>
@@ -126,7 +138,12 @@ export function ResultsScreen() {
             data-testid="result-accuracy"
             className="text-2xl font-bold text-text"
           >
-            <AnimatedNumber value={accuracy} from={0} />%
+            <AnimatedNumber
+              value={accuracy}
+              from={0}
+              className="tabular-nums"
+            />
+            %
           </div>
           <div className="text-xs text-text-2">{t('results.accuracy')}</div>
         </div>
@@ -152,7 +169,7 @@ export function ResultsScreen() {
               <div key={idx} className="rounded-lg bg-muted p-3">
                 <p className="mb-1 font-medium text-text">{m.question.text}</p>
                 <div className="flex flex-col gap-1 text-sm">
-                  <span className="text-danger">
+                  <span className="text-danger-ink">
                     ❌{' '}
                     {m.selectedOptionIds
                       .map(
@@ -162,7 +179,7 @@ export function ResultsScreen() {
                       )
                       .join(', ')}
                   </span>
-                  <span className="text-success">
+                  <span className="text-success-ink">
                     ✅{' '}
                     {m.question.correctOptionIds
                       .map(
@@ -193,7 +210,7 @@ export function ResultsScreen() {
         <button
           type="button"
           onClick={handleNewQuiz}
-          className="rounded-lg bg-primary px-6 py-2.5 font-semibold text-on-primary shadow-sm transition-colors hover:bg-primary/90"
+          className="rounded-lg bg-primary px-6 py-2.5 font-semibold text-on-primary shadow-sm transition-colors hover:bg-primary-hover"
         >
           {t('results.new_quiz')}
         </button>

@@ -1,4 +1,5 @@
 import { memo } from 'react'
+import { useTranslation } from 'react-i18next'
 import { QuizOption } from './quiz-option'
 
 export interface QuizOptionsProps {
@@ -16,13 +17,14 @@ export const QuizOptions = memo(function QuizOptions({
   status,
   onToggle,
 }: QuizOptionsProps) {
+  const { t } = useTranslation()
   const answered = status === 'answered'
   // Set lookups instead of per-option Array.includes (js-set-map-lookups)
   const correctSet = new Set(correctOptionIds)
   const selectedSet = new Set(selectedIds)
 
   return (
-    <div className="space-y-3">
+    <div role="listbox" aria-label={t('quiz.question')} className="space-y-3">
       {options.map((option) => (
         <QuizOption
           key={option.id}

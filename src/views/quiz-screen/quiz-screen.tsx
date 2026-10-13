@@ -29,22 +29,33 @@ import { QuizActions } from './components/quiz-actions'
 // Static states hoisted to module level (rendering-hoist-jsx) so the
 // orchestrator's early returns stay one-liners.
 function QuizLoading() {
+  const { t } = useTranslation()
   return (
-    <div className="flex min-h-[60vh] items-center justify-center">
-      <div className="text-lg text-text-2">Loading...</div>
+    <div
+      className="flex min-h-[60vh] items-center justify-center"
+      role="status"
+      aria-live="polite"
+    >
+      <div className="text-lg text-text-2">{t('common.loading')}</div>
     </div>
   )
 }
 
 function QuizError({ message }: { message: string }) {
+  const { t } = useTranslation()
   return (
-    <div className="flex min-h-[60vh] flex-col items-center justify-center gap-4">
-      <p className="text-danger">Error: {message}</p>
+    <div
+      className="flex min-h-[60vh] flex-col items-center justify-center gap-4"
+      role="alert"
+    >
+      <p className="text-danger-ink">
+        {t('common.error')}: {message}
+      </p>
       <button
         onClick={() => window.location.reload()}
         className="rounded-lg bg-primary px-4 py-2 text-on-primary"
       >
-        Retry
+        {t('common.retry')}
       </button>
     </div>
   )

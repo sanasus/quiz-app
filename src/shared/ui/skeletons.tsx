@@ -3,7 +3,10 @@
  */
 
 export const Skeleton = ({ className = '' }: { className?: string }) => (
-  <div className={`animate-pulse rounded-lg bg-primary/10 ${className}`} />
+  <div
+    aria-hidden="true"
+    className={`animate-pulse rounded-lg bg-primary/10 ${className}`}
+  />
 )
 
 export const CategorySkeleton = () => <Skeleton className="h-11 w-full" />

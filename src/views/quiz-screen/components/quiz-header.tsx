@@ -57,7 +57,7 @@ export function QuizHeader({
               role="timer"
               aria-label={t('quiz.time_remaining')}
               className={`text-lg font-mono font-bold tabular-nums ${
-                lowTime ? 'text-danger' : 'text-text'
+                lowTime ? 'text-danger-ink' : 'text-text'
               }`}
               animate={{ scale: motionEnabled && lowTime ? [1, 1.12, 1] : 1 }}
               transition={{
@@ -78,7 +78,7 @@ export function QuizHeader({
               {'❤️'.repeat(lives ?? 0)}
             </span>
           ) : null}
-          <span className="text-lg font-bold text-primary">
+          <span className="text-lg font-bold text-primary-ink">
             {t('quiz.score_label')}{' '}
             <AnimatedNumber value={score} className="tabular-nums" />
           </span>
