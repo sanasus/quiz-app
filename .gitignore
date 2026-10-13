@@ -50,8 +50,7 @@ playwright-report
 acl-recovery/
 
 # Agent/OpenCode artifacts
-.agents/*
-!.agents/skills/
+.agents/
 skills-lock.json
 
 # Local OpenCode pairing helper
