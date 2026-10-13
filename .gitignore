@@ -55,3 +55,5 @@ skills-lock.json
 
 # Local OpenCode pairing helper
 pair.bat
+.vercel
+.env*
