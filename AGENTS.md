@@ -44,10 +44,12 @@ Run `typecheck` before committing — `noUnusedLocals` and `noUnusedParameters` 
   HTML report + traces uploaded as artifacts on failure
 
 ## E2E rules
-- Before writing or modifying anything under `e2e/` or `playwright.config.ts`,
-  load the `playwright-best-practices` skill (skill tool) and follow it —
-  locators, assertions, waiting, structure, tags. Do not improvise Playwright
-  patterns. Shared helpers live in `e2e/fixtures.ts` (`startQuiz`,
+- If the `playwright-best-practices` skill is available in your environment,
+  load it before writing or modifying anything under `e2e/` or
+  `playwright.config.ts` and follow it — locators, assertions, waiting,
+  structure, tags. Do not improvise Playwright patterns. Without the skill,
+  stick to the rules below.
+- Shared helpers live in `e2e/fixtures.ts` (`startQuiz`,
   `completeQuiz`, `optionLocator`, `waitForResults`) — reuse them instead of
   writing new flows inline.
 - Prefer user-facing locators (roles, labels); use `data-testid`/`data-state`
