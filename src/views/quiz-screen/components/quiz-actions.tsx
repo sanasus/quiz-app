@@ -25,7 +25,7 @@ export const QuizActions = memo(function QuizActions({
   const { t } = useTranslation()
 
   return (
-    <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
+    <div className="sticky bottom-0 mt-6 flex flex-wrap items-center justify-between gap-x-4 gap-y-2 border-t border-border bg-bg pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))]">
       <div className="flex items-center gap-3">
         <span className="text-sm text-text-3">
           {t('quiz.streak')}:{' '}

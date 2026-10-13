@@ -8,9 +8,7 @@ import { useTranslation } from 'react-i18next'
 
 const routes = [
   { path: '/', label: '🏠', key: 'app.nav.home' },
-  { path: '/setup', label: '⚙️', key: 'app.nav.setup' },
-  { path: '/quiz', label: '🎮', key: 'app.nav.quiz' },
-  { path: '/results', label: '🏆', key: 'app.nav.results' },
+  { path: '/setup', label: '🎯', key: 'app.nav.new_quiz' },
   { path: '/stats', label: '📊', key: 'app.nav.stats' },
   { path: '/achievements', label: '🏅', key: 'app.nav.achievements' },
   { path: '/settings', label: '⚙️', key: 'app.nav.settings' },

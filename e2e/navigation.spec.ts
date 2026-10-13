@@ -20,8 +20,8 @@ test.describe('Navigation', () => {
         page.getByRole('heading', { name: '🏠 Welcome to QuizApp!' }),
       ).toBeVisible()
 
-      // Setup ("⚙️ Setup" — name disambiguates from "⚙️ Settings")
-      await page.getByRole('link', { name: '⚙️ Setup' }).click()
+      // New Quiz — the /setup entry point
+      await page.getByRole('link', { name: 'New Quiz' }).click()
       await expect(page).toHaveURL(/\/setup/)
       await expect(
         page.getByRole('heading', { name: 'Quiz Settings' }),
@@ -64,7 +64,7 @@ test.describe('Navigation', () => {
       const bottomNav = page.getByTestId('mobile-bottom-nav')
       await expect(bottomNav).toBeVisible()
 
-      await bottomNav.getByRole('link', { name: 'Setup' }).click()
+      await bottomNav.getByRole('link', { name: 'New Quiz' }).click()
       await expect(page).toHaveURL(/\/setup/)
       await expect(
         page.getByRole('heading', { name: 'Quiz Settings' }),

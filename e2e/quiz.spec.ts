@@ -56,6 +56,25 @@ test.describe('Quiz screen', () => {
     await expect(page.getByRole('button', { name: 'Next' })).toBeVisible()
   })
 
+  test(
+    'actions stay reachable after answering on mobile',
+    { tag: ['@mobile'] },
+    async ({ page }) => {
+      // Realistic phone viewport — the answer feedback (explanation) grows
+      // the page, so the action row must not be pushed below the fold.
+      await page.setViewportSize({ width: 375, height: 667 })
+
+      const options = optionLocator(page)
+      await expect(options.first()).toBeVisible()
+      await options.first().click()
+      await page.getByRole('button', { name: 'Submit' }).click()
+
+      const next = page.getByRole('button', { name: 'Next' })
+      await expect(next).toBeVisible()
+      await expect(next).toBeInViewport()
+    },
+  )
+
   test('skipping a question advances to next', async ({ page }) => {
     await skipQuestion(page)
 

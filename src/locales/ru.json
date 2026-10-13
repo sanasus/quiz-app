@@ -6,9 +6,7 @@
     "footer": "QuizApp · Powered by QuizAPI",
     "nav": {
       "home": "Главная",
-      "setup": "Настройка",
-      "quiz": "Тест",
-      "results": "Результаты",
+      "new_quiz": "Новый тест",
       "stats": "Статистика",
       "achievements": "Достижения",
       "settings": "Настройки"

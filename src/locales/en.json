@@ -6,9 +6,7 @@
     "footer": "QuizApp · Powered by QuizAPI",
     "nav": {
       "home": "Home",
-      "setup": "Setup",
-      "quiz": "Quiz",
-      "results": "Results",
+      "new_quiz": "New Quiz",
       "stats": "Statistics",
       "achievements": "Achievements",
       "settings": "Settings"
