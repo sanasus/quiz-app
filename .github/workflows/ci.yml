@@ -81,4 +81,10 @@ jobs:
         run: npx vercel build
 
       - name: Deploy to production
-        run: npx vercel deploy --prebuilt --prod
+        shell: bash
+        run: |
+          set -o pipefail
+          if ! npx vercel deploy --prebuilt --prod 2>&1 | tee /tmp/vercel-deploy.log; then
+            echo "::error title=Vercel deploy failed::$(tail -n 30 /tmp/vercel-deploy.log | tr '\n' ' ')"
+            exit 1
+          fi
