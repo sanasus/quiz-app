@@ -1,32 +1,80 @@
-# React + TypeScript + Vite
+# QuizApp
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+Игровое веб-приложение для прохождения тестов на данных [QuizAPI](https://quizapi.io). Выбор категории, сложности и количества вопросов, четыре игровых режима, очки, XP и уровни, статистика и достижения, интерфейс на русском и английском.
 
-Currently, two official plugins are available:
+## Запуск
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
-
-## React Compiler
-
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the Oxlint configuration
-
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
-
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
+```bash
+npm install
+npm run dev        # dev-сервер на http://localhost:5173
 ```
 
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+Production-сборка и проверки:
+
+```bash
+npm run build      # tsc -b && vite build
+npm run preview    # предпросмотр production-сборки
+npm run typecheck  # tsc -b
+npm run lint       # oxlint
+npm run test       # vitest (jsdom)
+npm run format     # prettier
+npm run e2e        # playwright (тесты-теги @smoke/@mobile/@i18n/@slow)
+```
+
+## Переменные окружения
+
+Скопируйте `.env.example` в `.env` и заполните:
+
+| Переменная | Назначение |
+|---|---|
+| `VITE_QUIZAPI_KEY` | API-ключ QuizAPI (получается в dashboard на quizapi.io). Нужен только для работы с живым API |
+| `VITE_USE_MOCK_DATA` | `true` — приложение работает на встроенных мок-данных (`src/shared/api/mock-*.ts`) без ключа и сети |
+
+`.env` не коммитится (в `.gitignore`). API-ключ живёт на клиенте — это осознанное решение для учебного/личного проекта; для production ключ следует вынести на прокси (базовый URL инкапсулирован в одном модуле — см. ниже).
+
+## Режимы
+
+- **Классика** — без таймера.
+- **На время** — общий таймер на всю сессию, по истечении сессия завершается.
+- **Блиц** — таймер на каждый вопрос; истечение = неверный ответ, автопереход. Таймер стоит на паузе, пока игрок читает пояснение после ответа.
+- **Выживание** — 3 жизни, ошибка отнимает жизнь, 0 жизней = конец. Вопросы подгружаются порциями по 10, пока API не кончится; настройка количества вопросов не действует.
+
+Ручная пауза не реализована — таймеры в «Блице» и «На время» встают на паузу автоматически после ответа на вопрос (решение зафиксировано в `PLAN.md` §15.1).
+
+## Архитектурные решения
+
+- **TanStack Router** — типобезопасные search-params: конфигурация квиза живёт в URL. Маршруты `/quiz` и `/results` защищены `beforeLoad`-редиректом на `/setup`.
+- **TanStack Query** — серверное состояние QuizAPI (кэш, ретраи, состояния загрузки/ошибки).
+- **Zustand + `persist`** — клиентское состояние: сессия квиза, настройки, статистика, достижения, XP. Схемы персистентных сторов валидируются Zod при загрузке, сторы версионируются с миграциями.
+- **API-слой** (`src/shared/api/`) — клиент, Zod-схемы и адаптер изолированы; адаптер приводит ответы QuizAPI к внутренней модели `Question` и отбрасывает невалидные вопросы. Для разработки без ключа есть мок-клиент, включаемый `VITE_USE_MOCK_DATA` (см. `docs/api-notes.md`).
+- **Бизнес-логика** — очки, XP/уровни, автомат сессии, режимы, правила достижений — чистые функции без привязки к React, покрыты тестами.
+- **i18n** — i18next, RU/EN, автоопределение по браузеру, выбор сохраняется. Все строки интерфейса — через ключи.
+- **Дизайн** — Tailwind CSS v4 с токенами в теме, светлая/тёмная темы, анимации Motion с учётом `prefers-reduced-motion` и настройки отключения в `/settings`.
+- **Error boundary** — на уровне приложения через `defaultErrorComponent` роутера (`src/shared/ui/error-page.tsx`).
+
+## Ограничения
+
+- **Тексты вопросов приходят от API на английском и не переводятся** — переводится только интерфейс.
+- Бесплатный тариф QuizAPI имеет rate limit (60 requests/min/IP); приложение показывает понятную ошибку при 429 и не делает бесконечных повторов.
+- `EXPERT`-сложность API не используется: внутренняя модель ограничена easy/medium/hard.
+- Ручная пауза во время квиза отсутствует (см. выше).
+- Звуковых эффектов нет.
+
+## Структура
+
+```
+src/
+  app/            # провайдеры, роутер, i18n, тема, настройки
+  routes/         # маршруты TanStack Router (кодогенерация routeTree.gen.ts)
+  features/       # modes, meta, stats, achievements, progress
+  shared/
+    api/          # клиент QuizAPI, схемы Zod, адаптер, моки
+    ui/           # переиспользуемые компоненты
+    lib/          # сторы, очки, утилиты
+  views/          # экраны (home, setup, quiz, results, stats, achievements, settings)
+  locales/        # ru.json, en.json
+e2e/              # Playwright-тесты
+docs/             # api-notes.md — заметки по API QuizAPI
+```
+
+Подробный план и зафиксированные решения — в `PLAN.md` (отклонения — §15).
