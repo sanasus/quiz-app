@@ -47,7 +47,9 @@
     "score": "Score: {{score}}",
     "score_label": "Score:",
     "streak": "Streak",
-    "explanation": "Explanation"
+    "explanation": "Explanation",
+    "batch_error": "Failed to load the next batch of questions. Retry or end the run.",
+    "finish_now": "End run"
   },
   "a11y": {
     "answer_correct": "Correct answer",

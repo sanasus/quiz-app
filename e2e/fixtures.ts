@@ -1,4 +1,5 @@
 import { type Page, expect } from '@playwright/test'
+import { mockQuestions } from '../src/shared/api/mock-questions'
 
 /**
  * Shared helpers for quiz e2e tests.
@@ -158,6 +159,32 @@ export async function completeQuiz(
  */
 export async function skipQuestion(page: Page) {
   await page.getByRole('button', { name: 'Skip' }).click()
+  const nextBtn = page.getByRole('button', { name: 'Next' })
+  await expect(nextBtn).toBeVisible()
+  await nextBtn.click()
+}
+
+/**
+ * Answer the current question correctly and advance.
+ *
+ * Survival grants only 3 lives, so blindly picking the first option
+ * ends the run early. The mock pool is the source of truth: match the
+ * visible question text and click the correct option(s). Handles
+ * multiple-choice questions (several correct options) too.
+ *
+ * At the pool's edge the Next click auto-waits for the prefetched
+ * batch (Next is disabled while the batch is pending).
+ */
+export async function answerCorrectly(page: Page) {
+  const text = await page.getByRole('heading', { level: 3 }).textContent()
+  const question = mockQuestions.find((q) => q.text === text)
+  if (!question) throw new Error(`Unknown mock question: ${text}`)
+
+  for (const id of question.correctOptionIds) {
+    await page.getByTestId(`option-${id}`).click()
+  }
+
+  await page.getByRole('button', { name: 'Submit' }).click()
   const nextBtn = page.getByRole('button', { name: 'Next' })
   await expect(nextBtn).toBeVisible()
   await nextBtn.click()

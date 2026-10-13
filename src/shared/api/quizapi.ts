@@ -20,11 +20,12 @@ import { adaptQuestions } from './adapter'
 import {
   categoriesApiResponseSchema,
   metadataApiResponseSchema,
+  quizApiMetaSchema,
   quizApiQuestionSchema,
 } from './schemas'
 import { fetchMockMetadata } from './mock-data'
 import { fetchMockCategories } from './mock-categories'
-import { fetchMockQuestions } from './mock-questions'
+import { countMockQuestions, fetchMockQuestions } from './mock-questions'
 
 // ---------------------------------------------------------------------------
 // Dev flag
@@ -60,10 +61,20 @@ interface FetchQuestionsOptions {
   /** Batch size to request (defaults to the initial fetch limit). */
   limit?: number
   /**
-   * Pool offset (mock only — the live API is queried with random=true
-   * and no offset; duplicates are deduplicated client-side).
+   * Pool offset. Both the live API and the mock paginate by offset;
+   * each survival batch fetches the next slice of the pool.
    */
   offset?: number
+}
+
+/** One page of questions plus the pool size under the same filters. */
+export interface QuestionsPage {
+  questions: Question[]
+  /**
+   * Total questions in the pool matching this config (live API
+   * `meta.total`, mock pool length). Undefined when the API omits it.
+   */
+  total?: number
 }
 
 /** Read the API key from Vite env. */
@@ -77,28 +88,50 @@ function getApiKey(): string {
   return key
 }
 
-async function fetchQuestions(
+/**
+ * Build the live /questions URL. Pure — unit-tested, because survival
+ * batch loading silently depends on `offset` reaching the API.
+ */
+export function buildQuestionsUrl(
   config: QuizConfig,
   options: FetchQuestionsOptions = {},
-): Promise<Question[]> {
+): string {
   const limit = options.limit ?? getInitialFetchLimit(config)
   const offset = options.offset ?? 0
-
-  if (USE_MOCK) {
-    return fetchMockQuestions(limit, config.difficulty, config.category, offset)
-  }
 
   const params = new URLSearchParams({
     limit: String(limit),
     difficulty: config.difficulty.toUpperCase(),
     random: 'true',
+    offset: String(offset),
   })
 
   if (config.category && config.category !== 'all') {
     params.set('category', config.category)
   }
 
-  const url = `${API_BASE}/questions?${params.toString()}`
+  return `${API_BASE}/questions?${params.toString()}`
+}
+
+async function fetchQuestions(
+  config: QuizConfig,
+  options: FetchQuestionsOptions = {},
+): Promise<QuestionsPage> {
+  const offset = options.offset ?? 0
+
+  if (USE_MOCK) {
+    return {
+      questions: await fetchMockQuestions(
+        options.limit ?? getInitialFetchLimit(config),
+        config.difficulty,
+        config.category,
+        offset,
+      ),
+      total: countMockQuestions(config.difficulty, config.category),
+    }
+  }
+
+  const url = buildQuestionsUrl(config, options)
 
   const response = await fetch(url, {
     headers: {
@@ -121,10 +154,16 @@ async function fetchQuestions(
 
   const json = await response.json()
 
-  // The API returns { success: true, data: [...] }
+  // The API returns { success: true, data: [...], meta: { total } }
   const rawArray = (json as any).data ?? []
+  const metaResult = quizApiMetaSchema.safeParse((json as any).meta)
+  const total = metaResult.success ? metaResult.data.total : undefined
 
   if (!Array.isArray(rawArray) || rawArray.length === 0) {
+    // Running past the end of the pool is a normal outcome for a
+    // survival batch (offset > 0): an empty page means "exhausted",
+    // not an error. An empty *initial* fetch is a config problem.
+    if (offset > 0) return { questions: [], total }
     throw new Error('No questions returned from API. Try different settings.')
   }
 
@@ -146,7 +185,7 @@ async function fetchQuestions(
     )
   }
 
-  return valid
+  return { questions: valid, total }
 }
 
 // ---------------------------------------------------------------------------
@@ -247,6 +286,15 @@ async function fetchCategories(): Promise<{
 
 const QUESTIONS_QUERY_KEY = ['quiz', 'questions'] as const
 
+/**
+ * Auth failures and rate limits need user action, not silent retries.
+ */
+function retryQuestions(count: number, error: Error): boolean {
+  if (error.message.includes('Invalid or expired')) return false
+  if (error.message.includes('Rate limit exceeded')) return false
+  return count < 2
+}
+
 export function useQuizQuestions(config: QuizConfig | null) {
   const store = useQuizSessionStore()
 
@@ -262,11 +310,7 @@ export function useQuizQuestions(config: QuizConfig | null) {
       return fetchQuestions(config)
     },
     enabled: config !== null && !isRepeatSession,
-    retry: (count, error) => {
-      // Don't retry on 401/403
-      if (error.message.includes('Invalid or expired')) return false
-      return count < 2
-    },
+    retry: retryQuestions,
     staleTime: 5 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
   })
@@ -274,7 +318,10 @@ export function useQuizQuestions(config: QuizConfig | null) {
   // If in a repeat session, return stored questions instead of query data
   if (isRepeatSession) {
     return {
-      data: store.questions as Question[],
+      data: {
+        questions: store.questions,
+        total: store.questions.length,
+      } satisfies QuestionsPage,
       isLoading: false,
       error: null,
     }
@@ -287,8 +334,9 @@ export function useQuizQuestions(config: QuizConfig | null) {
  * Fetch one survival question batch.
  *
  * The offset is the number of questions already loaded, so each key
- * fetches a distinct slice of the pool. Disabled outside the survival
- * prefetch window — see useQuestionFeed.
+ * fetches a distinct slice of the pool (the live API paginates by
+ * `offset` too). Disabled outside the survival prefetch window — see
+ * useQuestionFeed.
  */
 export function useQuestionBatch(
   config: QuizConfig | null,
@@ -305,11 +353,7 @@ export function useQuestionBatch(
       })
     },
     enabled: enabled && config !== null,
-    retry: (count, error) => {
-      // Don't retry on 401/403
-      if (error.message.includes('Invalid or expired')) return false
-      return count < 2
-    },
+    retry: retryQuestions,
     staleTime: 5 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
   })

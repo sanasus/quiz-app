@@ -51,6 +51,11 @@ export interface QuizSession {
   timeRemaining?: number // timed/blitz mode: seconds left on current question
   // Survival batch loading: no more question batches will arrive
   questionsExhausted: boolean
+  /**
+   * Pool size under the current filters (API `meta.total`). Survival
+   * shows it as the run's question count; undefined when unknown.
+   */
+  questionsTotal?: number
   // Repeat-mistakes support
   repeatConfig: QuizConfig | null
 }
@@ -74,7 +79,7 @@ export type SessionAction =
   | { type: 'START_LOADING' }
   | {
       type: 'LOAD_QUESTIONS'
-      payload: { questions: Question[]; config: QuizConfig }
+      payload: { questions: Question[]; config: QuizConfig; total?: number }
     }
   | { type: 'START_PLAYING' }
   | { type: 'START_TIMER'; payload: { timeRemaining: number } }
@@ -88,7 +93,10 @@ export type SessionAction =
       payload: { score: number; timeSpent: number; correctCount: number }
     }
   | { type: 'LOSE_LIFE' }
-  | { type: 'APPEND_QUESTIONS'; payload: { questions: Question[] } }
+  | {
+      type: 'APPEND_QUESTIONS'
+      payload: { questions: Question[]; total?: number }
+    }
   | { type: 'MARK_QUESTIONS_EXHAUSTED' }
   | {
       type: 'REPEAT_MISTAKES'

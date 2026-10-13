@@ -53,7 +53,11 @@ interface QuizSessionStore extends QuizSession {
   // Actions
   startLoading: () => void
   startSessionTimer: () => void
-  loadQuestions: (questions: Question[], config: QuizConfig) => void
+  loadQuestions: (
+    questions: Question[],
+    config: QuizConfig,
+    total?: number,
+  ) => void
   startPlaying: () => void
   startTimer: (timeRemaining: number) => void
   timerTick: () => void
@@ -70,7 +74,7 @@ interface QuizSessionStore extends QuizSession {
   ) => void
   loseLife: () => void
   /** Append a fetched question batch (survival batch loading). */
-  appendQuestions: (questions: Question[]) => void
+  appendQuestions: (questions: Question[], total?: number) => void
   /** No further question batches will arrive (fetch error / pool empty). */
   markQuestionsExhausted: () => void
   resetBlitzTimer: () => void
@@ -96,6 +100,7 @@ function createInitialState(config: QuizConfig): QuizSession {
     mode: config.mode,
     config,
     questionsExhausted: false,
+    questionsTotal: undefined,
     repeatConfig: null,
   }
 }
@@ -146,6 +151,19 @@ export function addQuestionBatch(
   }
 }
 
+/**
+ * Keep the largest known pool size: the server pool can grow while a
+ * run is in progress, and a stale smaller total must not shrink it.
+ */
+function mergePoolTotal(
+  current: number | undefined,
+  incoming: number | undefined,
+): number | undefined {
+  if (incoming === undefined) return current
+  if (current === undefined) return incoming
+  return Math.max(current, incoming)
+}
+
 function sessionReducer(
   state: QuizSession,
   action: SessionAction,
@@ -173,6 +191,7 @@ function sessionReducer(
         timeSpent: 0,
         timeRemaining: undefined,
         questionsExhausted: false,
+        questionsTotal: action.payload.total,
       }
     }
 
@@ -310,9 +329,16 @@ function sessionReducer(
         state,
         action.payload.questions,
       )
+      const withTotal = {
+        ...session,
+        questionsTotal: mergePoolTotal(
+          state.questionsTotal,
+          action.payload.total,
+        ),
+      }
       // Nothing new in the batch — no further batches will arrive.
-      if (added === 0) return { ...session, questionsExhausted: true }
-      return session
+      if (added === 0) return { ...withTotal, questionsExhausted: true }
+      return withTotal
     }
 
     case 'MARK_QUESTIONS_EXHAUSTED':
@@ -335,6 +361,7 @@ function sessionReducer(
         questions: action.payload.questions,
         status: 'playing',
         repeatConfig: action.payload.config,
+        questionsTotal: action.payload.questions.length,
       }
 
     case 'RESET':
@@ -371,11 +398,11 @@ export const useQuizSessionStore = create<QuizSessionStore>((set) => ({
 
   startLoading: () =>
     set((s) => ({ ...sessionReducer(s, { type: 'START_LOADING' }) })),
-  loadQuestions: (questions, config) =>
+  loadQuestions: (questions, config, total) =>
     set((s) => ({
       ...sessionReducer(s, {
         type: 'LOAD_QUESTIONS',
-        payload: { questions, config },
+        payload: { questions, config, total },
       }),
     })),
   startPlaying: () =>
@@ -457,11 +484,11 @@ export const useQuizSessionStore = create<QuizSessionStore>((set) => ({
       }
     }),
   loseLife: () => set((s) => ({ ...sessionReducer(s, { type: 'LOSE_LIFE' }) })),
-  appendQuestions: (questions) =>
+  appendQuestions: (questions, total) =>
     set((s) => ({
       ...sessionReducer(s, {
         type: 'APPEND_QUESTIONS',
-        payload: { questions },
+        payload: { questions, total },
       }),
     })),
   markQuestionsExhausted: () =>

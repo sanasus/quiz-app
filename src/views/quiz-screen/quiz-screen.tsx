@@ -140,7 +140,8 @@ export function QuizScreen() {
   })
 
   useQuizSessionEnd(result.currentQuestion)
-  const { waitingForBatch } = useQuestionFeed(effectiveConfig)
+  const { waitingForBatch, batchError, retryBatch, finishWithoutBatch } =
+    useQuestionFeed(effectiveConfig)
   useDevAnswerHint(result.currentQuestion)
 
   // Reset timer when the question changes (blitz mode only).
@@ -176,10 +177,14 @@ export function QuizScreen() {
 
   const question = result.currentQuestion
   const progress = store.currentIndex + 1
-  // Total grows with the loaded pool: survival's question-count setting
-  // is ignored (it batches until the API runs out), so configured count
-  // would be meaningless here.
-  const total = store.questions.length
+  // Survival shows the real pool size (API `meta.total`) — its
+  // question-count setting is ignored and batches keep arriving until
+  // the API runs out. Other modes: the loaded pool equals the
+  // configured count.
+  const total =
+    store.mode === 'survival' && store.questionsTotal
+      ? Math.max(store.questionsTotal, store.questions.length)
+      : store.questions.length
 
   // Timer length for the header bar: static or derived from question count.
   const timeLimit =
@@ -229,6 +234,31 @@ export function QuizScreen() {
 
       {store.status === 'answered' && question.explanation ? (
         <QuizExplanation explanation={question.explanation} />
+      ) : null}
+
+      {/* A failed batch blocks progress at the pool's edge: offer a
+          retry, or end the run honestly instead of freezing. */}
+      {waitingForBatch && batchError ? (
+        <div
+          role="alert"
+          className="mb-4 flex flex-col gap-3 rounded-lg border border-danger bg-danger/10 p-4 sm:flex-row sm:items-center sm:justify-between"
+        >
+          <p className="text-danger-ink">{t('quiz.batch_error')}</p>
+          <div className="flex shrink-0 gap-2">
+            <button
+              onClick={retryBatch}
+              className="rounded-lg bg-primary px-4 py-2 text-on-primary"
+            >
+              {t('common.retry')}
+            </button>
+            <button
+              onClick={finishWithoutBatch}
+              className="rounded-lg bg-muted px-4 py-2 text-text"
+            >
+              {t('quiz.finish_now')}
+            </button>
+          </div>
+        </div>
       ) : null}
 
       <QuizActions

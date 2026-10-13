@@ -14,7 +14,8 @@ export function useQuizSession(
 ): QuizSessionResult {
   const store = useQuizSessionStore()
   const prevConfigRef = useRef<string | null>(null)
-  const { data: questions, error } = useQuizQuestions(effectiveConfig)
+  const { data, error } = useQuizQuestions(effectiveConfig)
+  const questions = data?.questions
 
   useEffect(() => {
     if (!questions || !effectiveConfig) return
@@ -25,7 +26,7 @@ export function useQuizSession(
     prevConfigRef.current = configKey
 
     store.reset()
-    store.loadQuestions(questions, effectiveConfig)
+    store.loadQuestions(questions, effectiveConfig, data?.total)
 
     store.startPlaying()
     store.startSessionTimer()

@@ -43,27 +43,34 @@ export type QuizApiQuestion = z.infer<typeof quizApiQuestionSchema>
 // Wrapped response: { success: true, data: QuizApiQuestion[] }
 // ---------------------------------------------------------------------------
 
+/**
+ * Pagination envelope of a /questions response. `total` is the exact
+ * number of questions matching the request filters (category,
+ * difficulty) — the survival UI shows it as the run's question count.
+ */
+export const quizApiMetaSchema = z.object({
+  total: z.number().optional(),
+  pageTotal: z.number().optional(),
+  page: z.number().optional(),
+  lastPage: z.number().optional(),
+  limit: z.number().optional(),
+  offset: z.number().optional(),
+  links: z
+    .object({
+      first: z.string().optional(),
+      last: z.string().optional(),
+      next: z.string().nullable().optional(),
+      prev: z.string().nullable().optional(),
+    })
+    .optional(),
+})
+
+export type QuizApiMeta = z.infer<typeof quizApiMetaSchema>
+
 export const quizApiListSchema = z.object({
   success: z.literal(true),
   data: z.array(quizApiQuestionSchema),
-  meta: z
-    .object({
-      total: z.number().optional(),
-      pageTotal: z.number().optional(),
-      page: z.number().optional(),
-      lastPage: z.number().optional(),
-      limit: z.number().optional(),
-      offset: z.number().optional(),
-      links: z
-        .object({
-          first: z.string().optional(),
-          last: z.string().optional(),
-          next: z.string().nullable().optional(),
-          prev: z.string().nullable().optional(),
-        })
-        .optional(),
-    })
-    .optional(),
+  meta: quizApiMetaSchema.optional(),
 })
 
 export type QuizApiList = z.infer<typeof quizApiListSchema>

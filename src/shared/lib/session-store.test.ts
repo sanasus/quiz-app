@@ -293,3 +293,59 @@ describe('finishSession', () => {
     expect(result?.mistakes[0].question.id).toBe('q5')
   })
 })
+
+// ---------------------------------------------------------------------------
+// questionsTotal — pool size shown by the survival header ("Question 1/68")
+// ---------------------------------------------------------------------------
+
+describe('questionsTotal', () => {
+  it('records the pool total on load', () => {
+    useQuizSessionStore.getState().reset()
+    useQuizSessionStore.getState().loadQuestions(pool, survivalConfig, 42)
+
+    expect(useQuizSessionStore.getState().questionsTotal).toBe(42)
+  })
+
+  it('stays undefined when the API omits it', () => {
+    expect(useQuizSessionStore.getState().questionsTotal).toBeUndefined()
+  })
+
+  it('takes the larger total when a batch updates it', () => {
+    useQuizSessionStore.getState().appendQuestions([makeQuestion('new1')], 20)
+
+    expect(useQuizSessionStore.getState().questionsTotal).toBe(20)
+  })
+
+  it('never shrinks on a stale smaller total', () => {
+    useQuizSessionStore.getState().appendQuestions([makeQuestion('new1')], 20)
+    useQuizSessionStore.getState().appendQuestions([makeQuestion('new2')], 12)
+
+    expect(useQuizSessionStore.getState().questionsTotal).toBe(20)
+  })
+
+  it('keeps the previous total when a batch omits it', () => {
+    useQuizSessionStore.getState().appendQuestions([makeQuestion('new1')], 20)
+    useQuizSessionStore.getState().appendQuestions([makeQuestion('new2')])
+
+    expect(useQuizSessionStore.getState().questionsTotal).toBe(20)
+  })
+
+  it('is the repeated question count in a repeat session', () => {
+    // Every attempted question wrong → all of them come back for review.
+    const answers: Record<string, string[]> = {}
+    for (const q of pool) {
+      answers[q.id] = q.options
+        .filter((o) => !q.correctOptionIds.includes(o.id))
+        .map((o) => o.id)
+    }
+    useQuizSessionStore.setState({
+      answers,
+      currentIndex: pool.length - 1,
+      status: 'answered',
+    })
+    useQuizSessionStore.getState().finishSession(0, 30, 0)
+    useQuizSessionStore.getState().repeatMistakes(survivalConfig)
+
+    expect(useQuizSessionStore.getState().questionsTotal).toBe(pool.length)
+  })
+})

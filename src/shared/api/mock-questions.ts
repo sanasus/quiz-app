@@ -210,11 +210,9 @@ export const mockQuestions: Question[] = [
 ]
 
 /** Generate a deterministic mock list based on config. */
-export function generateMockQuestions(
-  count: number,
+export function filterMockPool(
   difficulty: string,
   category: string,
-  offset = 0,
 ): Question[] {
   let filtered = mockQuestions
 
@@ -236,11 +234,31 @@ export function generateMockQuestions(
 
   // Deterministic shuffle based on difficulty + category seed
   const seed = difficulty.charCodeAt(0) + category.length
-  const shuffled = [...filtered].sort((a, b) => {
+  return [...filtered].sort((a, b) => {
     const hashA = (a.id.charCodeAt(1) * seed) % 1000
     const hashB = (b.id.charCodeAt(1) * seed) % 1000
     return hashA - hashB
   })
+}
+
+/**
+ * Size of the mock pool the live API would report as `meta.total` —
+ * the full filtered pool, before offset/limit slicing.
+ */
+export function countMockQuestions(
+  difficulty: string,
+  category: string,
+): number {
+  return filterMockPool(difficulty, category).length
+}
+
+export function generateMockQuestions(
+  count: number,
+  difficulty: string,
+  category: string,
+  offset = 0,
+): Question[] {
+  const shuffled = filterMockPool(difficulty, category)
 
   // Offset lets survival fetch batches as non-overlapping slices of the
   // same pool; running past the pool returns fewer (or zero) questions,

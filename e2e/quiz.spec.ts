@@ -1,11 +1,16 @@
 import { test, expect } from '@playwright/test'
+import { mockQuestions } from '../src/shared/api/mock-questions'
 import {
+  answerCorrectly,
   completeQuiz,
   optionLocator,
   skipQuestion,
   startQuiz,
   waitForResults,
 } from './fixtures'
+
+/** Survival shows the whole mock pool as its question count. */
+const survivalPoolSize = mockQuestions.length
 
 test.describe('Quiz screen', () => {
   test.beforeEach(async ({ page }) => {
@@ -115,10 +120,35 @@ test.describe('Quiz screen', () => {
     // Lives show as heart emojis (❤️)
     await expect(page.getByTestId('quiz-lives')).toHaveText(/❤️+/)
 
-    // The question-count setting does not apply to survival: it always
-    // starts with the first batch of 10 questions (the default count is 2)
+    // The question-count setting does not apply to survival: it starts
+    // with the first batch of 10 questions, and the header shows the
+    // whole pool (the API's `meta.total`, mocked as the fixture pool)
     await expect(
-      page.getByRole('heading', { name: 'Question 1/10', exact: true }),
+      page.getByRole('heading', {
+        name: `Question 1/${survivalPoolSize}`,
+        exact: true,
+      }),
     ).toBeVisible()
   })
+
+  test(
+    'survival appends the next question batch near the pool edge',
+    { tag: ['@slow'] },
+    async ({ page }) => {
+      // Ten questions × several interactions each — above the 30s default.
+      test.setTimeout(60_000)
+
+      await startQuiz(page, { mode: 'survival' })
+      await expect(page.getByText(`1 of ${survivalPoolSize}`)).toBeVisible()
+
+      // Only the first 10 questions are loaded up front; question 11
+      // exists only if the prefetched batch (offset 10) was appended.
+      for (let answered = 1; answered <= 10; answered++) {
+        await answerCorrectly(page)
+        await expect(
+          page.getByText(`${answered + 1} of ${survivalPoolSize}`),
+        ).toBeVisible()
+      }
+    },
+  )
 })
