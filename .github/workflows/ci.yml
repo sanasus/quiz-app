@@ -78,7 +78,7 @@ jobs:
         run: npx vercel pull --yes --environment=production
 
       - name: Build for Vercel
-        run: npx vercel build
+        run: npx vercel build --prod
 
       - name: Deploy to production
         shell: bash
