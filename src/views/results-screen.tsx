@@ -11,6 +11,11 @@ import {
   AchievementToast,
   type AchievementToastItem,
 } from '../shared/ui/achievement-toast'
+import { AnimatedNumber } from '../shared/ui/animated-number'
+import { Confetti } from '../shared/ui/confetti'
+
+/** Accuracy (%) at or above which the win confetti fires. */
+const CONFETTI_THRESHOLD = 70
 
 export function ResultsScreen() {
   const { t } = useTranslation()
@@ -69,6 +74,9 @@ export function ResultsScreen() {
 
   return (
     <div className="mx-auto max-w-2xl px-4 py-8">
+      {/* Celebration burst for a strong result */}
+      <Confetti show={accuracy >= CONFETTI_THRESHOLD} />
+
       {/* Title */}
       <h1 className="mb-6 text-center text-3xl font-bold text-text">
         {t('results.title')}
@@ -80,7 +88,7 @@ export function ResultsScreen() {
           data-testid="result-score"
           className="mb-2 text-5xl font-extrabold text-primary"
         >
-          {result.score}
+          <AnimatedNumber value={result.score} from={0} />
         </div>
         <div className="text-text-2">{t('results.score')}</div>
         {metrics && (
@@ -100,7 +108,7 @@ export function ResultsScreen() {
             data-testid="result-correct"
             className="text-2xl font-bold text-success"
           >
-            {result.correctCount}
+            <AnimatedNumber value={result.correctCount} from={0} />
           </div>
           <div className="text-xs text-text-2">{t('results.correct')}</div>
         </div>
@@ -109,7 +117,7 @@ export function ResultsScreen() {
             data-testid="result-incorrect"
             className="text-2xl font-bold text-danger"
           >
-            {result.incorrectCount}
+            <AnimatedNumber value={result.incorrectCount} from={0} />
           </div>
           <div className="text-xs text-text-2">{t('results.incorrect')}</div>
         </div>
@@ -118,7 +126,7 @@ export function ResultsScreen() {
             data-testid="result-accuracy"
             className="text-2xl font-bold text-text"
           >
-            {accuracy}%
+            <AnimatedNumber value={accuracy} from={0} />%
           </div>
           <div className="text-xs text-text-2">{t('results.accuracy')}</div>
         </div>
@@ -185,7 +193,7 @@ export function ResultsScreen() {
         <button
           type="button"
           onClick={handleNewQuiz}
-          className="rounded-lg bg-primary px-6 py-2.5 font-semibold text-white shadow-sm transition-colors hover:bg-primary/90"
+          className="rounded-lg bg-primary px-6 py-2.5 font-semibold text-on-primary shadow-sm transition-colors hover:bg-primary/90"
         >
           {t('results.new_quiz')}
         </button>

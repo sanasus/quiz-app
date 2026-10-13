@@ -72,7 +72,7 @@ export function ConfirmDialog({
             ref={confirmRef}
             type="button"
             onClick={onConfirm}
-            className="rounded-lg bg-danger px-4 py-2 font-semibold text-white transition-colors hover:bg-danger/90"
+            className="rounded-lg bg-danger px-4 py-2 font-semibold text-on-danger transition-colors hover:bg-danger/90"
           >
             {confirmLabel ?? t('common.confirm')}
           </button>

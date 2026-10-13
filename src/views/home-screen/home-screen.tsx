@@ -24,7 +24,7 @@ export function HomeScreen() {
 
   return (
     <div className="flex min-h-[60vh] flex-col items-center justify-center gap-6 animate-fade-in">
-      <h1 className="text-4xl font-bold text-primary">
+      <h1 className="px-2 text-center text-3xl font-bold text-primary sm:text-4xl">
         🏠 {t('home.welcome')}
       </h1>
 
@@ -79,7 +79,7 @@ export function HomeScreen() {
 
       <Link
         to="/setup"
-        className="rounded-lg bg-primary px-6 py-3 text-lg font-bold text-white shadow-md transition-all hover:bg-primary-hover hover:shadow-lg hover:-translate-y-0.5 active:scale-[0.98] cursor-pointer"
+        className="rounded-lg bg-primary px-6 py-3 text-lg font-bold text-on-primary shadow-md transition-all hover:bg-primary-hover hover:shadow-lg hover:-translate-y-0.5 active:scale-[0.98] cursor-pointer"
       >
         {t('home.start')}
       </Link>

@@ -1,72 +1,138 @@
 @import 'tailwindcss';
 
 @theme {
-  /* Semantic colors */
+  /* ---------------------------------------------------------------- */
+  /* Semantic colors — light theme (default)                           */
+  /* ---------------------------------------------------------------- */
   --color-primary: #6c5ce7;
   --color-primary-hover: #5a4bd1;
-  --color-success: #00b894;
-  --color-success-hover: #00a383;
+  --color-on-primary: #ffffff;
+
+  --color-success: #00875e;
+  --color-success-hover: #006b4b;
+  --color-on-success: #ffffff;
+
   --color-warning: #fdcb6e;
-  --color-warning-hover: #f9bf3b;
-  --color-danger: #e17055;
-  --color-danger-hover: #d63031;
-  --color-info: #0984e3;
-  --color-info-hover: #0770c2;
+  --color-warning-hover: #f5b93f;
+  --color-on-warning: #3a2a00;
+
+  --color-danger: #cf3b34;
+  --color-danger-hover: #b32f28;
+  --color-on-danger: #ffffff;
+
+  --color-info: #0b6ec7;
+  --color-info-hover: #0a5ea8;
+  --color-on-info: #ffffff;
 
   /* Base palette */
-  --color-bg: #faf9ff;
-  --color-bg-2: #f3f0ff;
-  --color-bg-3: #ebe7ff;
+  --color-bg: #f6f4ff;
+  --color-bg-2: #efeaff;
+  --color-bg-3: #e7e0ff;
   --color-surface: #ffffff;
-  --color-surface-hover: #f3f0ff;
-  --color-border: #e5e0f0;
-  --color-text: #1e1b2e;
-  --color-text-2: #4a4463;
-  --color-text-3: #7c74a0;
-  --color-foreground: #1e1b2e;
+  --color-surface-hover: #f2eeff;
+  --color-border: #e2dbf7;
+  --color-text: #191436;
+  --color-text-2: #47406b;
+  --color-text-3: #716a97;
+  --color-foreground: #191436;
   --color-card: #ffffff;
-  --color-card-foreground: #1e1b2e;
+  --color-card-foreground: #191436;
   --color-popover: #ffffff;
-  --color-popover-foreground: #1e1b2e;
-  --color-muted: #f3f0ff;
-  --color-muted-foreground: #7c74a0;
-  --color-accent: #f3f0ff;
-  --color-accent-foreground: #1e1b2e;
+  --color-popover-foreground: #191436;
+  --color-muted: #efeaff;
+  --color-muted-foreground: #716a97;
+  --color-accent: #efeaff;
+  --color-accent-foreground: #191436;
+
+  /* ---------------------------------------------------------------- */
+  /* Type                                                              */
+  /* ---------------------------------------------------------------- */
+  --font-display: var(--font-sans), system-ui, sans-serif;
+
+  /* ---------------------------------------------------------------- */
+  /* Radii — thick, game-like                                          */
+  /* ---------------------------------------------------------------- */
+  --radius-card: 1.25rem;
+  --radius-tile: 1rem;
+  --radius-pill: 9999px;
+
+  /* ---------------------------------------------------------------- */
+  /* Shadows                                                           */
+  /* ---------------------------------------------------------------- */
+  --shadow-card:
+    0 1px 2px rgb(25 20 54 / 0.06), 0 10px 28px -14px rgb(25 20 54 / 0.3);
+  --shadow-card-hover:
+    0 2px 4px rgb(25 20 54 / 0.08), 0 16px 34px -14px rgb(25 20 54 / 0.36);
+  --shadow-pop: 0 8px 24px -10px rgb(108 92 231 / 0.55);
+  /* Hard offset edge for "volumetric" buttons (collapse on :active). */
+  --shadow-edge: 0 4px 0 0 rgb(25 20 54 / 0.16);
+
+  /* ---------------------------------------------------------------- */
+  /* Animations                                                        */
+  /* ---------------------------------------------------------------- */
+  --animate-fade-in: fade-in 0.4s ease-out both;
+
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
 }
 
-/* Dark theme overrides (auto-detect) */
-@media (prefers-color-scheme: dark) {
-  @theme {
-    --color-bg: #0f0d1a;
-    --color-bg-2: #1a1630;
-    --color-bg-3: #252040;
-    --color-surface: #1a1630;
-    --color-surface-hover: #252040;
-    --color-border: #2e2850;
-    --color-text: #ede9fe;
-    --color-text-2: #b8b0d0;
-    --color-text-3: #7c74a0;
-    --color-foreground: #ede9fe;
-    --color-card: #1a1630;
-    --color-card-foreground: #ede9fe;
-    --color-popover: #1a1630;
-    --color-popover-foreground: #ede9fe;
-    --color-muted: #252040;
-    --color-muted-foreground: #7c74a0;
-    --color-accent: #252040;
-    --color-accent-foreground: #ede9fe;
+/* -------------------------------------------------------------------- */
+/* Dark theme — explicit attribute set by the settings store            */
+/* (system preference is resolved to light/dark before first paint).    */
+/* -------------------------------------------------------------------- */
+[data-theme='dark'] {
+  --color-primary: #a29bfe;
+  --color-primary-hover: #8f86f7;
+  --color-on-primary: #1b1440;
 
-    --color-primary: #a29bfe;
-    --color-primary-hover: #6c5ce7;
-    --color-success: #55efc4;
-    --color-success-hover: #00b894;
-    --color-warning: #ffeaa7;
-    --color-warning-hover: #fdcb6e;
-    --color-danger: #fab1a0;
-    --color-danger-hover: #e17055;
-    --color-info: #74b9ff;
-    --color-info-hover: #0984e3;
-  }
+  --color-success: #55efc4;
+  --color-success-hover: #2ed3ab;
+  --color-on-success: #06261d;
+
+  --color-warning: #ffeaa7;
+  --color-warning-hover: #f5dc8a;
+  --color-on-warning: #3a2a00;
+
+  --color-danger: #fab1a0;
+  --color-danger-hover: #f79482;
+  --color-on-danger: #3a1410;
+
+  --color-info: #74b9ff;
+  --color-info-hover: #5aa8f8;
+  --color-on-info: #06263f;
+
+  --color-bg: #0f0d1a;
+  --color-bg-2: #171331;
+  --color-bg-3: #211c40;
+  --color-surface: #1a1630;
+  --color-surface-hover: #241f45;
+  --color-border: #322b57;
+  --color-text: #ede9fe;
+  --color-text-2: #b8b0d8;
+  --color-text-3: #948cb8;
+  --color-foreground: #ede9fe;
+  --color-card: #1a1630;
+  --color-card-foreground: #ede9fe;
+  --color-popover: #1a1630;
+  --color-popover-foreground: #ede9fe;
+  --color-muted: #241f45;
+  --color-muted-foreground: #948cb8;
+  --color-accent: #241f45;
+  --color-accent-foreground: #ede9fe;
+
+  --shadow-card: 0 1px 2px rgb(0 0 0 / 0.4), 0 10px 28px -14px rgb(0 0 0 / 0.6);
+  --shadow-card-hover:
+    0 2px 4px rgb(0 0 0 / 0.45), 0 16px 34px -14px rgb(0 0 0 / 0.7);
+  --shadow-pop: 0 8px 24px -10px rgb(162 155 254 / 0.5);
+  --shadow-edge: 0 4px 0 0 rgb(0 0 0 / 0.45);
 }
 
 /* Global base styles */
@@ -88,8 +154,8 @@
 
   body {
     font-family: var(--font-sans), system-ui, sans-serif;
-    color: var(--color-text, #1e1b2e);
-    background: var(--color-bg, #faf9ff);
+    color: var(--color-text, #191436);
+    background: var(--color-bg, #f6f4ff);
     line-height: 1.6;
     margin: 0;
     -webkit-font-smoothing: antialiased;
@@ -104,9 +170,22 @@
     display: flex;
     flex-direction: column;
   }
+
+  /* Visible keyboard focus everywhere. */
+  :focus-visible {
+    outline: 3px solid var(--color-primary);
+    outline-offset: 2px;
+  }
+
+  ::selection {
+    background: color-mix(in srgb, var(--color-primary) 30%, transparent);
+  }
 }
 
-/* Reduced motion */
+/* -------------------------------------------------------------------- */
+/* Motion opt-outs: OS preference and the /settings toggle.             */
+/* Motion (JS) animations are handled separately via useReducedMotion.  */
+/* -------------------------------------------------------------------- */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -117,18 +196,26 @@
   }
 }
 
+[data-motion='off'] *,
+[data-motion='off'] *::before,
+[data-motion='off'] *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+}
+
 /* Scrollbar styling */
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
 }
 ::-webkit-scrollbar-track {
-  background: var(--color-bg-2, #f3f0ff);
+  background: var(--color-bg-2, #efeaff);
 }
 ::-webkit-scrollbar-thumb {
-  background: var(--color-border, #e5e0f0);
-  border-radius: var(--radius-full, 9999px);
+  background: var(--color-border, #e2dbf7);
+  border-radius: var(--radius-pill, 9999px);
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--color-text-3, #8b85a0);
+  background: var(--color-text-3, #716a97);
 }

@@ -10,7 +10,7 @@ export function NotFoundPage() {
       <p className="text-xl text-text-2">{t('common.not_found')}</p>
       <Link
         to="/"
-        className="rounded-lg bg-primary px-6 py-2 font-semibold text-white transition-colors hover:bg-primary/90"
+        className="rounded-lg bg-primary px-6 py-2 font-semibold text-on-primary transition-colors hover:bg-primary/90"
       >
         {t('common.back')}
       </Link>

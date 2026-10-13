@@ -85,6 +85,11 @@ export function useQuizSubmission(
     useQuizSessionStore.getState().skipQuestion()
   }, [currentQuestion])
 
+  /** Drop the in-progress selection (Esc). */
+  const handleClear = useCallback(() => {
+    setCurrentSubmission([])
+  }, [])
+
   const handleNext = useCallback(() => {
     if (!currentQuestion) return
     setCurrentSubmission([])
@@ -99,6 +104,7 @@ export function useQuizSubmission(
     handleSkip,
     handleNext,
     handleToggle,
+    handleClear,
     hasSelection,
   } as const
 }

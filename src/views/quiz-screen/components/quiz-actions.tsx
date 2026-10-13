@@ -1,5 +1,6 @@
 import { memo } from 'react'
 import { useTranslation } from 'react-i18next'
+import { AnimatedNumber } from '../../../shared/ui/animated-number'
 
 export interface QuizActionsProps {
   streak: number
@@ -27,7 +28,8 @@ export const QuizActions = memo(function QuizActions({
     <div className="flex items-center justify-between">
       <div className="flex items-center gap-3">
         <span className="text-sm text-text-3">
-          {t('quiz.streak')}: {streak} 🔥
+          {t('quiz.streak')}: <AnimatedNumber value={streak} duration={400} />{' '}
+          🔥
         </span>
       </div>
       <div className="flex gap-3">
@@ -42,7 +44,7 @@ export const QuizActions = memo(function QuizActions({
             <button
               onClick={onSubmit}
               disabled={!hasSelection}
-              className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-primary/90 disabled:opacity-50"
+              className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-on-primary transition-colors hover:bg-primary/90 disabled:opacity-50"
             >
               {t('quiz.submit')}
             </button>
@@ -52,7 +54,7 @@ export const QuizActions = memo(function QuizActions({
           <button
             onClick={onNext}
             disabled={nextDisabled}
-            className="rounded-lg bg-primary px-6 py-2 text-sm font-semibold text-white transition-colors hover:bg-primary/90 disabled:cursor-wait disabled:opacity-60"
+            className="rounded-lg bg-primary px-6 py-2 text-sm font-semibold text-on-primary transition-colors hover:bg-primary/90 disabled:cursor-wait disabled:opacity-60"
           >
             {nextDisabled ? t('quiz.loading_next') : t('quiz.next')}
           </button>

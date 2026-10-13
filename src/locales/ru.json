@@ -44,8 +44,13 @@
     "time_remaining": "Оставшееся время",
     "lives": "Жизни",
     "score": "Очки: {{score}}",
+    "score_label": "Очки:",
     "streak": "Серия",
     "explanation": "Пояснение"
+  },
+  "a11y": {
+    "answer_correct": "Правильный ответ",
+    "answer_incorrect": "Неправильный ответ"
   },
   "results": {
     "title": "Результаты",
@@ -106,7 +111,11 @@
     "animations": "Анимации",
     "light": "Светлая",
     "dark": "Тёмная",
-    "system": "Системная"
+    "system": "Системная",
+    "animations_hint": "Движение и переходы",
+    "on": "Вкл",
+    "off": "Выкл",
+    "theme_hint": "Системная тема следует настройкам устройства."
   },
   "common": {
     "loading": "Загрузка...",

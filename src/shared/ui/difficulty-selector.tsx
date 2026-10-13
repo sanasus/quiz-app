@@ -30,7 +30,7 @@ const DifficultySelector = ({
   }
 
   return (
-    <div className="flex gap-2">
+    <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
       {difficulties.map((d) => (
         <button
           key={d.value}
@@ -38,7 +38,7 @@ const DifficultySelector = ({
           data-testid={`difficulty-${d.value}`}
           aria-pressed={selectedDifficulty === d.value}
           onClick={() => onSelect(d.value)}
-          className={`flex-1 rounded-lg border-[3px] px-3 py-2 text-sm font-bold transition-all
+          className={`rounded-lg border-[3px] px-3 py-2 text-sm font-bold transition-all
             ${
               selectedDifficulty === d.value
                 ? 'border-primary ring-2 ring-primary/30 bg-primary/20 text-primary scale-[1.03] cursor-pointer'

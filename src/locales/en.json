@@ -44,8 +44,13 @@
     "time_remaining": "Time remaining",
     "lives": "Lives",
     "score": "Score: {{score}}",
+    "score_label": "Score:",
     "streak": "Streak",
     "explanation": "Explanation"
+  },
+  "a11y": {
+    "answer_correct": "Correct answer",
+    "answer_incorrect": "Wrong answer"
   },
   "results": {
     "title": "Results",
@@ -59,7 +64,7 @@
     "new_quiz": "New Quiz"
   },
   "stats": {
-    "title": "Statistics",
+    "title": "Stats",
     "total_sessions": "Total Sessions",
     "accuracy": "Accuracy",
     "avg_streak": "Average Streak",
@@ -106,7 +111,11 @@
     "animations": "Animations",
     "light": "Light",
     "dark": "Dark",
-    "system": "System"
+    "system": "System",
+    "animations_hint": "Motion and transitions",
+    "on": "On",
+    "off": "Off",
+    "theme_hint": "The system theme follows your device setting."
   },
   "common": {
     "loading": "Loading...",
