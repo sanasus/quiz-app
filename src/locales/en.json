@@ -121,6 +121,7 @@
   "common": {
     "loading": "Loading…",
     "error": "Error",
+    "error_title": "Something went wrong",
     "not_found": "Page not found",
     "retry": "Retry",
     "close": "Close",

@@ -1,6 +1,7 @@
 import { createRouter } from '@tanstack/react-router'
 // Импортируем автоматически сгенерированное дерево маршрутов
 import { routeTree } from '../routeTree.gen.ts'
+import { ErrorPage } from '../shared/ui/error-page'
 import { NotFoundPage } from '../shared/ui/not-found-page'
 
 // Создаем инстанс роутера. Передавать кастомную историю больше не нужно,
@@ -9,6 +10,8 @@ import { NotFoundPage } from '../shared/ui/not-found-page'
 export const router = createRouter({
   routeTree,
   defaultNotFoundComponent: NotFoundPage,
+  // App-level error boundary: catches render/loader errors inside routes.
+  defaultErrorComponent: ErrorPage,
   // basepath: '/' — удален, так как '/' является значением по умолчанию
 })
 
