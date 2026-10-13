@@ -52,6 +52,16 @@ npm run e2e        # playwright (тесты-теги @smoke/@mobile/@i18n/@slow)
 - **Дизайн** — Tailwind CSS v4 с токенами в теме, светлая/тёмная темы, анимации Motion с учётом `prefers-reduced-motion` и настройки отключения в `/settings`.
 - **Error boundary** — на уровне приложения через `defaultErrorComponent` роутера (`src/shared/ui/error-page.tsx`).
 
+## CI/CD и деплой
+
+- **Хостинг**: Vercel, проект `sanas1/quiz-app`, продакшен — https://quiz-app-three-weld-25.vercel.app.
+- **CI**: GitHub Actions, два workflow:
+  - `.github/workflows/ci.yml` — на каждый PR и push в `main`: lint → typecheck → unit-тесты → build. На push в `main` дополнительно деплой в production: `vercel pull` → `vercel build --prod` → `vercel deploy --prebuilt --prod` (build и deploy строго в один target — иначе prebuilt-деплой падает с рассинхроном окружений).
+  - `.github/workflows/e2e.yml` — Playwright: smoke-набор (тег `@smoke`) на push/PR, полный набор по расписанию (nightly, 03:00 UTC) и вручную (`workflow_dispatch`).
+- **Секреты GitHub Actions**: `VERCEL_TOKEN` (создаётся в dashboard Vercel → Account Settings → Tokens), `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID` (из `.vercel/project.json` после `vercel link`).
+- **Переменные окружения Vercel**: `VITE_QUIZAPI_KEY` и `VITE_USE_MOCK_DATA=false` заданы для Production в настройках проекта — CI подхватывает их через `vercel pull` при сборке.
+- **SPA-роутинг**: `vercel.json` содержит rewrite всех путей на `index.html`, поэтому прямые ссылки вида `/setup` работают (без этого Vercel отдаёт 404 на несуществующих файлах).
+
 ## Ограничения
 
 - **Тексты вопросов приходят от API на английском и не переводятся** — переводится только интерфейс.
