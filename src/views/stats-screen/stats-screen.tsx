@@ -18,6 +18,12 @@ import { xpProgress } from '../../features/progress/xp'
 import { ConfirmDialog } from '../../shared/ui/confirm-dialog'
 
 /**
+ * Rough number of history rows that fit without scrolling; beyond this
+ * the list becomes a focusable scroll container.
+ */
+const HISTORY_VISIBLE_ROWS = 10
+
+/**
  * Lightweight accuracy-dynamics chart: a polyline over the last
  * sessions, plain SVG, no charting library.
  */
@@ -231,12 +237,19 @@ export function StatsScreen() {
             </ul>
           </div>
 
-          {/* History */}
+          {/* History — scrollable when the list gets long */}
           <div className="mb-6 rounded-xl bg-surface p-4 shadow-md">
-            <h2 className="mb-3 text-lg font-semibold text-text">
+            <h2
+              id="history-heading"
+              className="mb-3 text-lg font-semibold text-text"
+            >
               {t('stats.history')}
             </h2>
-            <ul className="flex flex-col gap-2">
+            <ul
+              aria-labelledby="history-heading"
+              tabIndex={stats.history.length > HISTORY_VISIBLE_ROWS ? 0 : -1}
+              className="flex max-h-72 flex-col gap-2 overflow-y-auto overscroll-contain"
+            >
               {stats.history.map((s) => (
                 <li
                   key={s.finishedAt}
