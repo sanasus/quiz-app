@@ -5,11 +5,19 @@ import { useMotionEnabled } from '../../../shared/lib/use-motion-enabled'
 export interface QuizOptionProps {
   id: string
   text: string
+  /** Zero-based position — used for the A/B/C/D badge, never the raw id. */
+  index: number
   isSelected: boolean
   isCorrect: boolean
   showResult: boolean
   disabled: boolean
   onToggle: (optionId: string) => void
+}
+
+/** Single-letter badge label: 0 → A, 1 → B, … 25 → Z, then the number. */
+function badgeLabel(index: number): string {
+  if (index < 26) return String.fromCharCode(65 + index)
+  return String(index + 1)
 }
 
 /** Shake keyframes for a wrongly picked option. */
@@ -18,6 +26,7 @@ const SHAKE = [0, -8, 8, -6, 6, -3, 3, 0]
 export const QuizOption = memo(function QuizOption({
   id,
   text,
+  index,
   isSelected,
   isCorrect,
   showResult,
@@ -72,7 +81,7 @@ export const QuizOption = memo(function QuizOption({
     >
       <div className="flex items-center gap-3">
         <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-border text-xs">
-          {id.toUpperCase()}
+          {badgeLabel(index)}
         </span>
         <span className="min-w-0 break-words">{text}</span>
         {showResult && isCorrect ? (

@@ -25,11 +25,12 @@ export const QuizOptions = memo(function QuizOptions({
 
   return (
     <div role="listbox" aria-label={t('quiz.question')} className="space-y-3">
-      {options.map((option) => (
+      {options.map((option, index) => (
         <QuizOption
           key={option.id}
           id={option.id}
           text={option.text}
+          index={index}
           isSelected={selectedSet.has(option.id)}
           isCorrect={correctSet.has(option.id)}
           showResult={answered}
