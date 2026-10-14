@@ -4,6 +4,9 @@
  * Base URL: https://quizapi.io/api/v1
  * Auth: Authorization: Bearer VITE_QUIZAPI_KEY
  *
+ * Hybrid: any QuizAPI failure (timeout, network, 4xx/5xx, parsing)
+ * falls back to The Trivia API — see withFallback below.
+ *
  * Development: set VITE_USE_MOCK_DATA=true to use mock data instead of live API.
  */
 
@@ -26,6 +29,11 @@ import {
 import { fetchMockMetadata } from './mock-data'
 import { fetchMockCategories } from './mock-categories'
 import { countMockQuestions, fetchMockQuestions } from './mock-questions'
+import {
+  fetchTriviaCategories,
+  fetchTriviaMetadata,
+  fetchTriviaQuestions,
+} from './triviaapi'
 
 // ---------------------------------------------------------------------------
 // Dev flag
@@ -39,6 +47,9 @@ const USE_MOCK = import.meta.env.VITE_USE_MOCK_DATA === 'true'
 // ---------------------------------------------------------------------------
 
 const API_BASE = 'https://quizapi.io/api/v1'
+
+/** Every live request aborts after 10s — a hung API must not stall the app. */
+const REQUEST_TIMEOUT_MS = 10_000
 
 /**
  * Survival loads questions in batches of this size instead of fetching
@@ -88,6 +99,41 @@ function getApiKey(): string {
   return key
 }
 
+/** Message of any thrown value (fetch rejects with non-Errors too). */
+function errorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : String(error)
+}
+
+/**
+ * Run the primary provider (QuizAPI); on *any* failure — timeout,
+ * network, 4xx/5xx, parsing — log it and retry against the fallback
+ * provider (The Trivia API). If both fail, the combined message keeps
+ * both originals so `retryQuestions` still matches primary substrings
+ * like 'Invalid or expired' and 'Rate limit exceeded'.
+ */
+async function withFallback<T>(
+  label: string,
+  primary: () => Promise<T>,
+  fallback: () => Promise<T>,
+): Promise<T> {
+  try {
+    return await primary()
+  } catch (primaryError) {
+    console.warn(
+      `QuizAPI ${label} request failed, falling back to The Trivia API:`,
+      primaryError,
+    )
+    try {
+      return await fallback()
+    } catch (fallbackError) {
+      throw new Error(
+        `${errorMessage(primaryError)}; fallback failed: ` +
+          errorMessage(fallbackError),
+      )
+    }
+  }
+}
+
 /**
  * Build the live /questions URL. Pure — unit-tested, because survival
  * batch loading silently depends on `offset` reaching the API.
@@ -113,23 +159,12 @@ export function buildQuestionsUrl(
   return `${API_BASE}/questions?${params.toString()}`
 }
 
-async function fetchQuestions(
+/** Live QuizAPI /questions — the primary provider behind withFallback. */
+async function fetchQuizApiQuestions(
   config: QuizConfig,
   options: FetchQuestionsOptions = {},
 ): Promise<QuestionsPage> {
   const offset = options.offset ?? 0
-
-  if (USE_MOCK) {
-    return {
-      questions: await fetchMockQuestions(
-        options.limit ?? getInitialFetchLimit(config),
-        config.difficulty,
-        config.category,
-        offset,
-      ),
-      total: countMockQuestions(config.difficulty, config.category),
-    }
-  }
 
   const url = buildQuestionsUrl(config, options)
 
@@ -137,6 +172,7 @@ async function fetchQuestions(
     headers: {
       Authorization: `Bearer ${getApiKey()}`,
     },
+    signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
   })
 
   if (response.status === 401 || response.status === 403) {
@@ -188,19 +224,50 @@ async function fetchQuestions(
   return { questions: valid, total }
 }
 
+/**
+ * One page of questions: mock first (dev, never touches the network),
+ * otherwise QuizAPI with an automatic fallback to The Trivia API.
+ */
+async function fetchQuestions(
+  config: QuizConfig,
+  options: FetchQuestionsOptions = {},
+): Promise<QuestionsPage> {
+  if (USE_MOCK) {
+    return {
+      questions: await fetchMockQuestions(
+        options.limit ?? getInitialFetchLimit(config),
+        config.difficulty,
+        config.category,
+        options.offset ?? 0,
+      ),
+      total: countMockQuestions(config.difficulty, config.category),
+    }
+  }
+
+  return withFallback(
+    'questions',
+    () => fetchQuizApiQuestions(config, options),
+    () =>
+      fetchTriviaQuestions(config, {
+        limit: options.limit ?? getInitialFetchLimit(config),
+        offset: options.offset ?? 0,
+      }),
+  )
+}
+
 // ---------------------------------------------------------------------------
 // Metadata
 // ---------------------------------------------------------------------------
 
-async function fetchMetadata(): Promise<ApiMetadata> {
-  if (USE_MOCK) return fetchMockMetadata()
-
+/** Live QuizAPI /metadata — the primary provider behind withFallback. */
+async function fetchQuizApiMetadata(): Promise<ApiMetadata> {
   const url = `${API_BASE}/metadata`
 
   const response = await fetch(url, {
     headers: {
       Authorization: `Bearer ${getApiKey()}`,
     },
+    signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
   })
 
   if (!response.ok) {
@@ -217,23 +284,29 @@ async function fetchMetadata(): Promise<ApiMetadata> {
   return parseResult.data.data
 }
 
+async function fetchMetadata(): Promise<ApiMetadata> {
+  if (USE_MOCK) return fetchMockMetadata()
+
+  return withFallback('metadata', fetchQuizApiMetadata, fetchTriviaMetadata)
+}
+
 // ---------------------------------------------------------------------------
 // Categories (hierarchical: topics → categories with icons, quiz counts)
 // ---------------------------------------------------------------------------
 
-async function fetchCategories(): Promise<{
+/** Live QuizAPI /categories — the primary provider behind withFallback. */
+async function fetchQuizApiCategories(): Promise<{
   topics: Topic[]
   /** All categories flattened for lookup by slug. */
   flatCategories: Category[]
 }> {
-  if (USE_MOCK) return fetchMockCategories()
-
   const url = `${API_BASE}/categories`
 
   const response = await fetch(url, {
     headers: {
       Authorization: `Bearer ${getApiKey()}`,
     },
+    signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
   })
 
   if (!response.ok) {
@@ -278,6 +351,20 @@ async function fetchCategories(): Promise<{
   }
 
   return { topics: filteredTopics, flatCategories: filteredFlatCategories }
+}
+
+async function fetchCategories(): Promise<{
+  topics: Topic[]
+  /** All categories flattened for lookup by slug. */
+  flatCategories: Category[]
+}> {
+  if (USE_MOCK) return fetchMockCategories()
+
+  return withFallback(
+    'categories',
+    fetchQuizApiCategories,
+    fetchTriviaCategories,
+  )
 }
 
 // ---------------------------------------------------------------------------

@@ -1725,3 +1725,51 @@ v1
 14. `include_answers` по умолчанию `false` — всегда добавлять для quiz_id запросов.
 15. Meta отличается между режимами Questions API — не путать.
 ```
+
+------------------------------------------------------------------------
+
+# 28. Фоллбэк на The Trivia API v2
+
+**Зачем:** quizapi.io часто зависает/лагает (запросы по 10–60+ секунд),
+поэтому все live-запросы обоих провайдеров ограничены
+`AbortSignal.timeout(10_000)`.
+
+**Схема:** `withFallback(label, primary, fallback)` в
+`src/shared/api/quizapi.ts` — try primary → `console.warn` → fallback
+(The Trivia API v2, `https://the-trivia-api.com/v2`, бесплатно, без
+ключа). Если упали оба — комбинированное сообщение
+`"<primary>; fallback failed: <fallback>"`, сохраняющее подстроки
+'Invalid or expired' / 'Rate limit exceeded' для `retryQuestions`.
+Мок-ветка `USE_MOCK` приоритетна и стоит до try/catch.
+
+**Эндпоинты:**
+`GET /questions?limit=&offset=&difficulties=&categories=&types=`,
+`GET /questions/count?<те же фильтры>` (точный размер пула — аналог
+`meta.total`), `GET /metadata`, `GET /categories` (плоский record
+`displayName` → slug-и, 10 категорий).
+
+**Параметры:** `limit` клампится на 50; `difficulties` — одно
+lowercase-значение из `config.difficulty`; `types` всегда `text_choice`
+(`text_input` без ключа даёт 401); `categories` отправляется только при
+успешном маппинге слага — неизвестный слаг API молча подменяет на
+`general_knowledge`. `offset` v2 сейчас игнорирует (параметр шлём на
+будущее), исчерпание пула детектируется на клиенте: `addQuestionBatch`
+дедуплицирует по `id`, `added === 0` → `questionsExhausted`
+(`src/shared/lib/session-store.ts`).
+
+**Маппинг категорий** — `resolveTriviaCategory` в
+`src/shared/api/triviaapi.ts`: science/history/geography-листы →
+`science`/`history`/`geography`, literature и art-and-architecture →
+`arts_and_literature`, movies/tv-shows/anime → `film_and_tv`, music →
+`music`, sports → `sport_and_leisure`, food-and-drink →
+`food_and_drink`, mythology → `society_and_culture`, general-knowledge-листы
+→ `general_knowledge`; trivia-алиасы (movies, sports, literature, drink,
+games…) нормализуются в канон; programming, devops, database,
+cybersecurity, math, business и `'all'`/пусто/неизвестное → `null`
+(без фильтра — весь пул).
+
+Атрибуция **CC BY-NC 4.0** обязательна — добавлена в футер
+(`app.footer` в `src/locales/en.json` и `ru.json`).
+
+**Код:** клиент — `src/shared/api/triviaapi.ts`, zod-схемы —
+`src/shared/api/schemas.ts`, тесты — `src/shared/api/triviaapi.test.ts`.

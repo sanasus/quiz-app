@@ -136,6 +136,60 @@ export const metadataApiResponseSchema = z.object({
 export type MetadataApiResponse = z.infer<typeof metadataApiResponseSchema>
 
 // ---------------------------------------------------------------------------
+// The Trivia API (https://the-trivia-api.com) — fallback provider.
+// Free, no key required; CC BY-NC 4.0 (attribution in the app footer).
+// ---------------------------------------------------------------------------
+
+export const triviaApiQuestionSchema = z.object({
+  id: z.string(),
+  question: z.object({ text: z.string().min(1) }),
+  correctAnswer: z.string().min(1),
+  incorrectAnswers: z.array(z.string()),
+  category: z.string(),
+  difficulty: z.enum(['easy', 'medium', 'hard']),
+  type: z.string().optional(),
+  tags: z.array(z.string()).optional(),
+})
+
+export type TriviaApiQuestion = z.infer<typeof triviaApiQuestionSchema>
+
+/**
+ * /v2/metadata — question counts per dimension. Used to build the
+ * ApiMetadata shape and per-category quizCount for the fallback
+ * category list.
+ */
+export const triviaApiMetadataSchema = z.object({
+  byCategory: z.record(z.string(), z.number()),
+  byDifficulty: z.record(z.string(), z.number()),
+  byType: z.record(z.string(), z.number()),
+  byState: z.record(z.string(), z.number()),
+})
+
+export type TriviaApiMetadata = z.infer<typeof triviaApiMetadataSchema>
+
+/**
+ * /questions/count — the exact pool size the same filters draw from
+ * (mirrors QuizAPI's `meta.total` for the survival header).
+ */
+export const triviaApiCountSchema = z.object({
+  count: z.number(),
+})
+
+export type TriviaApiCount = z.infer<typeof triviaApiCountSchema>
+
+/**
+ * /v2/categories — flat record: displayName → array of slug aliases.
+ * The canonical slug of a category is the alias that also appears as a
+ * key of /v2/metadata's byCategory (see fetchTriviaCategories).
+ */
+export const triviaApiCategoriesSchema = z.record(
+  z.string(),
+  z.array(z.string()).min(1),
+)
+
+export type TriviaApiCategories = z.infer<typeof triviaApiCategoriesSchema>
+
+// ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
 

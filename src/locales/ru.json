@@ -3,7 +3,7 @@
     "title": "QuizApp",
     "skip_to_content": "Перейти к содержимому",
     "language_current": "Текущий язык: {{code}}",
-    "footer": "QuizApp · Powered by QuizAPI",
+    "footer": "QuizApp · Powered by QuizAPI · The Trivia API (CC BY-NC 4.0)",
     "nav": {
       "home": "Главная",
       "new_quiz": "Новый тест",
