@@ -11,9 +11,12 @@
 import { useNavigate } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
 import { useQuizSessionStore } from '../../shared/lib/session-store'
+import { isDifficulty } from '../../shared/lib/difficulties'
 import { useCategories, useMetadata } from '../../shared/api/quizapi'
 import CategoryDropdown from '../../shared/ui/category-dropdown'
-import DifficultySelector from '../../shared/ui/difficulty-selector'
+import DifficultySelector, {
+  type DifficultyOption,
+} from '../../shared/ui/difficulty-selector'
 import QuestionCountSlider from '../../shared/ui/question-count-slider'
 import ModeSelector from '../../shared/ui/mode-selector'
 import StartButton from '../../shared/ui/start-button'
@@ -22,12 +25,6 @@ import { MODE_IDS } from '../../features/modes'
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
-
-/** Map API difficulty (uppercase) → internal (lowercase). */
-function apiDifficultyToInternal(apiDiff: string): 'easy' | 'medium' | 'hard' {
-  const lower = apiDiff.toLowerCase() as 'easy' | 'medium' | 'hard'
-  return lower
-}
 
 // Mode labels — derived from registry for i18n. Static, so hoisted to module
 // level instead of being rebuilt on every render (rendering-hoist-jsx).
@@ -54,14 +51,17 @@ export function SetupScreen() {
 
   const loading = loadingMetadata || loadingCategories
 
-  // Build difficulties list from API
-  const difficulties = (metadata?.difficulties ?? []).map((d) => {
-    const value = apiDifficultyToInternal(d)
-    return {
+  // Build the difficulties list from API metadata, keeping only the
+  // levels the internal model supports end to end. The API also reports
+  // EXPERT (uppercase) — it is filtered out instead of rendering a
+  // button that could never start a quiz (see README «Ограничения»).
+  const difficulties = (metadata?.difficulties ?? [])
+    .map((d) => d.toLowerCase())
+    .filter(isDifficulty)
+    .map((value): DifficultyOption => ({
       value,
-      labelKey: `setup.${value}` as `setup.${'easy' | 'medium' | 'hard'}`,
-    }
-  })
+      labelKey: `setup.${value}`,
+    }))
 
   const handleStart = () => {
     store.reset()

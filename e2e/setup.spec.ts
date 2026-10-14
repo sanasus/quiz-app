@@ -80,6 +80,16 @@ test.describe('Setup page', () => {
     await expect(mediumBtn).toHaveAttribute('aria-pressed', 'false')
   })
 
+  test('offers only the difficulties the app supports', async ({ page }) => {
+    // Metadata is loaded once these are on screen...
+    await expect(page.getByTestId('difficulty-easy')).toBeVisible()
+    await expect(page.getByTestId('difficulty-hard')).toBeVisible()
+
+    // ...and EXPERT, which the API reports, must stay filtered out:
+    // it used to render and silently bounce Start back to /setup.
+    await expect(page.getByTestId('difficulty-expert')).toHaveCount(0)
+  })
+
   test('question count slider is visible', async ({ page }) => {
     const slider = page.locator('input[type="range"]')
     await expect(slider).toBeVisible()
