@@ -36,7 +36,6 @@
   },
   "quiz": {
     "question": "Question",
-    "progress": "{{current}} of {{total}}",
     "submit": "Submit",
     "skip": "Skip",
     "next": "Next",

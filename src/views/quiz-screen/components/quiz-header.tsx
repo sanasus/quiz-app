@@ -46,9 +46,6 @@ export function QuizHeader({
           <h2 className="text-xl font-bold text-text">
             {t('quiz.question')} {progress}/{total}
           </h2>
-          <p className="text-sm text-text-2">
-            {t('quiz.progress', { current: progress, total })}
-          </p>
         </div>
         <div className="flex items-center gap-4">
           {hasTimer ? (

@@ -27,8 +27,8 @@ test.describe('Quiz screen', () => {
         page.getByRole('heading', { name: 'Question' }),
       ).toBeVisible()
 
-      // Progress shows "1 of 2"
-      await expect(page.getByText('1 of 2')).toBeVisible()
+      // Progress shows "1/2"
+      await expect(page.getByText('1/2')).toBeVisible()
 
       // 4 answer options — action buttons asserted separately
       await expect(optionLocator(page)).toHaveCount(4)
@@ -84,7 +84,7 @@ test.describe('Quiz screen', () => {
     await skipQuestion(page)
 
     // Progress moved to the second (last) question
-    await expect(page.getByText('2 of 2')).toBeVisible()
+    await expect(page.getByText('2/2')).toBeVisible()
   })
 
   test(

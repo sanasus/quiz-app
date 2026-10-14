@@ -36,7 +36,6 @@
   },
   "quiz": {
     "question": "Вопрос",
-    "progress": "{{current}} из {{total}}",
     "submit": "Ответить",
     "skip": "Пропустить",
     "next": "Далее",
