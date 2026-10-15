@@ -38,10 +38,10 @@ jobs:
       - name: Typecheck
         run: npm run typecheck
 
+      # Unit tests run hermetically: vitest.config.ts pins
+      # VITE_USE_MOCK_DATA=false and a dummy VITE_QUIZAPI_KEY.
       - name: Unit tests
         run: npm run test -- --run
-        env:
-          VITE_USE_MOCK_DATA: 'true'
 
       - name: Build
         run: npm run build
