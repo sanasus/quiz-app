@@ -9,7 +9,10 @@ import {
   buildQuestionsUrl,
   getInitialFetchLimit,
   SURVIVAL_BATCH_SIZE,
-} from './quizapi'
+} from './quizapi-client'
+import { retryQuestions } from './quizapi'
+import { QuizApiError } from './errors'
+import type { ErrorKind } from './errors'
 import type { QuizConfig } from '../types/quiz'
 
 const classicConfig: QuizConfig = {
@@ -59,5 +62,36 @@ describe('buildQuestionsUrl', () => {
       buildQuestionsUrl({ ...classicConfig, category: 'javascript' }),
     ).searchParams
     expect(withCategory.get('category')).toBe('javascript')
+  })
+})
+
+describe('retryQuestions', () => {
+  function apiError(kind: ErrorKind): QuizApiError {
+    return new QuizApiError('boom', { kind, providerId: 'quizapi' })
+  }
+
+  it('retries connectivity failures for the first two attempts', () => {
+    expect(retryQuestions(0, apiError('network'))).toBe(true)
+    expect(retryQuestions(1, apiError('network'))).toBe(true)
+    expect(retryQuestions(2, apiError('network'))).toBe(false)
+  })
+
+  it('never retries a timeout — a hung provider must fail fast', () => {
+    // No 2×10s wait: the dialog / auto-switch offers a provider
+    // change right away (HAR-verified hangs past REQUEST_TIMEOUT_MS).
+    expect(retryQuestions(0, apiError('timeout'))).toBe(false)
+    expect(retryQuestions(1, apiError('timeout'))).toBe(false)
+  })
+
+  it('never retries broken-provider kinds', () => {
+    for (const kind of ['auth', 'rate_limit', 'parse', 'http'] as const) {
+      expect(retryQuestions(0, apiError(kind))).toBe(false)
+    }
+  })
+
+  it('retries plain unclassified errors like a network blip', () => {
+    expect(retryQuestions(0, new Error('boom'))).toBe(true)
+    expect(retryQuestions(1, new Error('boom'))).toBe(true)
+    expect(retryQuestions(2, new Error('boom'))).toBe(false)
   })
 })

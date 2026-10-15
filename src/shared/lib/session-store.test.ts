@@ -7,6 +7,7 @@ import { beforeEach, describe, expect, it } from 'vitest'
 import {
   addQuestionBatch,
   canLoadMoreQuestions,
+  isSessionActive,
   useQuizSessionStore,
 } from './session-store'
 import type { Question, QuizConfig, QuizSession } from '../types/quiz'
@@ -347,5 +348,45 @@ describe('questionsTotal', () => {
     useQuizSessionStore.getState().repeatMistakes(survivalConfig)
 
     expect(useQuizSessionStore.getState().questionsTotal).toBe(pool.length)
+  })
+})
+
+// ---------------------------------------------------------------------------
+// reset
+// ---------------------------------------------------------------------------
+
+describe('reset', () => {
+  it('clears sessionStartTime and timeRemaining', () => {
+    useQuizSessionStore.getState().startSessionTimer()
+    useQuizSessionStore.getState().startTimer(25)
+    expect(useQuizSessionStore.getState().sessionStartTime).not.toBeNull()
+    expect(useQuizSessionStore.getState().timeRemaining).toBe(25)
+
+    useQuizSessionStore.getState().reset()
+
+    const state = useQuizSessionStore.getState()
+    expect(state.sessionStartTime).toBeNull()
+    // Optional timed-mode field — must not survive a reset either.
+    expect(state.timeRemaining).toBeUndefined()
+    expect(state.status).toBe('idle')
+    expect(state.questions).toEqual([])
+    expect(state.finishedSession).toBeNull()
+  })
+})
+
+// ---------------------------------------------------------------------------
+// isSessionActive
+// ---------------------------------------------------------------------------
+
+describe('isSessionActive', () => {
+  it('treats loading/playing/answered as an active session', () => {
+    expect(isSessionActive('loading')).toBe(true)
+    expect(isSessionActive('playing')).toBe(true)
+    expect(isSessionActive('answered')).toBe(true)
+  })
+
+  it('treats idle/finished as inactive', () => {
+    expect(isSessionActive('idle')).toBe(false)
+    expect(isSessionActive('finished')).toBe(false)
   })
 })

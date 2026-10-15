@@ -17,15 +17,15 @@ npm run preview      # vite preview
 Run `typecheck` before committing — `noUnusedLocals` and `noUnusedParameters` are enforced.
 
 ## Env
-- `VITE_QUIZAPI_KEY` — API key (required for live mode; see `.env`)
-- `VITE_USE_MOCK_DATA=true` — switch to mock data (see `src/shared/api/mock-*.ts`)
+- `VITE_QUIZAPI_KEY` — QuizAPI key (only for the `quizapi` provider; The Trivia API needs no key; see `.env`)
+- `VITE_USE_MOCK_DATA=true` — switch to mock data and force `providerId='mock'` on every page load (see `src/shared/api/mock-*.ts`); the settings switcher lists mock only while it is the active source — no manual way back
 
 ## Architecture
 - **Entry**: `src/main.tsx` → `<Providers>` → `<RouterProvider>`
 - **Providers**: `src/app/providers.tsx` — wraps `QueryClientProvider` → `I18nextProvider` → `RouterProvider` (ReactQueryDevtools unconditionally mounted)
 - **Routes**: TanStack Router with `autoCodeSplitting: true`. Codegen at `src/routeTree.gen.ts` — do not edit; run `build` to regenerate.
 - **State**: React Query (`retry: 2`, `staleTime: 5 min`, `gcTime: 10 min`) + Zustand (client state)
-- **API layer**: `src/shared/api/` — `adapter.ts` converts raw QuizAPI responses to internal models; mock mirrors the real API
+- **API layer**: `src/shared/api/` — provider registry (`providers.ts`: quizapi/trivia/mock), active provider in the `provider-store` persist store (part of every query key); `adapter.ts` converts raw QuizAPI responses to internal models; mock mirrors the real API. No transparent fallback — switching is explicit: settings selector, `ApiErrorDialog` on /quiz, auto-switch + toast on /setup (see `docs/api-notes.md` §28)
 - **i18n**: `src/app/i18n.ts` — en/ru, `fallbackLng: 'en'`, detection order: querystring → localStorage → navigator
 - **Alias**: `@` → `src/` (both vite and tsconfig)
 - **tsconfig**: `tsconfig.json` is a root file with project references; compiler options live in `tsconfig.app.json`
@@ -52,6 +52,11 @@ Run `typecheck` before committing — `noUnusedLocals` and `noUnusedParameters` 
 - Shared helpers live in `e2e/fixtures.ts` (`startQuiz`,
   `completeQuiz`, `optionLocator`, `waitForResults`) — reuse them instead of
   writing new flows inline.
+- Provider-switch tests intercept every external request with
+  `e2e/api-fixtures.ts` (`routeQuizApi`, `routeTrivia`, `abortTrivia`) —
+  never let a live API call hit the network; remember that
+  `page.goto`/reload re-forces `providerId` to mock, so drive provider
+  changes through SPA navigation only.
 - Prefer user-facing locators (roles, labels); use `data-testid`/`data-state`
   only when no accessible hook exists. Never assert on CSS classes or timings.
 

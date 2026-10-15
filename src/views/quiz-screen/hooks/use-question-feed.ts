@@ -1,8 +1,6 @@
 import { useEffect, useRef } from 'react'
-import {
-  useQuestionBatch,
-  type QuestionsPage,
-} from '../../../shared/api/quizapi'
+import { useQuestionBatch } from '../../../shared/api/quizapi'
+import type { QuestionsPage } from '../../../shared/api/providers'
 import {
   canLoadMoreQuestions,
   useQuizSessionStore,
@@ -22,6 +20,8 @@ export interface QuestionFeedResult {
   batchError: string | null
   /** Retry the failed batch fetch. */
   retryBatch: () => void
+  /** A batch refetch is in flight — drives the error dialog's spinner. */
+  isFetching: boolean
   /**
    * Give up on further batches and finish the run — the escape hatch
    * for errors a retry cannot fix (e.g. an invalid API key).
@@ -55,7 +55,11 @@ export function useQuestionFeed(config: QuizConfig | null): QuestionFeedResult {
     loaded > 0 &&
     currentIndex >= loaded - PREFETCH_THRESHOLD
 
-  const { data, error, refetch } = useQuestionBatch(config, loaded, shouldFetch)
+  const { data, error, refetch, isFetching } = useQuestionBatch(
+    config,
+    loaded,
+    shouldFetch,
+  )
 
   // StrictMode re-runs effects on mount: without this guard an
   // already-resolved batch would be appended twice, and the second
@@ -86,6 +90,7 @@ export function useQuestionFeed(config: QuizConfig | null): QuestionFeedResult {
     waitingForBatch,
     batchError,
     retryBatch: refetch,
+    isFetching,
     finishWithoutBatch: markQuestionsExhausted,
   }
 }

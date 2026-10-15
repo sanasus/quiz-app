@@ -1,6 +1,6 @@
 /**
- * The Trivia API client — fallback provider used when quizapi.io
- * fails (see the hybrid-integration task in quizapi.ts).
+ * The Trivia API client — the second live provider (see providers.ts).
+ * Keyless fallback when quizapi.io is broken or its key is invalid.
  *
  * Base URL: https://the-trivia-api.com/v2
  * Auth: none (free, CORS enabled). Licence: CC BY-NC 4.0 — attribution
@@ -23,7 +23,7 @@ import type {
   QuizConfig,
   Topic,
 } from '../types/quiz'
-import type { QuestionsPage } from './quizapi'
+import type { QuestionsPage } from './providers'
 import type {
   TriviaApiCategories,
   TriviaApiMetadata,
@@ -35,6 +35,7 @@ import {
   triviaApiMetadataSchema,
   triviaApiQuestionSchema,
 } from './schemas'
+import { classifyError, httpErrorKind, QuizApiError } from './errors'
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -324,43 +325,55 @@ export async function fetchTriviaQuestions(
   config: QuizConfig,
   options: { limit: number; offset: number },
 ): Promise<QuestionsPage> {
-  const [count, response] = await Promise.all([
-    options.offset === 0
-      ? fetchTriviaCount(config)
-      : Promise.resolve(undefined),
-    fetch(buildTriviaQuestionsUrl(config, options), {
-      signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
-    }),
-  ])
+  try {
+    const [count, response] = await Promise.all([
+      options.offset === 0
+        ? fetchTriviaCount(config)
+        : Promise.resolve(undefined),
+      fetch(buildTriviaQuestionsUrl(config, options), {
+        signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+      }),
+    ])
 
-  if (!response.ok) {
-    throw new Error(`The Trivia API error: HTTP ${response.status}`)
+    if (!response.ok) {
+      throw new QuizApiError(`The Trivia API error: HTTP ${response.status}`, {
+        kind: httpErrorKind(response.status),
+        providerId: 'trivia',
+        status: response.status,
+      })
+    }
+
+    const json: unknown = await response.json()
+
+    if (!Array.isArray(json)) {
+      throw new QuizApiError(
+        'Invalid questions response from The Trivia API.',
+        { kind: 'parse', providerId: 'trivia' },
+      )
+    }
+
+    const questions: Question[] = []
+    for (const item of json) {
+      const parsed = triviaApiQuestionSchema.safeParse(item)
+      if (!parsed.success) continue
+      const question = adaptTriviaQuestion(parsed.data)
+      if (question !== null) questions.push(question)
+    }
+
+    // An empty page at offset > 0 means the pool is exhausted (the store
+    // dedupes by id) — a normal outcome for a survival batch, while an
+    // empty *initial* fetch is a config problem.
+    if (questions.length === 0 && options.offset === 0) {
+      throw new QuizApiError(
+        'No questions returned from The Trivia API. Try different settings.',
+        { kind: 'parse', providerId: 'trivia' },
+      )
+    }
+
+    return { questions, total: count }
+  } catch (error) {
+    throw classifyError(error, 'trivia')
   }
-
-  const json: unknown = await response.json()
-
-  if (!Array.isArray(json)) {
-    throw new Error('Invalid questions response from The Trivia API.')
-  }
-
-  const questions: Question[] = []
-  for (const item of json) {
-    const parsed = triviaApiQuestionSchema.safeParse(item)
-    if (!parsed.success) continue
-    const question = adaptTriviaQuestion(parsed.data)
-    if (question !== null) questions.push(question)
-  }
-
-  // An empty page at offset > 0 means the pool is exhausted (the store
-  // dedupes by id) — a normal outcome for a survival batch, while an
-  // empty *initial* fetch is a config problem.
-  if (questions.length === 0 && options.offset === 0) {
-    throw new Error(
-      'No questions returned from The Trivia API. Try different settings.',
-    )
-  }
-
-  return { questions, total: count }
 }
 
 // ---------------------------------------------------------------------------
@@ -374,35 +387,49 @@ async function fetchTriviaRawMetadata(): Promise<TriviaApiMetadata> {
   })
 
   if (!response.ok) {
-    throw new Error(`The Trivia API metadata error: HTTP ${response.status}`)
+    throw new QuizApiError(
+      `The Trivia API metadata error: HTTP ${response.status}`,
+      {
+        kind: httpErrorKind(response.status),
+        providerId: 'trivia',
+        status: response.status,
+      },
+    )
   }
 
   const json: unknown = await response.json()
   const parsed = triviaApiMetadataSchema.safeParse(json)
 
   if (!parsed.success) {
-    throw new Error(`Invalid metadata response: ${parsed.error.message}`)
+    throw new QuizApiError(
+      `Invalid metadata response: ${parsed.error.message}`,
+      { kind: 'parse', providerId: 'trivia', cause: parsed.error },
+    )
   }
 
   return parsed.data
 }
 
 export async function fetchTriviaMetadata(): Promise<ApiMetadata> {
-  const metadata = await fetchTriviaRawMetadata()
+  try {
+    const metadata = await fetchTriviaRawMetadata()
 
-  return {
-    // Keys are already lowercase — what isDifficulty() expects.
-    difficulties: Object.keys(metadata.byDifficulty),
-    questionTypes: Object.keys(metadata.byType),
-    categories: Object.keys(metadata.byCategory),
-    tags: [],
-    stats: {
-      totalQuizzes: 0,
-      totalQuestions: Object.values(metadata.byCategory).reduce(
-        (sum, count) => sum + count,
-        0,
-      ),
-    },
+    return {
+      // Keys are already lowercase — what isDifficulty() expects.
+      difficulties: Object.keys(metadata.byDifficulty),
+      questionTypes: Object.keys(metadata.byType),
+      categories: Object.keys(metadata.byCategory),
+      tags: [],
+      stats: {
+        totalQuizzes: 0,
+        totalQuestions: Object.values(metadata.byCategory).reduce(
+          (sum, count) => sum + count,
+          0,
+        ),
+      },
+    }
+  } catch (error) {
+    throw classifyError(error, 'trivia')
   }
 }
 
@@ -416,14 +443,24 @@ async function fetchTriviaCategoriesRecord(): Promise<TriviaApiCategories> {
   })
 
   if (!response.ok) {
-    throw new Error(`The Trivia API categories error: HTTP ${response.status}`)
+    throw new QuizApiError(
+      `The Trivia API categories error: HTTP ${response.status}`,
+      {
+        kind: httpErrorKind(response.status),
+        providerId: 'trivia',
+        status: response.status,
+      },
+    )
   }
 
   const json: unknown = await response.json()
   const parsed = triviaApiCategoriesSchema.safeParse(json)
 
   if (!parsed.success) {
-    throw new Error(`Invalid categories response: ${parsed.error.message}`)
+    throw new QuizApiError(
+      `Invalid categories response: ${parsed.error.message}`,
+      { kind: 'parse', providerId: 'trivia', cause: parsed.error },
+    )
   }
 
   return parsed.data
@@ -452,37 +489,41 @@ export async function fetchTriviaCategories(): Promise<{
   /** All categories flattened for lookup by slug. */
   flatCategories: Category[]
 }> {
-  // Metadata only supplies quizCount and helps detect canonical slugs:
-  // categories are still usable when it fails.
-  const [record, metadata] = await Promise.all([
-    fetchTriviaCategoriesRecord(),
-    fetchTriviaRawMetadata().catch(() => undefined),
-  ])
+  try {
+    // Metadata only supplies quizCount and helps detect canonical slugs:
+    // categories are still usable when it fails.
+    const [record, metadata] = await Promise.all([
+      fetchTriviaCategoriesRecord(),
+      fetchTriviaRawMetadata().catch(() => undefined),
+    ])
 
-  const byCategory = metadata?.byCategory
-  const flatCategories: Category[] = []
+    const byCategory = metadata?.byCategory
+    const flatCategories: Category[] = []
 
-  for (const [name, slugs] of Object.entries(record)) {
-    const slug = pickCanonicalSlug(slugs, byCategory)
-    flatCategories.push({
-      id: slug,
-      name,
-      slug,
-      icon: null,
-      quizCount: byCategory?.[slug],
-    })
-  }
-
-  return {
-    topics: [
-      {
-        id: 'the-trivia-api',
-        name: 'The Trivia API',
-        slug: 'the-trivia-api',
+    for (const [name, slugs] of Object.entries(record)) {
+      const slug = pickCanonicalSlug(slugs, byCategory)
+      flatCategories.push({
+        id: slug,
+        name,
+        slug,
         icon: null,
-        categories: flatCategories,
-      },
-    ],
-    flatCategories,
+        quizCount: byCategory?.[slug],
+      })
+    }
+
+    return {
+      topics: [
+        {
+          id: 'the-trivia-api',
+          name: 'The Trivia API',
+          slug: 'the-trivia-api',
+          icon: null,
+          categories: flatCategories,
+        },
+      ],
+      flatCategories,
+    }
+  } catch (error) {
+    throw classifyError(error, 'trivia')
   }
 }

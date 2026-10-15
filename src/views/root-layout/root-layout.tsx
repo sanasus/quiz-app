@@ -5,6 +5,7 @@
 
 import { Link, Outlet, useRouterState } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
+import { useProviderStore } from '../../shared/api/provider-store'
 
 const routes = [
   { path: '/', label: '🏠', key: 'app.nav.home' },
@@ -13,6 +14,53 @@ const routes = [
   { path: '/achievements', label: '🏅', key: 'app.nav.achievements' },
   { path: '/settings', label: '⚙️', key: 'app.nav.settings' },
 ]
+
+// Attribution links for The Trivia API: its license (CC BY-NC 4.0)
+// requires attribution with a link. Subtle in the footer's own colors.
+const triviaLinkClass =
+  'underline decoration-text-3/40 underline-offset-2 transition-colors hover:text-text'
+
+/**
+ * Footer attribution per active provider. The trivia line is composed
+ * of i18n fragments around the two required links (brand and license
+ * names stay untranslated).
+ */
+function ProviderFooter() {
+  const { t } = useTranslation()
+  const providerId = useProviderStore((s) => s.providerId)
+
+  if (providerId === 'trivia') {
+    return (
+      <span>
+        {t('app.footer_trivia_prefix')}
+        <a
+          href="https://the-trivia-api.com"
+          target="_blank"
+          rel="noopener noreferrer"
+          className={triviaLinkClass}
+        >
+          The Trivia API
+        </a>
+        {t('app.footer_trivia_mid')}
+        <a
+          href="https://creativecommons.org/licenses/by-nc/4.0/"
+          target="_blank"
+          rel="noopener noreferrer"
+          className={triviaLinkClass}
+        >
+          CC BY-NC 4.0
+        </a>
+        {t('app.footer_trivia_suffix')}
+      </span>
+    )
+  }
+
+  if (providerId === 'quizapi') {
+    return <span>{t('app.footer_quizapi')}</span>
+  }
+
+  return <span>{t('app.footer_mock')}</span>
+}
 
 export function RootLayout() {
   const { t, i18n } = useTranslation()
@@ -109,7 +157,7 @@ export function RootLayout() {
 
       {/* Footer */}
       <footer className="border-t border-border bg-surface px-4 py-3 text-center text-xs text-text-3">
-        {t('app.footer')}
+        <ProviderFooter />
       </footer>
     </div>
   )

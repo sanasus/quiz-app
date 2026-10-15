@@ -11,6 +11,8 @@ interface ConfirmDialogProps {
   message: string
   confirmLabel?: string
   cancelLabel?: string
+  /** Optional test hook on the dialog root (e2e / component tests). */
+  testId?: string
   onConfirm: () => void
   onCancel: () => void
 }
@@ -21,6 +23,7 @@ export function ConfirmDialog({
   message,
   confirmLabel,
   cancelLabel,
+  testId,
   onConfirm,
   onCancel,
 }: ConfirmDialogProps) {
@@ -48,6 +51,7 @@ export function ConfirmDialog({
         aria-modal="true"
         aria-labelledby="confirm-dialog-title"
         aria-describedby="confirm-dialog-message"
+        data-testid={testId}
         className="w-full max-w-sm rounded-xl bg-surface p-6 shadow-xl"
         onClick={(e) => e.stopPropagation()}
       >

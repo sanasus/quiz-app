@@ -20,7 +20,9 @@ import DifficultySelector, {
 import QuestionCountSlider from '../../shared/ui/question-count-slider'
 import ModeSelector from '../../shared/ui/mode-selector'
 import StartButton from '../../shared/ui/start-button'
+import { AppToast } from '../../shared/ui/app-toast'
 import { MODE_IDS } from '../../features/modes'
+import { useProviderFallback } from './hooks/use-provider-fallback'
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -46,8 +48,27 @@ export function SetupScreen() {
   const config = store.config
 
   // Fetch data from API
-  const { data: metadata, isLoading: loadingMetadata } = useMetadata()
-  const { data: categoriesData, isLoading: loadingCategories } = useCategories()
+  const {
+    data: metadata,
+    isLoading: loadingMetadata,
+    error: metadataError,
+    refetch: refetchMetadata,
+  } = useMetadata()
+  const {
+    data: categoriesData,
+    isLoading: loadingCategories,
+    error: categoriesError,
+    refetch: refetchCategories,
+  } = useCategories()
+
+  // Broken provider → auto-switch + toast; network failure → inline
+  // error with Retry (see the hook for the full policy).
+  const { inlineError, toast, dismissToast, retryAll } = useProviderFallback({
+    metadataError,
+    categoriesError,
+    refetchMetadata,
+    refetchCategories,
+  })
 
   const loading = loadingMetadata || loadingCategories
 
@@ -148,6 +169,33 @@ export function SetupScreen() {
         {/* Start button */}
         <StartButton loading={loading} onClick={handleStart} />
       </div>
+
+      {/* A failed setup fetch the auto-switch doesn't handle (user's
+          network, or the fallback provider failing too). */}
+      {inlineError ? (
+        <div
+          role="alert"
+          className="mt-6 flex flex-col gap-3 rounded-lg border border-danger bg-danger/10 p-4"
+        >
+          <p className="text-danger-ink">{t('setup.load_error')}</p>
+          <p className="break-words text-xs text-text-2">{inlineError}</p>
+          <button
+            type="button"
+            onClick={retryAll}
+            className="self-start rounded-lg bg-primary px-4 py-2 text-on-primary"
+          >
+            {t('common.retry')}
+          </button>
+        </div>
+      ) : null}
+
+      {toast ? (
+        <AppToast
+          title={toast.title}
+          message={toast.message}
+          onDismiss={dismissToast}
+        />
+      ) : null}
     </div>
   )
 }

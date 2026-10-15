@@ -3,7 +3,11 @@
     "title": "QuizApp",
     "skip_to_content": "Перейти к содержимому",
     "language_current": "Текущий язык: {{code}}",
-    "footer": "QuizApp · Powered by QuizAPI · The Trivia API (CC BY-NC 4.0)",
+    "footer_quizapi": "QuizApp · на основе QuizAPI",
+    "footer_trivia_prefix": "QuizApp · на основе ",
+    "footer_trivia_mid": " (",
+    "footer_trivia_suffix": ")",
+    "footer_mock": "QuizApp · Мок-данные (разработка)",
     "nav": {
       "home": "Главная",
       "new_quiz": "Новый тест",
@@ -32,7 +36,8 @@
     "classic": "Классика",
     "timed": "На время",
     "blitz": "Блиц",
-    "survival": "Выживание"
+    "survival": "Выживание",
+    "load_error": "Не удалось загрузить категории и сложность. Проверьте подключение."
   },
   "quiz": {
     "question": "Вопрос",
@@ -45,9 +50,13 @@
     "score": "Очки: {{score}}",
     "score_label": "Очки:",
     "streak": "Серия",
-    "explanation": "Пояснение",
-    "batch_error": "Не удалось загрузить следующую партию вопросов. Повторите попытку или завершите забег.",
-    "finish_now": "Завершить"
+    "explanation": "Пояснение"
+  },
+  "api_error": {
+    "title": "Источник недоступен",
+    "message": "{{provider}} не ответил. Повторите попытку или смените API.",
+    "change_api": "Сменить API",
+    "retrying": "Повтор…"
   },
   "a11y": {
     "answer_correct": "Правильный ответ",
@@ -116,7 +125,11 @@
     "animations_hint": "Движение и переходы",
     "on": "Вкл",
     "off": "Выкл",
-    "theme_hint": "Системная тема следует настройкам устройства."
+    "theme_hint": "Системная тема следует настройкам устройства.",
+    "api_provider": "Источник вопросов",
+    "api_provider_hint": "Смена источника сбросит текущую сессию и вернёт вас к настройке теста.",
+    "api_provider_switch_confirm_title": "Сменить источник вопросов?",
+    "api_provider_switch_confirm": "Текущая сессия будет потеряна, и вы вернётесь к экрану настройки."
   },
   "common": {
     "loading": "Загрузка…",
@@ -136,5 +149,14 @@
     "science": "Наука",
     "history": "История",
     "geography": "География"
+  },
+  "provider": {
+    "quizapi": "QuizAPI",
+    "trivia": "The Trivia API",
+    "mock": "Мок-данные"
+  },
+  "provider_switch": {
+    "toast_title": "Источник вопросов изменён",
+    "toast_message": "Предыдущий источник не ответил. Сейчас используется {{provider}}."
   }
 }

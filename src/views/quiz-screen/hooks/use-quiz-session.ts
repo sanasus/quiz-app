@@ -7,6 +7,13 @@ export interface QuizSessionResult {
   currentQuestion: Question | null
   loadingState: 'loading' | 'ready'
   error: Error | null
+  /**
+   * Refetch the failed initial fetch. Undefined in a repeat session —
+   * its questions come from the store, there is nothing to fetch.
+   */
+  refetch: (() => Promise<unknown>) | undefined
+  /** A refetch is in flight — drives the error dialog's spinner. */
+  isFetching: boolean
 }
 
 export function useQuizSession(
@@ -14,7 +21,8 @@ export function useQuizSession(
 ): QuizSessionResult {
   const store = useQuizSessionStore()
   const prevConfigRef = useRef<string | null>(null)
-  const { data, error } = useQuizQuestions(effectiveConfig)
+  const query = useQuizQuestions(effectiveConfig)
+  const { data, error } = query
   const questions = data?.questions
 
   useEffect(() => {
@@ -36,11 +44,18 @@ export function useQuizSession(
   const currentQuestion: Question | null =
     store.questions[store.currentIndex] ?? null
 
+  // The repeat-session branch of useQuizQuestions returns a plain
+  // object without query controls — narrow the union with `in`.
+  const refetch = 'refetch' in query ? query.refetch : undefined
+  const isFetching = 'isFetching' in query ? query.isFetching : false
+
   // `error` is returned in both branches: otherwise a failed initial fetch
   // would be indistinguishable from loading (error UI never reachable).
   return {
     currentQuestion,
     loadingState: currentQuestion ? 'ready' : 'loading',
     error,
+    refetch,
+    isFetching,
   }
 }

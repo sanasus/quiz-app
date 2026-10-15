@@ -5,11 +5,15 @@
  * delegates rendering to atomic components.
  */
 
-import { useCallback, useEffect, useRef } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { motion } from 'motion/react'
 import { useTranslation } from 'react-i18next'
 import { useQuizSessionStore } from '../../shared/lib/session-store'
 import { useMotionEnabled } from '../../shared/lib/use-motion-enabled'
+import { useProviderStore } from '../../shared/api/provider-store'
+import { PROVIDERS } from '../../shared/api/providers'
+import { ApiErrorDialog } from '../../shared/ui/api-error-dialog'
+import { useChangeProvider } from '../../features/provider/use-change-provider'
 import { useQuizConfig } from './hooks/use-quiz-config'
 import { useQuizSession } from './hooks/use-quiz-session'
 import { useQuizTimers } from './hooks/use-quiz-timers'
@@ -37,26 +41,6 @@ function QuizLoading() {
       aria-live="polite"
     >
       <div className="text-lg text-text-2">{t('common.loading')}</div>
-    </div>
-  )
-}
-
-function QuizError({ message }: { message: string }) {
-  const { t } = useTranslation()
-  return (
-    <div
-      className="flex min-h-[60vh] flex-col items-center justify-center gap-4"
-      role="alert"
-    >
-      <p className="text-danger-ink">
-        {t('common.error')}: {message}
-      </p>
-      <button
-        onClick={() => window.location.reload()}
-        className="rounded-lg bg-primary px-4 py-2 text-on-primary"
-      >
-        {t('common.retry')}
-      </button>
     </div>
   )
 }
@@ -140,9 +124,42 @@ export function QuizScreen() {
   })
 
   useQuizSessionEnd(result.currentQuestion)
-  const { waitingForBatch, batchError, retryBatch, finishWithoutBatch } =
-    useQuestionFeed(effectiveConfig)
+  const {
+    waitingForBatch,
+    batchError,
+    retryBatch,
+    isFetching: batchFetching,
+  } = useQuestionFeed(effectiveConfig)
   useDevAnswerHint(result.currentQuestion)
+
+  // ---------------------------------------------------------------------------
+  // Error dialog (initial fetch vs survival batch)
+  // ---------------------------------------------------------------------------
+
+  const providerId = useProviderStore((s) => s.providerId)
+  const changeProvider = useChangeProvider()
+
+  // The dialog shows the first active failure. The two sources can't
+  // overlap: a batch only exists once questions are loaded, i.e. after
+  // the initial fetch succeeded.
+  const initialError = result.error
+  const errorMessage = initialError ? initialError.message : batchError
+
+  // Single source of truth for openness: errors open the dialog, a
+  // clean state closes it. Derived during render (no effect): later
+  // errors while it's open never re-trigger anything.
+  const [dialogOpen, setDialogOpen] = useState(errorMessage !== null)
+  const [prevErrorMessage, setPrevErrorMessage] = useState(errorMessage)
+  if (errorMessage !== prevErrorMessage) {
+    setPrevErrorMessage(errorMessage)
+    setDialogOpen(errorMessage !== null)
+  }
+
+  const retryInitial = result.refetch
+  const handleRetry = useCallback(() => {
+    if (initialError) retryInitial?.()
+    else retryBatch()
+  }, [initialError, retryInitial, retryBatch])
 
   // Reset timer when the question changes (blitz mode only).
   // Narrowed to primitive deps so the effect doesn't re-run on unrelated
@@ -161,18 +178,30 @@ export function QuizScreen() {
   // Early returns
   // ---------------------------------------------------------------------------
 
+  const errorDialog = (
+    <ApiErrorDialog
+      open={dialogOpen}
+      providerLabelKey={PROVIDERS[providerId].labelKey}
+      errorMessage={errorMessage}
+      retrying={initialError ? result.isFetching : batchFetching}
+      onRetry={handleRetry}
+      onChangeApi={changeProvider}
+    />
+  )
+
   if (!effectiveConfig) {
     return null
   }
 
-  // Error before loading: a failed initial fetch must show the retry UI,
-  // not an endless "Loading...".
-  if (result.error) {
-    return <QuizError message={result.error.message} />
-  }
-
+  // Error before loading: the dialog sits over the loading state until
+  // the user retries or switches the provider.
   if (result.loadingState === 'loading' || !result.currentQuestion) {
-    return <QuizLoading />
+    return (
+      <>
+        <QuizLoading />
+        {errorDialog}
+      </>
+    )
   }
 
   const question = result.currentQuestion
@@ -236,31 +265,8 @@ export function QuizScreen() {
         <QuizExplanation explanation={question.explanation} />
       ) : null}
 
-      {/* A failed batch blocks progress at the pool's edge: offer a
-          retry, or end the run honestly instead of freezing. */}
-      {waitingForBatch && batchError ? (
-        <div
-          role="alert"
-          className="mb-4 flex flex-col gap-3 rounded-lg border border-danger bg-danger/10 p-4 sm:flex-row sm:items-center sm:justify-between"
-        >
-          <p className="text-danger-ink">{t('quiz.batch_error')}</p>
-          <div className="flex shrink-0 gap-2">
-            <button
-              onClick={retryBatch}
-              className="rounded-lg bg-primary px-4 py-2 text-on-primary"
-            >
-              {t('common.retry')}
-            </button>
-            <button
-              onClick={finishWithoutBatch}
-              className="rounded-lg bg-muted px-4 py-2 text-text"
-            >
-              {t('quiz.finish_now')}
-            </button>
-          </div>
-        </div>
-      ) : null}
-
+      {/* A failed batch blocks progress at the pool's edge: the error
+          dialog above offers a retry or a provider switch. */}
       <QuizActions
         streak={store.streak}
         status={store.status}
@@ -270,6 +276,8 @@ export function QuizScreen() {
         onSubmit={handleSubmit}
         onNext={handleNext}
       />
+
+      {errorDialog}
     </div>
   )
 }

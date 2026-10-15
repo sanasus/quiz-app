@@ -3,7 +3,11 @@
     "title": "QuizApp",
     "skip_to_content": "Skip to content",
     "language_current": "Current language: {{code}}",
-    "footer": "QuizApp · Powered by QuizAPI · The Trivia API (CC BY-NC 4.0)",
+    "footer_quizapi": "QuizApp · Powered by QuizAPI",
+    "footer_trivia_prefix": "QuizApp · Powered by ",
+    "footer_trivia_mid": " (",
+    "footer_trivia_suffix": ")",
+    "footer_mock": "QuizApp · Mock data (development)",
     "nav": {
       "home": "Home",
       "new_quiz": "New Quiz",
@@ -32,7 +36,8 @@
     "classic": "Classic",
     "timed": "Timed",
     "blitz": "Blitz",
-    "survival": "Survival"
+    "survival": "Survival",
+    "load_error": "Failed to load categories and difficulties. Check your connection."
   },
   "quiz": {
     "question": "Question",
@@ -45,9 +50,13 @@
     "score": "Score: {{score}}",
     "score_label": "Score:",
     "streak": "Streak",
-    "explanation": "Explanation",
-    "batch_error": "Failed to load the next batch of questions. Retry or end the run.",
-    "finish_now": "End run"
+    "explanation": "Explanation"
+  },
+  "api_error": {
+    "title": "Question source unavailable",
+    "message": "{{provider}} did not respond. Try again or switch to another API.",
+    "change_api": "Change API",
+    "retrying": "Retrying…"
   },
   "a11y": {
     "answer_correct": "Correct answer",
@@ -116,7 +125,11 @@
     "animations_hint": "Motion and transitions",
     "on": "On",
     "off": "Off",
-    "theme_hint": "The system theme follows your device setting."
+    "theme_hint": "The system theme follows your device setting.",
+    "api_provider": "Question source",
+    "api_provider_hint": "Changing the source resets the current session and returns you to setup.",
+    "api_provider_switch_confirm_title": "Change question source?",
+    "api_provider_switch_confirm": "The current session will be lost and you will return to the setup screen."
   },
   "common": {
     "loading": "Loading…",
@@ -136,5 +149,14 @@
     "science": "Science",
     "history": "History",
     "geography": "Geography"
+  },
+  "provider": {
+    "quizapi": "QuizAPI",
+    "trivia": "The Trivia API",
+    "mock": "Mock data"
+  },
+  "provider_switch": {
+    "toast_title": "Question source changed",
+    "toast_message": "The previous source did not respond. Now using {{provider}}."
   }
 }

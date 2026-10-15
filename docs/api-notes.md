@@ -1728,27 +1728,68 @@ v1
 
 ------------------------------------------------------------------------
 
-# 28. Фоллбэк на The Trivia API v2
+# 28. Выбор провайдера вопросов и политика ошибок
 
-**Зачем:** quizapi.io часто зависает/лагает (запросы по 10–60+ секунд),
-поэтому все live-запросы обоих провайдеров ограничены
+**Провайдеры** — реестр `PROVIDERS` в `src/shared/api/providers.ts`:
+
+- `quizapi` — quizapi.io, требует `VITE_QUIZAPI_KEY`;
+- `trivia` — The Trivia API v2, `https://the-trivia-api.com/v2`,
+  бесплатно и без ключа;
+- `mock` — встроенные мок-данные (dev/e2e): включается только через
+  `VITE_USE_MOCK_DATA=true`; в переключателе настроек опция mock
+  появляется лишь пока mock — активный источник (ручного возврата нет,
+  при следующей загрузке решает env-флаг).
+
+Активный провайдер — `providerId` в persist-сторе `quiz-provider`
+(`src/shared/api/provider-store.ts`, `version: 1`); он входит в ключи
+всех quiz-запросов `['quiz', providerId, ...]`, поэтому запросы разных
+провайдеров не делят кэш. При `USE_MOCK` merge стора форсирует `mock`
+при каждой загрузке страницы. По умолчанию
+`DEFAULT_PROVIDER_ID = USE_MOCK ? 'mock' : 'quizapi'`.
+
+Прозрачного авто-фолбэка (раньше `withFallback`) нет — источник
+вопросов меняется только явно:
+
+1. **Селектор в `/settings`** («Question source») — `changeProvider(id)`;
+   при активной сессии требуется подтверждение (диалог предупреждает о
+   сбросе).
+2. **Диалог на `/quiz`** (`ApiErrorDialog`) — когда упали вопросы
+   сессии: начальный запрос или survival-батч. «Question source
+   unavailable»: Retry (повтор того же провайдера) или Change API
+   (переключение на `alternateProviderId`). Закрыть диалог нельзя —
+   Escape и клики по подложке игнорируются.
+3. **Авто-смена на `/setup`** — если metadata/категории упали
+   broken-ошибкой (см. ниже), приложение само переключается на другого
+   провайдера и показывает тост «Question source changed».
+
+Любая смена провайдера делает одно и то же
+(`src/features/provider/use-change-provider.ts`): `setProviderId` →
+`removeQueries(['quiz'])` → `reset()` сессии → навигация на `/setup`.
+
+**Политика ошибок.** Все ошибки API типизированы (`QuizApiError.kind`,
+`src/shared/api/errors.ts`):
+
+| kind | Смысл | Реакция |
+| --- | --- | --- |
+| `network` | обрыв сети пользователя | ретраи того же провайдера (до 2); на `/setup` — inline-alert с Retry, провайдер **не** меняется |
+| `timeout` | провайдер завис дольше 10 с (HAR-подтверждено) | провайдер сломан: на `/quiz` — диалог Retry/Change API; на `/setup` — авто-смена + тост, без авто-retry |
+| `auth`, `rate_limit`, `parse`, `http` | провайдер сломан | на `/quiz` — диалог Retry/Change API; на `/setup` — авто-смена + тост |
+
+Ретраи: `retryQuestions` — только network до 2 повторов; timeout и
+остальные kind падают сразу (fail fast — смена провайдера без ожидания
+2×10 с). metadata/категории используют дефолт React Query (2
+повтора). Все live-запросы обоих провайдеров ограничены
 `AbortSignal.timeout(10_000)`.
 
-**Схема:** `withFallback(label, primary, fallback)` в
-`src/shared/api/quizapi.ts` — try primary → `console.warn` → fallback
-(The Trivia API v2, `https://the-trivia-api.com/v2`, бесплатно, без
-ключа). Если упали оба — комбинированное сообщение
-`"<primary>; fallback failed: <fallback>"`, сохраняющее подстроки
-'Invalid or expired' / 'Rate limit exceeded' для `retryQuestions`.
-Мок-ветка `USE_MOCK` приоритетна и стоит до try/catch.
+**The Trivia API v2 — справка** (`src/shared/api/triviaapi.ts`):
 
-**Эндпоинты:**
+Эндпоинты:
 `GET /questions?limit=&offset=&difficulties=&categories=&types=`,
 `GET /questions/count?<те же фильтры>` (точный размер пула — аналог
 `meta.total`), `GET /metadata`, `GET /categories` (плоский record
 `displayName` → slug-и, 10 категорий).
 
-**Параметры:** `limit` клампится на 50; `difficulties` — одно
+Параметры: `limit` клампится на 50; `difficulties` — одно
 lowercase-значение из `config.difficulty`; `types` всегда `text_choice`
 (`text_input` без ключа даёт 401); `categories` отправляется только при
 успешном маппинге слага — неизвестный слаг API молча подменяет на
@@ -1757,7 +1798,7 @@ lowercase-значение из `config.difficulty`; `types` всегда `text_
 дедуплицирует по `id`, `added === 0` → `questionsExhausted`
 (`src/shared/lib/session-store.ts`).
 
-**Маппинг категорий** — `resolveTriviaCategory` в
+Маппинг категорий — `resolveTriviaCategory` в
 `src/shared/api/triviaapi.ts`: science/history/geography-листы →
 `science`/`history`/`geography`, literature и art-and-architecture →
 `arts_and_literature`, movies/tv-shows/anime → `film_and_tv`, music →
@@ -1768,8 +1809,13 @@ games…) нормализуются в канон; programming, devops, databas
 cybersecurity, math, business и `'all'`/пусто/неизвестное → `null`
 (без фильтра — весь пул).
 
-Атрибуция **CC BY-NC 4.0** обязательна — добавлена в футер
-(`app.footer` в `src/locales/en.json` и `ru.json`).
+Атрибуция **CC BY-NC 4.0** обязательна — футер показывает её только при
+активном trivia (ключи `app.footer_trivia_*` в `src/locales/en.json` и
+`ru.json`).
 
-**Код:** клиент — `src/shared/api/triviaapi.ts`, zod-схемы —
-`src/shared/api/schemas.ts`, тесты — `src/shared/api/triviaapi.test.ts`.
+**Код:** клиент — `src/shared/api/triviaapi.ts`, реестр и альтернатива —
+`src/shared/api/providers.ts`, стор — `src/shared/api/provider-store.ts`,
+zod-схемы — `src/shared/api/schemas.ts`, тесты —
+`src/shared/api/triviaapi.test.ts`, `providers.test.ts`,
+`provider-store.test.ts`; e2e — `e2e/provider-switch.spec.ts` (фикстуры
+внешних ответов — `e2e/api-fixtures.ts`).

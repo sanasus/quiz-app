@@ -11,6 +11,7 @@ import type {
   QuizSession,
   SessionAction,
   SessionResult,
+  SessionStatus,
 } from '../types/quiz'
 import { getMode } from '../../features/modes'
 
@@ -103,6 +104,14 @@ function createInitialState(config: QuizConfig): QuizSession {
     questionsTotal: undefined,
     repeatConfig: null,
   }
+}
+
+/**
+ * Whether a session is currently in progress — the statuses where a
+ * provider switch would destroy user work (idle/finished would not).
+ */
+export function isSessionActive(status: SessionStatus): boolean {
+  return status === 'loading' || status === 'playing' || status === 'answered'
 }
 
 /**
@@ -511,6 +520,10 @@ export const useQuizSessionStore = create<QuizSessionStore>((set) => ({
     set((s) => ({
       ...sessionReducer(s, { type: 'RESET' }),
       finishedSession: null,
+      sessionStartTime: null,
+      // Timed/blitz field lives outside createInitialState; a shallow
+      // set() would keep the stale value — clear it explicitly.
+      timeRemaining: undefined,
     })),
   startSessionTimer: () => set({ sessionStartTime: Date.now() }),
 }))

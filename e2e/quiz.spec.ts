@@ -27,8 +27,11 @@ test.describe('Quiz screen', () => {
         page.getByRole('heading', { name: 'Question' }),
       ).toBeVisible()
 
-      // Progress shows "1/2"
-      await expect(page.getByText('1/2')).toBeVisible()
+      // Progress shows "1/2" — scope to the header heading: the
+      // screen-reader live region repeats the same text.
+      await expect(
+        page.getByRole('heading', { name: 'Question 1/2' }),
+      ).toBeVisible()
 
       // 4 answer options — action buttons asserted separately
       await expect(optionLocator(page)).toHaveCount(4)
@@ -83,8 +86,11 @@ test.describe('Quiz screen', () => {
   test('skipping a question advances to next', async ({ page }) => {
     await skipQuestion(page)
 
-    // Progress moved to the second (last) question
-    await expect(page.getByText('2/2')).toBeVisible()
+    // Progress moved to the second (last) question — the heading,
+    // not the sr-only live region that repeats it.
+    await expect(
+      page.getByRole('heading', { name: 'Question 2/2' }),
+    ).toBeVisible()
   })
 
   test(
@@ -139,14 +145,18 @@ test.describe('Quiz screen', () => {
       test.setTimeout(60_000)
 
       await startQuiz(page, { mode: 'survival' })
-      await expect(page.getByText(`1 of ${survivalPoolSize}`)).toBeVisible()
+      await expect(
+        page.getByRole('heading', { name: `Question 1/${survivalPoolSize}` }),
+      ).toBeVisible()
 
       // Only the first 10 questions are loaded up front; question 11
       // exists only if the prefetched batch (offset 10) was appended.
       for (let answered = 1; answered <= 10; answered++) {
         await answerCorrectly(page)
         await expect(
-          page.getByText(`${answered + 1} of ${survivalPoolSize}`),
+          page.getByRole('heading', {
+            name: `Question ${answered + 1}/${survivalPoolSize}`,
+          }),
         ).toBeVisible()
       }
     },

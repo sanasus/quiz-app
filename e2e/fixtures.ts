@@ -71,6 +71,23 @@ export async function selectMode(page: Page, mode: QuizConfig['mode']) {
 }
 
 /**
+ * Select a category on the setup page: open the dropdown, expand the
+ * topic, pick the category — the panel closes on selection and the
+ * trigger shows the picked name.
+ */
+export async function selectCategory(
+  page: Page,
+  topic: string,
+  category: string,
+) {
+  const dropdown = page.getByTestId('category-dropdown')
+  await expect(dropdown).toBeVisible()
+  await dropdown.click()
+  await page.getByRole('button', { name: topic }).click()
+  await page.getByRole('button', { name: category }).click()
+}
+
+/**
  * Navigate from setup to the quiz with the given config.
  * Returns the page ready at /quiz with the first question loaded.
  */
@@ -95,6 +112,36 @@ export async function startQuiz(page: Page, config?: Partial<QuizConfig>) {
   await expect(page.getByRole('heading', { name: 'Question' })).toBeVisible()
 
   return page
+}
+
+/**
+ * Start the quiz from the setup page that is already open — unlike
+ * startQuiz it never calls page.goto(): a reload re-forces providerId
+ * back to 'mock' (provider-store merge in mock mode), undoing a live
+ * provider switch from provider-switch.spec.ts.
+ *
+ * Waits for the category dropdown first: it only renders once the
+ * setup queries settled.
+ */
+export async function startFromCurrentSetup(page: Page) {
+  await expect(page.getByTestId('category-dropdown')).toBeVisible()
+  await page.getByRole('button', { name: 'Start' }).click()
+  await expect(page).toHaveURL(/\/quiz/)
+}
+
+// ── Provider helpers ────────────────────────────────────────────────────────
+
+/**
+ * Pick a question source in /settings and wait for the redirect to
+ * /setup. The switch itself is client-side: afterwards the test must
+ * navigate with clicks only (see startFromCurrentSetup).
+ */
+export async function selectProvider(page: Page, label: string) {
+  await page
+    .getByTestId('provider-selector')
+    .getByRole('radio', { name: label })
+    .click()
+  await expect(page).toHaveURL(/\/setup/)
 }
 
 // ── Answer helpers ───────────────────────────────────────────────────────────
@@ -188,6 +235,37 @@ export async function answerCorrectly(page: Page) {
   const nextBtn = page.getByRole('button', { name: 'Next' })
   await expect(nextBtn).toBeVisible()
   await nextBtn.click()
+}
+
+/**
+ * Answer the current Trivia API question correctly: pick the option
+ * carrying the fixture's correct answer, submit and (by default)
+ * advance.
+ *
+ * Mirror of answerCorrectly for the fixture-driven trivia pool of
+ * provider-switch.spec.ts (mockQuestions doesn't contain these
+ * questions); the heading assertion pins the question before acting
+ * on it.
+ *
+ * `next: false` on the run's last question — its Next stays disabled
+ * while the failed survival batch opens the error dialog.
+ */
+export async function answerTriviaCorrectly(
+  page: Page,
+  fixture: { question: { text: string }; correctAnswer: string },
+  { next = true }: { next?: boolean } = {},
+) {
+  await expect(page.getByRole('heading', { level: 3 })).toHaveText(
+    fixture.question.text,
+  )
+  await optionLocator(page).filter({ hasText: fixture.correctAnswer }).click()
+  await page.getByRole('button', { name: 'Submit' }).click()
+
+  if (next) {
+    const nextBtn = page.getByRole('button', { name: 'Next' })
+    await expect(nextBtn).toBeVisible()
+    await nextBtn.click()
+  }
 }
 
 // ── Results helpers ──────────────────────────────────────────────────────────
