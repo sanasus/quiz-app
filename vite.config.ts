@@ -14,4 +14,11 @@ export default defineConfig({
       '@': fileURLToPath(new URL('./src', import.meta.url)),
     },
   },
+  server: {
+    // Live providers go through the NestJS proxy (server/): same-origin
+    // in dev, no CORS config on the frontend.
+    proxy: {
+      '/api': 'http://localhost:3000',
+    },
+  },
 });

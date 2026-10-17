@@ -1,0 +1,47 @@
+# Vercel Container Runtime (https://vercel.com/docs/functions/runtimes/container)
+# — Beta на всех тарифах.
+#
+# Контекст сборки Docker — этот каталог (корень сервиса), а не репозиторий
+# целиком, поэтому корневой lockfile npm workspaces уровнем выше недоступен.
+# Образ ставит зависимости из server/package.json напрямую: версии берутся из
+# caret-диапазонов, а `tsc` в стадии сборки превращает любой ломающий бамп в
+# громкую ошибку сборки, а не в сюрприз в рантайме.
+#
+# tsc запускается здесь намеренно: DI Nest построен на `design:paramtypes`,
+# который esbuild-подобные бандлеры не эмитят — та же причина, по которой
+# юнит-тесты гоняются через SWC (см. server/vitest.config.mts). Компилируем
+# сами и запускаем готовый dist — никаких вопросов к компилятору Vercel.
+
+FROM node:24-alpine AS build
+WORKDIR /app
+
+# devDependencies нужны именно здесь: сам tsc лежит там.
+COPY package.json ./
+RUN npm install --ignore-scripts --no-audit --no-fund
+
+COPY tsconfig.json tsconfig.build.json ./
+COPY src ./src
+
+# --incremental false: в контейнере нет node_modules/.tmp под tsBuildInfoFile,
+# а пересборка кэшем здесь всё равно ни на что не влияет.
+RUN npx tsc -p tsconfig.build.json --incremental false
+
+# Оставляем в node_modules только то, что импортируется в рантайме.
+RUN npm prune --omit=dev
+
+FROM node:24-alpine
+WORKDIR /app
+
+ENV NODE_ENV=production
+# Vercel отдаёт трафик на 80-й порт; main.ts читает PORT, так что фиксируем
+# здесь — значение в project settings всё равно может его переопределить.
+ENV PORT=80
+
+COPY --from=build /app/node_modules ./node_modules
+COPY --from=build /app/dist ./dist
+
+EXPOSE 80
+
+# Без --env-file: переменные приходят из Vercel, а server/.env (с ключом)
+# в образ не попадает — см. .dockerignore.
+CMD ["node", "dist/main.js"]

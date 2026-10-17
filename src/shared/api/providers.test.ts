@@ -20,10 +20,15 @@ describe('getProvider', () => {
     }
   })
 
-  it('marks only quizapi as requiring an API key', () => {
-    expect(getProvider('quizapi').requiresApiKey).toBe(true)
-    expect(getProvider('trivia').requiresApiKey).toBe(false)
-    expect(getProvider('mock').requiresApiKey).toBe(false)
+  it('gives every provider the same two entry points', () => {
+    // The proxy contract: one questions call, one merged catalog call.
+    // Nothing client-side may own an API key or a third request shape.
+    for (const id of ['quizapi', 'trivia', 'mock'] as const) {
+      const provider = getProvider(id)
+      expect(typeof provider.fetchQuestions).toBe('function')
+      expect(typeof provider.fetchCatalog).toBe('function')
+      expect(provider.labelKey).toBe(`provider.${id}`)
+    }
   })
 
   it('exposes all three providers in the registry', () => {
@@ -39,6 +44,20 @@ describe('alternateProviderId', () => {
 
   it('leaves mock for the default live provider', () => {
     expect(alternateProviderId('mock')).toBe('quizapi')
+  })
+})
+
+describe('fetchCatalog (mock)', () => {
+  it('narrows the raw mock difficulties and keeps the category tree', async () => {
+    // mock-data.ts serves 'EASY'…'EXPERT' raw, because the mock never
+    // passes through the proxy. The registry must normalise them so
+    // both providers expose one shape — otherwise the setup screen
+    // would render no difficulty buttons at all.
+    const catalog = await getProvider('mock').fetchCatalog()
+
+    expect(catalog.difficulties).toEqual(['easy', 'medium', 'hard'])
+    expect(catalog.topics.length).toBeGreaterThan(0)
+    expect(catalog.topics[0]?.categories.length).toBeGreaterThan(0)
   })
 })
 

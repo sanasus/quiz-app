@@ -1,50 +1,86 @@
 /**
- * API payloads and route handlers for the provider-switch e2e suite
- * (provider-switch.spec.ts).
+ * Proxy-contract payloads and route handlers for the provider-switch
+ * e2e suite (provider-switch.spec.ts).
  *
- * Payloads mirror the zod schemas in src/shared/api/schemas.ts — the
- * app parses every live response, so hand-written bodies must
- * validate. Handlers dispatch on the request path and answer 404 for
- * anything unexpected: a test never falls through to the real
- * network.
+ * The app talks to our own proxy (`/api/quiz/*`, server/) and never to
+ * an upstream, so intercepting that one same-origin path is what keeps
+ * the suite hermetic: no Nest server is started and nothing escapes to
+ * the network.
+ *
+ * Bodies mirror the wire contract the proxy guarantees, exactly as
+ * src/shared/api/backend.schemas.ts validates it on the client.
+ * Failures carry the typed envelope the proxy answers with, which the
+ * client rehydrates into a QuizApiError — `kind` is what decides retry
+ * vs provider switch, so a fixture names the failure instead of leaning
+ * on an HTTP status the client no longer reads.
+ *
+ * Handlers dispatch on the `provider` query param and call
+ * `route.fallback()` for the other provider's requests, so both
+ * fixtures can be registered in any order.
  */
 
 import type { Page, Route } from '@playwright/test'
 
-// ── Route globs ─────────────────────────────────────────────────────────────
+export const API_GLOB = '**/api/quiz/**'
 
-export const QUIZAPI_GLOB = '**/quizapi.io/**'
-export const TRIVIA_GLOB = '**the-trivia-api.com/**'
+// ── Contract types ──────────────────────────────────────────────────────────
+
+/** Every level the app supports — the proxy already dropped EXPERT. */
+export type ProxyDifficulty = 'easy' | 'medium' | 'hard'
+
+/** A cleaned question, exactly as the proxy returns it. */
+export interface ProxyQuestion {
+  id: string
+  text: string
+  options: { id: string; text: string }[]
+  correctOptionIds: string[]
+  multiple: boolean
+  category?: string
+  difficulty: ProxyDifficulty
+}
+
+/** One page of questions (`GET /api/quiz/questions`). */
+export interface ProxyQuestionsPage {
+  questions: ProxyQuestion[]
+  /** Absent when the pool size is unknown. */
+  total?: number
+}
+
+/** Merged difficulties + category tree (`GET /api/quiz/catalog`). */
+export interface ProxyCatalog {
+  difficulties: ProxyDifficulty[]
+  topics: {
+    id: string
+    name: string
+    slug: string
+    categories: {
+      id: string
+      name: string
+      slug: string
+      quizCount?: number
+    }[]
+  }[]
+}
+
+/** Options list with stable ids — `${questionId}-${index}`. */
+function optionList(questionId: string, texts: string[]) {
+  return texts.map((text, index) => ({ id: `${questionId}-${index}`, text }))
+}
 
 // ── QuizAPI payloads ────────────────────────────────────────────────────────
 
-/** metadataApiResponseSchema — `EXPERT` is filtered out by /setup. */
-export const quizApiMetadata = {
-  success: true,
-  data: {
-    difficulties: ['easy', 'medium', 'hard', 'EXPERT'],
-    questionTypes: ['multiple_choice', 'true_false'],
-    categories: ['science', 'history'],
-    tags: [],
-    stats: { totalQuizzes: 12, totalQuestions: 340 },
-  },
-}
-
-/** categoriesApiResponseSchema — `quizCount > 0` keeps the category. */
-export const quizApiCategories = {
-  success: true,
-  data: [
+export const quizApiCatalog: ProxyCatalog = {
+  difficulties: ['easy', 'medium', 'hard'],
+  topics: [
     {
-      id: 'topic-science',
+      id: 'science',
       name: 'Science',
       slug: 'science',
-      icon: null,
       categories: [
         {
           id: 'cat-physics',
           name: 'Physics',
           slug: 'physics',
-          icon: null,
           quizCount: 42,
         },
       ],
@@ -52,85 +88,95 @@ export const quizApiCategories = {
   ],
 }
 
-/**
- * quizApiQuestionSchema inside the `{ success, data, meta }` envelope —
- * what /questions answers when it succeeds.
- */
-export function quizApiQuestions(count: number) {
+/** Two questions and a pool the size of the page, as /questions answers. */
+export function quizApiQuestions(count: number): ProxyQuestionsPage {
   return {
-    success: true,
-    data: Array.from({ length: count }, (_, index) => {
+    questions: Array.from({ length: count }, (_, index) => {
       const id = `quizapi-${index + 1}`
       return {
         id,
         text: `QuizAPI question ${index + 1}?`,
-        difficulty: 'EASY',
-        answers: [
-          { id: `${id}-a`, text: 'First option', isCorrect: true },
-          { id: `${id}-b`, text: 'Second option', isCorrect: false },
-          { id: `${id}-c`, text: 'Third option', isCorrect: false },
-        ],
+        options: optionList(id, [
+          'First option',
+          'Second option',
+          'Third option',
+        ]),
+        correctOptionIds: [`${id}-0`],
+        multiple: false,
+        category: 'Physics',
+        difficulty: 'easy' as const,
       }
     }),
-    meta: { total: count },
+    total: count,
   }
 }
 
 // ── The Trivia API payloads ─────────────────────────────────────────────────
 
-/** triviaApiMetadataSchema — keys feed difficulties and quizCounts. */
-export const triviaMetadata = {
-  byCategory: { general_knowledge: 120, science: 80, geography: 60 },
-  byDifficulty: { easy: 100, medium: 90, hard: 70 },
-  byType: { TextChoice: 260 },
-  byState: { unpassed: 260 },
-}
-
-/** triviaApiCategoriesSchema — displayName → slug alias groups. */
-export const triviaCategories = {
-  'General Knowledge': ['general_knowledge'],
-  Science: ['science'],
-}
-
-/** triviaApiCountSchema — the survival pool the header reports. */
-export const triviaCount = { count: 3 }
-
-export interface TriviaQuestionFixture {
-  id: string
-  question: { text: string }
-  correctAnswer: string
-  incorrectAnswers: string[]
-  category: string
-  difficulty: 'easy' | 'medium' | 'hard'
+/**
+ * The proxy folds the whole trivia pool into a single topic listing its
+ * canonical categories (server/src/quiz/providers/trivia.provider.ts).
+ */
+export const triviaCatalog: ProxyCatalog = {
+  difficulties: ['easy', 'medium', 'hard'],
+  topics: [
+    {
+      id: 'the-trivia-api',
+      name: 'The Trivia API',
+      slug: 'the-trivia-api',
+      categories: [
+        {
+          id: 'general_knowledge',
+          name: 'General Knowledge',
+          slug: 'general_knowledge',
+          quizCount: 120,
+        },
+        {
+          id: 'science',
+          name: 'Science',
+          slug: 'science',
+          quizCount: 80,
+        },
+      ],
+    },
+  ],
 }
 
 /**
- * triviaApiQuestionSchema — the three questions the survival run in
- * provider-switch.spec.ts walks through. Correct answers are distinct
- * substrings, so picking an option by answer text stays unambiguous.
+ * The three questions the survival run in provider-switch.spec.ts
+ * walks through. Correct answers are distinct option texts, so picking
+ * an option by its text stays unambiguous.
  */
-export const triviaQuestions: TriviaQuestionFixture[] = [
+export const triviaQuestions: ProxyQuestion[] = [
   {
     id: 'trivia-1',
-    question: { text: 'What is the capital of France?' },
-    correctAnswer: 'Paris',
-    incorrectAnswers: ['London', 'Berlin', 'Rome'],
+    text: 'What is the capital of France?',
+    options: optionList('trivia-1', ['Paris', 'London', 'Berlin', 'Rome']),
+    correctOptionIds: ['trivia-1-0'],
+    multiple: false,
     category: 'Geography',
     difficulty: 'easy',
   },
   {
     id: 'trivia-2',
-    question: { text: 'Which planet is known as the Red Planet?' },
-    correctAnswer: 'Mars',
-    incorrectAnswers: ['Venus', 'Jupiter', 'Saturn'],
+    text: 'Which planet is known as the Red Planet?',
+    options: optionList('trivia-2', ['Mars', 'Venus', 'Jupiter', 'Saturn']),
+    correctOptionIds: ['trivia-2-0'],
+    multiple: false,
     category: 'Science',
     difficulty: 'easy',
   },
   {
     id: 'trivia-3',
-    question: { text: 'Who wrote the play Romeo and Juliet?' },
-    correctAnswer: 'William Shakespeare',
-    incorrectAnswers: ['Charles Dickens', 'Mark Twain', 'Jane Austen'],
+    text: 'Who wrote the play Romeo and Juliet?',
+    options: optionList('trivia-3', [
+      'William Shakespeare',
+      'Charles Dickens',
+      'Mark Twain',
+      'Jane Austen',
+    ]),
+    correctOptionIds: ['trivia-3-0'],
+    multiple: false,
     category: 'Literature',
     difficulty: 'medium',
   },
@@ -146,101 +192,141 @@ function jsonResponse(body: unknown, status = 200) {
   }
 }
 
-function serverErrorResponse() {
-  return { status: 500, body: 'Internal Server Error' }
+/**
+ * The proxy's failure envelope (server/src/quiz/http-error.filter.ts).
+ * The status mirrors the mapping the filter applies to `kind`.
+ */
+function errorEnvelope(
+  kind: 'http' | 'auth' | 'rate_limit' | 'parse' | 'timeout',
+  providerId: 'quizapi' | 'trivia',
+  message: string,
+  status: number,
+) {
+  return jsonResponse({ error: { kind, providerId, status, message } }, status)
+}
+
+/** An upstream that fails every call — `http` is not a retryable kind. */
+function upstreamDown(providerId: 'quizapi' | 'trivia', label: string) {
+  return errorEnvelope('http', providerId, `${label} error: HTTP 500`, 500)
+}
+
+/** Last path segment of the intercepted `/api/quiz/<endpoint>` request. */
+function endpointOf(url: URL): string {
+  return url.pathname.split('/').pop() ?? ''
 }
 
 export interface QuizApiRouteOptions {
-  /** Answer /questions with HTTP 500 instead of the fixtures. */
+  /** Answer /questions with a typed upstream failure. */
   failQuestions?: boolean
-  /** Answer every endpoint with HTTP 500 (a fully broken provider). */
+  /** Fail every endpoint (a fully broken provider). */
   failAll?: boolean
   /** Invoked on every intercepted /questions request (attempt count). */
   onQuestionsRequest?: () => void
 }
 
-async function handleQuizApi(route: Route, options: QuizApiRouteOptions) {
-  const url = new URL(route.request().url())
-
-  if (url.pathname.endsWith('/questions')) {
+async function handleQuizApi(
+  route: Route,
+  url: URL,
+  options: QuizApiRouteOptions,
+) {
+  if (endpointOf(url) === 'questions') {
     options.onQuestionsRequest?.()
     if (options.failQuestions || options.failAll) {
-      await route.fulfill(serverErrorResponse())
+      await route.fulfill(upstreamDown('quizapi', 'QuizAPI'))
       return
     }
     await route.fulfill(jsonResponse(quizApiQuestions(2)))
     return
   }
 
-  if (options.failAll) {
-    await route.fulfill(serverErrorResponse())
+  if (endpointOf(url) === 'catalog') {
+    if (options.failAll) {
+      await route.fulfill(upstreamDown('quizapi', 'QuizAPI'))
+      return
+    }
+    await route.fulfill(jsonResponse(quizApiCatalog))
     return
   }
 
-  if (url.pathname.endsWith('/metadata')) {
-    await route.fulfill(jsonResponse(quizApiMetadata))
-    return
-  }
-
-  if (url.pathname.endsWith('/categories')) {
-    await route.fulfill(jsonResponse(quizApiCategories))
-    return
-  }
-
-  // Unknown path — keep the request off the real network.
-  await route.fulfill({ status: 404, body: 'Unexpected QuizAPI path' })
-}
-
-/** Intercept every QuizAPI request (see QuizApiRouteOptions). */
-export function routeQuizApi(page: Page, options: QuizApiRouteOptions = {}) {
-  return page.route(QUIZAPI_GLOB, (route) => handleQuizApi(route, options))
+  // Unknown endpoint — keep the request off the real network.
+  await route.fulfill({ status: 404, body: 'Unexpected quiz endpoint' })
 }
 
 export interface TriviaRouteOptions {
   /**
-   * Answer /questions with a non-zero offset by HTTP 500: the first
-   * survival batch (offset=0) succeeds, the next one fails.
+   * Answer a /questions request with a non-zero offset with a typed
+   * failure: the first survival batch (offset=0) succeeds, the next
+   * one fails.
    */
   failBatchOffset?: boolean
 }
 
-async function handleTrivia(route: Route, options: TriviaRouteOptions) {
-  const url = new URL(route.request().url())
-
-  if (url.pathname.endsWith('/questions/count')) {
-    await route.fulfill(jsonResponse(triviaCount))
-    return
-  }
-
-  if (url.pathname.endsWith('/questions')) {
+async function handleTrivia(
+  route: Route,
+  url: URL,
+  options: TriviaRouteOptions,
+) {
+  if (endpointOf(url) === 'questions') {
     const offset = url.searchParams.get('offset')
     if (options.failBatchOffset && offset !== null && offset !== '0') {
-      await route.fulfill(serverErrorResponse())
+      await route.fulfill(upstreamDown('trivia', 'The Trivia API'))
       return
     }
-    await route.fulfill(jsonResponse(triviaQuestions))
+    await route.fulfill(
+      jsonResponse({
+        questions: triviaQuestions,
+        total: triviaQuestions.length,
+      }),
+    )
     return
   }
 
-  if (url.pathname.endsWith('/metadata')) {
-    await route.fulfill(jsonResponse(triviaMetadata))
+  if (endpointOf(url) === 'catalog') {
+    await route.fulfill(jsonResponse(triviaCatalog))
     return
   }
 
-  if (url.pathname.endsWith('/categories')) {
-    await route.fulfill(jsonResponse(triviaCategories))
-    return
-  }
-
-  await route.fulfill({ status: 404, body: 'Unexpected Trivia API path' })
+  await route.fulfill({ status: 404, body: 'Unexpected quiz endpoint' })
 }
 
-/** Intercept every Trivia API request (see TriviaRouteOptions). */
+/**
+ * Intercept the proxy for one provider. Requests naming the other
+ * provider fall through to the other fixture — or, unhandled, to the
+ * dev server, which is how a test still fails loudly instead of
+ * silently passing on a stray request.
+ */
+function routeProvider(
+  page: Page,
+  providerId: 'quizapi' | 'trivia',
+  handle: (route: Route, url: URL) => Promise<void>,
+) {
+  return page.route(API_GLOB, async (route) => {
+    const url = new URL(route.request().url())
+    if (url.searchParams.get('provider') !== providerId) {
+      await route.fallback()
+      return
+    }
+    await handle(route, url)
+  })
+}
+
+/** Intercept every quizapi request against the proxy (see options). */
+export function routeQuizApi(page: Page, options: QuizApiRouteOptions = {}) {
+  return routeProvider(page, 'quizapi', (route, url) =>
+    handleQuizApi(route, url, options),
+  )
+}
+
+/** Intercept every trivia request against the proxy (see options). */
 export function routeTrivia(page: Page, options: TriviaRouteOptions = {}) {
-  return page.route(TRIVIA_GLOB, (route) => handleTrivia(route, options))
+  return routeProvider(page, 'trivia', (route, url) =>
+    handleTrivia(route, url, options),
+  )
 }
 
-/** Fail every Trivia API request like a network-level outage. */
+/** Fail trivia like a network-level outage (the proxy unreachable). */
 export function abortTrivia(page: Page) {
-  return page.route(TRIVIA_GLOB, (route) => route.abort('internetdisconnected'))
+  return routeProvider(page, 'trivia', async (route) => {
+    await route.abort('internetdisconnected')
+  })
 }

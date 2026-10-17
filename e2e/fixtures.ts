@@ -1,5 +1,6 @@
 import { type Page, expect } from '@playwright/test'
 import { mockQuestions } from '../src/shared/api/mock-questions'
+import type { ProxyQuestion } from './api-fixtures'
 
 /**
  * Shared helpers for quiz e2e tests.
@@ -238,9 +239,8 @@ export async function answerCorrectly(page: Page) {
 }
 
 /**
- * Answer the current Trivia API question correctly: pick the option
- * carrying the fixture's correct answer, submit and (by default)
- * advance.
+ * Answer the current Trivia API question correctly: pick the option the
+ * fixture marks as correct, submit and (by default) advance.
  *
  * Mirror of answerCorrectly for the fixture-driven trivia pool of
  * provider-switch.spec.ts (mockQuestions doesn't contain these
@@ -252,13 +252,18 @@ export async function answerCorrectly(page: Page) {
  */
 export async function answerTriviaCorrectly(
   page: Page,
-  fixture: { question: { text: string }; correctAnswer: string },
+  question: ProxyQuestion,
   { next = true }: { next?: boolean } = {},
 ) {
-  await expect(page.getByRole('heading', { level: 3 })).toHaveText(
-    fixture.question.text,
+  const correct = question.options.find((option) =>
+    question.correctOptionIds.includes(option.id),
   )
-  await optionLocator(page).filter({ hasText: fixture.correctAnswer }).click()
+  if (!correct) throw new Error(`Question ${question.id} has no correct option`)
+
+  await expect(page.getByRole('heading', { level: 3 })).toHaveText(
+    question.text,
+  )
+  await optionLocator(page).filter({ hasText: correct.text }).click()
   await page.getByRole('button', { name: 'Submit' }).click()
 
   if (next) {

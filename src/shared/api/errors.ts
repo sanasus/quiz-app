@@ -3,10 +3,18 @@
  *
  * Every failure surfaced from a fetch function is a QuizApiError with a
  * coarse `kind` — the provider-switch policy
- * (docs/provider-switch-plan.md) keys off it: network → retry the same
- * provider; timeout (the provider hung) and anything else (auth,
+ * (docs/api-notes.md §28) keys off it: network → retry the same
+ * provider; timeout (the request hung) and anything else (auth,
  * rate_limit, parse, http) mean the provider is broken and is a
  * candidate for switching.
+ *
+ * Live providers no longer classify upstream failures themselves: the
+ * proxy derives the kind server-side and returns it in a typed
+ * envelope, which backend-client.ts rehydrates into this error. What
+ * classifyError below still covers is the proxy itself — a connection
+ * we cannot make (offline, server restarting) or a body that breaks the
+ * contract. The `kind` mapping it applies mirrors
+ * server/src/quiz/errors.ts so both sides tell the same story.
  */
 
 import { ZodError } from 'zod'
@@ -41,13 +49,6 @@ export class QuizApiError extends Error {
   }
 }
 
-/** Map an HTTP status onto the typed error kind. */
-export function httpErrorKind(status: number): ErrorKind {
-  if (status === 401 || status === 403) return 'auth'
-  if (status === 429) return 'rate_limit'
-  return 'http'
-}
-
 /**
  * Wrap any thrown fetch/parse exception into a QuizApiError. Already
  * typed errors pass through unchanged, so wrapping is idempotent.
@@ -60,11 +61,11 @@ export function classifyError(
 
   const name = errorName(error)
 
-  // AbortSignal.timeout(REQUEST_TIMEOUT_MS) rejects with a DOMException
-  // named TimeoutError; explicit aborts surface as AbortError — both
-  // mean "the request was cut off", not "the provider is broken".
-  // Matched by name (not instanceof): a DOMException from another
-  // realm (jsdom tests) is not an instance of this realm's Error.
+  // AbortSignal.timeout rejects with a DOMException named TimeoutError;
+  // explicit aborts surface as AbortError — both mean "the request was
+  // cut off", not "the other side is broken". Matched by name (not
+  // instanceof): a DOMException from another realm (jsdom tests) is not
+  // an instance of this realm's Error.
   if (name === 'TimeoutError' || name === 'AbortError') {
     return wrap(error, 'timeout', providerId)
   }
@@ -78,6 +79,15 @@ export function classifyError(
   // Zod schema violation — instanceof alone would miss a duplicate
   // zod copy, so the name is checked as a fallback.
   if (error instanceof ZodError || name === 'ZodError') {
+    return wrap(error, 'parse', providerId)
+  }
+
+  // A body that is not JSON at all. Reaching here means a response
+  // *was* received and was unreadable, so the endpoint is misbehaving
+  // (contract break) — a provider-switch candidate, never something a
+  // connectivity retry could fix. Same rule as the server's
+  // classifyUpstream (server/src/quiz/errors.ts).
+  if (error instanceof SyntaxError || name === 'SyntaxError') {
     return wrap(error, 'parse', providerId)
   }
 

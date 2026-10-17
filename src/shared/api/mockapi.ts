@@ -5,7 +5,7 @@
 
 import type { QuizConfig } from '../types/quiz'
 import { countMockQuestions, fetchMockQuestions } from './mock-questions'
-import { getInitialFetchLimit } from './quizapi-client'
+import { getInitialFetchLimit } from './fetch-limits'
 import type { QuestionsFetchOptions, QuestionsPage } from './providers'
 
 export { fetchMockCategories } from './mock-categories'

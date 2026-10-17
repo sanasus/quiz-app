@@ -1,0 +1,8 @@
+# В образ не должно попасть ничего лишнего — и особенно server/.env:
+# ключ живёт только в env Vercel, а не в слоях образа.
+node_modules
+dist
+.env
+.env.*
+*.tsbuildinfo
+node_modules/.tmp

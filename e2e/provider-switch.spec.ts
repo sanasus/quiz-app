@@ -14,7 +14,7 @@ import {
 } from './fixtures'
 
 /**
- * Provider switching e2e — docs/provider-switch-plan.md (T11).
+ * Provider switching e2e — policy matrix in docs/api-notes.md §28.
  *
  * The dev server runs with VITE_USE_MOCK_DATA=true: every page load
  * re-forces providerId to 'mock', so each scenario starts with
@@ -47,8 +47,8 @@ test.describe('Provider switching', () => {
       // The seeded category is gone — back to the default "All".
       await expect(dropdown).toContainText('All')
 
-      // Setup data comes from the trivia fixtures: difficulties from
-      // /v2/metadata, categories from /v2/categories.
+      // Setup data comes from the proxy fixtures: difficulties and the
+      // category tree in one catalog response.
       await expect(page.getByTestId('difficulty-easy')).toBeVisible()
       await dropdown.click()
       await page.getByRole('button', { name: /The Trivia API/ }).click()
@@ -153,8 +153,8 @@ test.describe('Provider switching', () => {
 
     await selectProvider(page, 'QuizAPI')
 
-    // A fully broken provider exhausts its retries (~3s) and the
-    // setup screen falls back to the other provider with a toast.
+    // A fully broken provider fails fast (`http` is not retryable) and
+    // the setup screen falls back to the other provider with a toast.
     const toast = page.getByRole('status')
     await expect(toast).toContainText('Question source changed', {
       timeout: 15_000,

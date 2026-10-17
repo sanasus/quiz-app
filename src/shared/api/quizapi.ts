@@ -16,16 +16,16 @@ import { QuizApiError } from './errors'
 import { useProviderStore } from './provider-store'
 import { getProvider } from './providers'
 import type { QuestionsPage } from './providers'
-import { SURVIVAL_BATCH_SIZE } from './quizapi-client'
+import { SURVIVAL_BATCH_SIZE } from './fetch-limits'
 
 /** Shared base of every quiz query key. */
 const QUIZ_QUERY_BASE = ['quiz'] as const
 
 /**
  * Retry only cheap connectivity failures — network alone. A timeout
- * means the provider hung past REQUEST_TIMEOUT_MS: fail fast so the
- * dialog / auto-switch can offer a provider change immediately, with
- * no 2×10s wait (error-policy matrix, docs/provider-switch-plan.md).
+ * means the request hung: fail fast so the dialog / auto-switch can
+ * offer a provider change immediately, with no 2×15s wait (error-policy
+ * matrix, docs/api-notes.md §28).
  */
 export function retryQuestions(count: number, error: Error): boolean {
   if (error instanceof QuizApiError) {
@@ -74,9 +74,9 @@ export function useQuizQuestions(config: QuizConfig | null) {
  * Fetch one survival question batch.
  *
  * The offset is the number of questions already loaded, so each key
- * fetches a distinct slice of the pool (the live API paginates by
- * `offset` too). Disabled outside the survival prefetch window — see
- * useQuestionFeed.
+ * fetches a distinct slice of the pool (the proxy paginates by
+ * `offset` upstream). Disabled outside the survival prefetch window —
+ * see useQuestionFeed.
  */
 export function useQuestionBatch(
   config: QuizConfig | null,
@@ -109,31 +109,21 @@ export function useQuestionBatch(
 }
 
 // ---------------------------------------------------------------------------
-// useMetadata — fetches available difficulties, question types, etc.
+// useCatalog — difficulties + categories for /setup, one request
 // ---------------------------------------------------------------------------
 
-export function useMetadata() {
+/**
+ * The proxy merges the two upstream calls (metadata + categories) into
+ * a single response, so the setup screen issues one query — which also
+ * makes its failure a single error for the fallback policy to read.
+ */
+export function useCatalog() {
   const providerId = useProviderStore((s) => s.providerId)
 
   return useQuery({
-    queryKey: [...QUIZ_QUERY_BASE, providerId, 'metadata'],
-    queryFn: () => getProvider(providerId).fetchMetadata(),
+    queryKey: [...QUIZ_QUERY_BASE, providerId, 'catalog'],
+    queryFn: () => getProvider(providerId).fetchCatalog(),
     staleTime: 24 * 60 * 60 * 1000, // 24 hours — changes rarely
-    gcTime: 7 * 24 * 60 * 60 * 1000, // 7 days
-  })
-}
-
-// ---------------------------------------------------------------------------
-// useCategories — fetches topics + flat category list
-// ---------------------------------------------------------------------------
-
-export function useCategories() {
-  const providerId = useProviderStore((s) => s.providerId)
-
-  return useQuery({
-    queryKey: [...QUIZ_QUERY_BASE, providerId, 'categories'],
-    queryFn: () => getProvider(providerId).fetchCategories(),
-    staleTime: 24 * 60 * 60 * 1000, // 24 hours
     gcTime: 7 * 24 * 60 * 60 * 1000, // 7 days
   })
 }

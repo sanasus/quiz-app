@@ -4,6 +4,9 @@
  * once with a toast; network alone never switches; a second failure
  * after the switch falls back to the inline error.
  *
+ * One query feeds it (the proxy merged metadata + categories), so the
+ * policy reads exactly one error — it never has to reconcile two.
+ *
  * useChangeProvider is mocked — the real one needs a router.
  */
 
@@ -29,12 +32,14 @@ function apiError(kind: ErrorKind, message = 'boom'): QuizApiError {
   return new QuizApiError(message, { kind, providerId: 'quizapi' })
 }
 
-const noInput: ProviderFallbackInput = {
-  metadataError: null,
-  categoriesError: null,
-  refetchMetadata: vi.fn(),
-  refetchCategories: vi.fn(),
+function withError(
+  catalogError: Error | null,
+  refetchCatalog = vi.fn(),
+): ProviderFallbackInput {
+  return { catalogError, refetchCatalog }
 }
+
+const noInput: ProviderFallbackInput = withError(null)
 
 function renderFallback(initialProps: ProviderFallbackInput) {
   return renderHook(
@@ -66,10 +71,9 @@ describe('useProviderFallback', () => {
   })
 
   it('auto-switches once on a broken-provider error, with a toast', () => {
-    const { result } = renderFallback({
-      ...noInput,
-      metadataError: apiError('auth', 'Invalid API key'),
-    })
+    const { result } = renderFallback(
+      withError(apiError('auth', 'Invalid API key')),
+    )
 
     expect(changeProviderMock).toHaveBeenCalledTimes(1)
     expect(changeProviderMock).toHaveBeenCalledWith('trivia')
@@ -79,10 +83,12 @@ describe('useProviderFallback', () => {
   })
 
   it('never switches on a network error — inline error instead', () => {
-    const { result } = renderFallback({
-      ...noInput,
-      categoriesError: apiError('network', 'Failed to fetch'),
-    })
+    // A network failure is the connection's, not the provider's:
+    // switching would blame a healthy provider (and with a shared
+    // proxy both live providers are equally unreachable anyway).
+    const { result } = renderFallback(
+      withError(apiError('network', 'Failed to fetch')),
+    )
 
     expect(changeProviderMock).not.toHaveBeenCalled()
     expect(result.current.toast).toBeNull()
@@ -92,10 +98,9 @@ describe('useProviderFallback', () => {
   it('auto-switches on a timeout — a hung provider is broken', () => {
     // HAR-verified: quizapi.io hung until AbortSignal.timeout fired,
     // so a timeout is the provider's fault, not the connection's.
-    const { result } = renderFallback({
-      ...noInput,
-      metadataError: apiError('timeout', 'The operation timed out'),
-    })
+    const { result } = renderFallback(
+      withError(apiError('timeout', 'The operation timed out')),
+    )
 
     expect(changeProviderMock).toHaveBeenCalledTimes(1)
     expect(changeProviderMock).toHaveBeenCalledWith('trivia')
@@ -103,41 +108,33 @@ describe('useProviderFallback', () => {
     expect(result.current.inlineError).toBeNull()
   })
 
-  it('a broken error wins over a simultaneous network one', () => {
-    const { result } = renderFallback({
-      ...noInput,
-      metadataError: apiError('network', 'Failed to fetch'),
-      categoriesError: apiError('auth', 'Invalid API key'),
-    })
+  it('switches for every non-network kind', () => {
+    for (const kind of ['rate_limit', 'parse', 'http'] as const) {
+      changeProviderMock.mockClear()
+      useProviderStore.setState({ providerId: 'quizapi' })
 
-    expect(changeProviderMock).toHaveBeenCalledTimes(1)
-    expect(changeProviderMock).toHaveBeenCalledWith('trivia')
-    expect(result.current.inlineError).toBeNull()
+      renderFallback(withError(apiError(kind, `${kind} failure`)))
+
+      expect(changeProviderMock).toHaveBeenCalledWith('trivia')
+    }
   })
 
   it('does not switch twice — the second failure shows the inline error', () => {
-    const { result, rerender } = renderFallback({
-      ...noInput,
-      metadataError: apiError('auth', 'Invalid API key'),
-    })
+    const { result, rerender } = renderFallback(
+      withError(apiError('auth', 'Invalid API key')),
+    )
     expect(changeProviderMock).toHaveBeenCalledTimes(1)
 
-    // The fallback provider fails too — queries refetched under the
-    // new providerId key and errored again.
-    rerender({
-      ...noInput,
-      metadataError: apiError('http', 'HTTP 500 from the fallback'),
-    })
+    // The fallback provider fails too — the query refetched under the
+    // new providerId key and errored again with a *new* error object.
+    rerender(withError(apiError('http', 'HTTP 500 from the fallback')))
 
     expect(changeProviderMock).toHaveBeenCalledTimes(1)
     expect(result.current.inlineError).toBe('HTTP 500 from the fallback')
   })
 
   it('dismissToast clears the toast', () => {
-    const { result } = renderFallback({
-      ...noInput,
-      metadataError: apiError('auth'),
-    })
+    const { result } = renderFallback(withError(apiError('auth')))
     expect(result.current.toast).not.toBeNull()
 
     act(() => result.current.dismissToast())
@@ -145,17 +142,12 @@ describe('useProviderFallback', () => {
     expect(result.current.toast).toBeNull()
   })
 
-  it('retryAll refetches both setup queries', () => {
-    const input: ProviderFallbackInput = {
-      ...noInput,
-      refetchMetadata: vi.fn(),
-      refetchCategories: vi.fn(),
-    }
-    const { result } = renderFallback(input)
+  it('retry refetches the catalog query', () => {
+    const refetchCatalog = vi.fn()
+    const { result } = renderFallback(withError(null, refetchCatalog))
 
-    act(() => result.current.retryAll())
+    act(() => result.current.retry())
 
-    expect(input.refetchMetadata).toHaveBeenCalledTimes(1)
-    expect(input.refetchCategories).toHaveBeenCalledTimes(1)
+    expect(refetchCatalog).toHaveBeenCalledTimes(1)
   })
 })

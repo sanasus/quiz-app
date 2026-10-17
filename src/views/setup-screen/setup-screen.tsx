@@ -12,7 +12,7 @@ import { useNavigate } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
 import { useQuizSessionStore } from '../../shared/lib/session-store'
 import { isDifficulty } from '../../shared/lib/difficulties'
-import { useCategories, useMetadata } from '../../shared/api/quizapi'
+import { useCatalog } from '../../shared/api/quizapi'
 import CategoryDropdown from '../../shared/ui/category-dropdown'
 import DifficultySelector, {
   type DifficultyOption,
@@ -47,36 +47,28 @@ export function SetupScreen() {
 
   const config = store.config
 
-  // Fetch data from API
+  // Fetch the difficulty levels and the category tree — one request,
+  // since the proxy merges the two upstream calls server-side.
   const {
-    data: metadata,
-    isLoading: loadingMetadata,
-    error: metadataError,
-    refetch: refetchMetadata,
-  } = useMetadata()
-  const {
-    data: categoriesData,
-    isLoading: loadingCategories,
-    error: categoriesError,
-    refetch: refetchCategories,
-  } = useCategories()
+    data: catalog,
+    isLoading: loading,
+    error: catalogError,
+    refetch: refetchCatalog,
+  } = useCatalog()
 
   // Broken provider → auto-switch + toast; network failure → inline
   // error with Retry (see the hook for the full policy).
-  const { inlineError, toast, dismissToast, retryAll } = useProviderFallback({
-    metadataError,
-    categoriesError,
-    refetchMetadata,
-    refetchCategories,
+  const { inlineError, toast, dismissToast, retry } = useProviderFallback({
+    catalogError,
+    refetchCatalog,
   })
 
-  const loading = loadingMetadata || loadingCategories
-
-  // Build the difficulties list from API metadata, keeping only the
-  // levels the internal model supports end to end. The API also reports
-  // EXPERT (uppercase) — it is filtered out instead of rendering a
-  // button that could never start a quiz (see README «Ограничения»).
-  const difficulties = (metadata?.difficulties ?? [])
+  // Build the difficulties list, keeping only the levels the internal
+  // model supports end to end. The proxy already drops EXPERT, but the
+  // mock provider serves raw values ('EASY', …, 'EXPERT') without going
+  // through it — filtered out here instead of rendering a button that
+  // could never start a quiz (see README «Ограничения»).
+  const difficulties = (catalog?.difficulties ?? [])
     .map((d) => d.toLowerCase())
     .filter(isDifficulty)
     .map((value): DifficultyOption => ({
@@ -113,7 +105,7 @@ export function SetupScreen() {
             {t('setup.category')}
           </label>
           <CategoryDropdown
-            topics={categoriesData?.topics ?? []}
+            topics={catalog?.topics ?? []}
             selectedCategory={config.category}
             onSelect={(cat) => store.updateConfig({ category: cat ?? 'all' })}
             loading={loading}
@@ -181,7 +173,7 @@ export function SetupScreen() {
           <p className="break-words text-xs text-text-2">{inlineError}</p>
           <button
             type="button"
-            onClick={retryAll}
+            onClick={retry}
             className="self-start rounded-lg bg-primary px-4 py-2 text-on-primary"
           >
             {t('common.retry')}

@@ -1732,13 +1732,15 @@ v1
 
 **Провайдеры** — реестр `PROVIDERS` в `src/shared/api/providers.ts`:
 
-- `quizapi` — quizapi.io, требует `VITE_QUIZAPI_KEY`;
+- `quizapi` — quizapi.io, требует API-ключ, который теперь хранится
+  только на сервере (`QUIZAPI_KEY`, см. §29);
 - `trivia` — The Trivia API v2, `https://the-trivia-api.com/v2`,
   бесплатно и без ключа;
 - `mock` — встроенные мок-данные (dev/e2e): включается только через
   `VITE_USE_MOCK_DATA=true`; в переключателе настроек опция mock
   появляется лишь пока mock — активный источник (ручного возврата нет,
-  при следующей загрузке решает env-флаг).
+  при следующей загрузке решает env-флаг). Единственный провайдер,
+  который считает данные в браузере: он не ходит в прокси (§29).
 
 Активный провайдер — `providerId` в persist-сторе `quiz-provider`
 (`src/shared/api/provider-store.ts`, `version: 1`); он входит в ключи
@@ -1758,9 +1760,9 @@ v1
    unavailable»: Retry (повтор того же провайдера) или Change API
    (переключение на `alternateProviderId`). Закрыть диалог нельзя —
    Escape и клики по подложке игнорируются.
-3. **Авто-смена на `/setup`** — если metadata/категории упали
-   broken-ошибкой (см. ниже), приложение само переключается на другого
-   провайдера и показывает тост «Question source changed».
+3. **Авто-смена на `/setup`** — если каталог (сложности + категории)
+   упал broken-ошибкой (см. ниже), приложение само переключается на
+   другого провайдера и показывает тост «Question source changed».
 
 Любая смена провайдера делает одно и то же
 (`src/features/provider/use-change-provider.ts`): `setProviderId` →
@@ -1777,11 +1779,15 @@ v1
 
 Ретраи: `retryQuestions` — только network до 2 повторов; timeout и
 остальные kind падают сразу (fail fast — смена провайдера без ожидания
-2×10 с). metadata/категории используют дефолт React Query (2
-повтора). Все live-запросы обоих провайдеров ограничены
-`AbortSignal.timeout(10_000)`.
+повторов). Каталог использует дефолт React Query (2 повтора). Браузер
+ограничивает свой запрос к прокси `AbortSignal.timeout(15_000)` —
+дольше апстрим-таймаута сервера (10 с), чтобы ответ 504 успевал прийти
+раньше собственного abort и уходил как `timeout`, а не как обрыв
+соединения.
 
-**The Trivia API v2 — справка** (`src/shared/api/triviaapi.ts`):
+**The Trivia API v2 — справка** (реализация переехала на сервер,
+`server/src/quiz/upstream/` — §29; справка сохранена как источник
+знаний об API):
 
 Эндпоинты:
 `GET /questions?limit=&offset=&difficulties=&categories=&types=`,
@@ -1799,7 +1805,7 @@ lowercase-значение из `config.difficulty`; `types` всегда `text_
 (`src/shared/lib/session-store.ts`).
 
 Маппинг категорий — `resolveTriviaCategory` в
-`src/shared/api/triviaapi.ts`: science/history/geography-листы →
+`server/src/quiz/upstream/category-mapping.ts`: science/history/geography-листы →
 `science`/`history`/`geography`, literature и art-and-architecture →
 `arts_and_literature`, movies/tv-shows/anime → `film_and_tv`, music →
 `music`, sports → `sport_and_leisure`, food-and-drink →
@@ -1813,9 +1819,172 @@ cybersecurity, math, business и `'all'`/пусто/неизвестное → `
 активном trivia (ключи `app.footer_trivia_*` в `src/locales/en.json` и
 `ru.json`).
 
-**Код:** клиент — `src/shared/api/triviaapi.ts`, реестр и альтернатива —
-`src/shared/api/providers.ts`, стор — `src/shared/api/provider-store.ts`,
-zod-схемы — `src/shared/api/schemas.ts`, тесты —
-`src/shared/api/triviaapi.test.ts`, `providers.test.ts`,
-`provider-store.test.ts`; e2e — `e2e/provider-switch.spec.ts` (фикстуры
-внешних ответов — `e2e/api-fixtures.ts`).
+**Код:** клиент — `src/shared/api/backend-client.ts`, реестр и
+альтернатива — `src/shared/api/providers.ts`, стор —
+`src/shared/api/provider-store.ts`, zod-схемы ответов прокси —
+`src/shared/api/backend.schemas.ts`, тесты —
+`src/shared/api/quizapi-dispatch.test.ts`, `providers.test.ts`,
+`provider-store.test.ts`; e2e — `e2e/provider-switch.spec.ts`
+(фикстуры ответов прокси — `e2e/api-fixtures.ts`).
+
+**Открытые вопросы.**
+
+1. **Оба провайдера упали.** Пользователь может переключаться
+   туда-сюда сколько угодно: авто-смена на `/setup` ограничена одним
+   разом за mount (`switchedFrom` в
+   `src/views/setup-screen/hooks/use-provider-fallback.ts`), но ручные
+   переключения — из диалога на `/quiz` и из настроек — ничем не
+   ограничены. Варианты: помнить, куда уже переключались, и блокировать
+   повторно; разрешать только Retry у последнего упавшего провайдера;
+   либо единая «деградированная» страница. Решение не принято.
+2. **Legal-review атрибуции.** Футер показывает CC BY-NC 4.0 только при
+   активном trivia; юридически это не согласовано. Фолбэк-вариант —
+   показывать обе подписи всегда.
+
+# 29. Сервер-прокси (NestJS) — `server/`
+
+Браузер больше не ходит в quizapi.io и the-trivia-api.com напрямую:
+оба live-провайдера идут через собственный NestJS-сервер (`server/`,
+npm workspace `@quiz-app/server`). Знания об API из §28 при этом не
+пропали — они переехали в серверный слой `server/src/quiz/upstream/`.
+
+**Зачем.** API-ключ (`VITE_QUIZAPI_KEY`) убран с клиента entirely — он
+живёт только в env сервера. Два разных API сведены к одному контракту,
+фильтрация/чистка и классификация ошибок выполняются на сервере, а в
+браузер приходит уже готовая внутренняя модель и уже типизированная
+ошибка.
+
+**Запуск:**
+
+```bash
+npm run dev:server     # сервер на :3000
+npm run dev:all        # vite (:5173) + сервер одновременно
+npm run typecheck:server && npm run test:server && npm run build:server
+```
+
+В dev vite проксирует `/api` на `:3000`, поэтому клиент шлёт
+same-origin-запросы и CORS не нужен (на проде `/api` обслуживает уже
+сам сервер — вопрос деплоя отдельный, вне этого раздела).
+
+**Env сервера:** `QUIZAPI_KEY` (обязателен для провайдера `quizapi`;
+отсутствие ключа — это ошибка `auth`, а не падение старта), а также
+`QUIZAPI_BASE_URL`, `TRIVIA_BASE_URL`, `UPSTREAM_TIMEOUT_MS` (по
+умолчанию 10 000), `CORS_ORIGIN`, `PORT`, `TRUST_PROXY`,
+`THROTTLE_TTL_MS` (по умолчанию 60 000) и `THROTTLE_LIMIT` (30).
+
+**Эндпоинта два** (провайдер — в query, `quizapi` | `trivia`):
+
+| Запрос | Ответ |
+| --- | --- |
+| `GET /api/quiz/questions?provider=&category=&difficulty=&limit=&offset=` | `{ questions: Question[], total? }` |
+| `GET /api/quiz/catalog?provider=` | `{ difficulties: ['easy'\|'medium'\|'hard'], topics: [...] }` |
+
+Каталог — это metadata и категории двух апстримов, сведённые в один
+запрос: `/setup` делает один запрос вместо двух, а его падение становится
+одной ошибкой для политики авто-смены (§28). На сервере уже убраны
+`EXPERT` и категории с `quizCount = 0`, так что клиенту остался
+защитный фильтр — он нужен только моку, который не проходит через прокси.
+`total` у trivia — результат best-effort запроса `/questions/count`: если
+он упал, страница приходит без `total`, а не с ошибкой.
+
+**Валидация запроса.** Query-параметры проверяет Zod
+(`server/src/quiz/query.schema.ts`) через Nest Pipe: неверный
+`limit`/`difficulty`/`provider` даёт **400** с телом Nest (строковый
+`error`), а не тихую подмену значения — сломанный запрос клиента не
+должен выглядеть как поломка провайдера и вызывать лишнее
+переключение.
+
+**Конверт ошибок.** Апстрим-ошибка становится `UpstreamError` с
+`kind` (`server/src/quiz/errors.ts`), а наружу уходит
+`HttpErrorFilter` (`server/src/quiz/http-error.filter.ts`):
+
+```json
+{ "error": { "kind": "auth", "providerId": "quizapi", "status": 401,
+             "retryAfter": 37, "message": "..." } }
+```
+
+| kind | HTTP-статус | Дополнительно |
+| --- | --- | --- |
+| `auth` | 401 / 403 | — |
+| `rate_limit` | 429 | заголовок `Retry-After` форвардится от апстрима (и у trivia тоже) |
+| `timeout` | 504 | апстрим-запрос обрезан по `UPSTREAM_TIMEOUT_MS` |
+| `parse`, `network` | 502 | тело апстрима нечитаемо / не удалось соединиться |
+| `http` | статус апстрима | — |
+
+**Почему `kind` едет в envelope, а не выводится из HTTP-статуса.**
+Прокси переписывает статусы на выходе, поэтому клиенту нельзя их
+читать как причину: например, `parse` (мусор в теле апстрима) и
+`network` (апстрим недоступен) оба отвечают 502, но по политике §28
+первое — повод переключить провайдера, второе — повод ретраить тот же.
+Клиент
+(`src/shared/api/backend-client.ts`) доверяет envelope и восстанавливает
+`QuizApiError` из него как есть.
+
+Исключение — ответ **без** envelope: это неполадка нашего сервера, а не
+провайдера (невалидный запрос, рестарт, vite-прокси ответил вместо
+него). Такое сообщается как `network` — единственный kind, не вызывающий
+авто-смену, ведь переключение не починит то, что общее для обоих
+провайдеров.
+
+**Лимиты и логи.** Прокси держит ключ — значит, должен сам
+ограничивать расход, пока лимит апстрима (у quizapi это 60
+req/min/IP) не сработал против нас. Глобальный `ThrottlerGuard`
+(`server/src/throttle.config.ts`, 30 запросов за 60 с на IP) считает
+всё, кроме `/health`: CI и деплой-петля ходят с того же адреса, что и
+само приложение, и троттлинг лайвнеса читался бы как авария.
+`TRUST_PROXY` — число доверенных хопов; за балансировщиком он
+обязателен, иначе все клиенты делят один бюджет балансировщика.
+
+Собственные 429 отвечают **телом Nest, без envelope** — это
+намеренное правило: по §28 envelope означает «провайдер сломан,
+переключись», а наш лимит не починится переключением. Клиент получит
+`network`, ретраит и покажет ошибку — то есть не сменит здорового
+провайдера из-за нашего счётчика (`server/src/throttling.test.ts`
+это закрепляет). Лог запросов (`http-bootstrap.ts`) пишет по строке на
+запрос: метод, путь, статус, длительность; 5xx уходит в `warn`.
+
+**Что осознанно не сделано:**
+
+- **`/api/v1`.** Версионирование окупается, когда контракт ломается
+  у кого-то, кроме нас: клиент и прокси здесь в одном репозитории и
+  катятся вместе. При деплое как отдельного сервиса — вернуть.
+- **`PROXY_TOKEN` в заголовке клиента.** Реализовывать в заявленном
+  виде нельзя: клиент — публичный SPA, любой токен лежит в бандле и
+  виден из DevTools. Это иллюзия защиты квоты, а с ней — ложное
+  ощущение безопасности. Если на проде нужна защита, она инфраструктурная
+  (приватный инстанс, Basic auth/Cloudflare Access перед прокси), и
+  тогда же имеет смысл rate limit. Требование к деплою, не код.
+- **`@nestjs/config`.** Env разбирается двумя маленькими функциями с
+  fallback'ами и диагнозом (`throttle.config.ts`, `main.ts`), а
+  реестр провайдеров намеренно собирается без ключа. Ради этого
+  статуса переплетать весь сервер с конфиг-модулем не стоит.
+
+**Деплой на Vercel.** Один проект, два сервиса (Vercel Services, Beta):
+`frontend` — Vite в корне репозитория, `backend` — контейнер из
+`server/Dockerfile.vercel`; `/api/(.*)` уходит в бэкенд, остальное во
+фронт, а SPA-кэч живёт внутри frontend-сервиса, чтобы не съедать API.
+Почему именно контейнер и как устроена сборка — в README,
+раздел «CI/CD и деплой».
+
+Что меняется на серверлессе:
+
+- **Кэш каталога и троттлинг живут в памяти процесса, то есть на
+  экземпляр.** Fluid переиспользует инстансы и уводит их в scale-to-zero,
+  поэтому `CatalogCacheService` (1 ч) переживает только свой инстанс:
+  промах = лишние запросы к апстриму, но не ошибка. Лимит 30/60 с тоже
+  считается на экземпляр, а не глобально на IP — защита ключа остаётся
+  best-effort. Жёсткий лимит и общий кэш — задача к деплою (Runtime
+  Cache или Marketplace Redis).
+- `QUIZAPI_KEY` — Secret в Vercel в **Production и Preview**, поэтому
+  превью полностью рабочие для обоих провайдеров. Без ключа quizapi
+  отдаёт типизированный `auth`, приложение не падает.
+- Контейнер собирается из каталога `server/`, корневой lockfile npm
+  workspaces ей недоступен: версии берутся из `server/package.json`, а
+  ломающий бамп ловит `tsc` на стадии сборки — до рантайма он не дойдёт.
+
+**Что осталось на клиенте.** Провайдер `mock` целиком — он считает
+данные в браузере и нужен для герметичности e2e/CI
+(`VITE_USE_MOCK_DATA=true`), см. §28. Live-часть клиента — тонкая
+обёртка: `backend-client.ts` (два fetch'а + разбор envelope),
+`backend.schemas.ts` (Zod-контракт ответов прокси) и `fetch-limits.ts`
+(политика размеров батчей, общая для live и мок).

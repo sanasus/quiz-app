@@ -7,7 +7,7 @@
 
 import { describe, expect, it } from 'vitest'
 import { z } from 'zod'
-import { classifyError, httpErrorKind, QuizApiError } from './errors'
+import { classifyError, QuizApiError } from './errors'
 
 describe('QuizApiError', () => {
   it('keeps the message and exposes kind, providerId, status and cause', () => {
@@ -110,19 +110,32 @@ describe('classifyError', () => {
     expect(error.message).toBe('plain string rejection')
   })
 
+  it('classifies a SyntaxError (unreadable body) as parse, not network', () => {
+    // `response.json()` on a non-JSON body. Reporting it as network
+    // would burn retries against an endpoint that answers garbage.
+    let syntaxError: unknown
+    try {
+      JSON.parse('<html>502 Bad Gateway</html>')
+    } catch (caught) {
+      syntaxError = caught
+    }
+    expect(syntaxError).toBeInstanceOf(SyntaxError)
+
+    const error = classifyError(syntaxError, 'quizapi')
+    expect(error.kind).toBe('parse')
+    expect(error.cause).toBe(syntaxError)
+  })
+
+  it('classifies a SyntaxError-shaped error by name', () => {
+    const fake = new Error('body broken')
+    fake.name = 'SyntaxError'
+
+    expect(classifyError(fake, 'trivia').kind).toBe('parse')
+  })
+
   it('stamps the requested providerId on wrapped errors', () => {
     expect(classifyError(new TypeError('x'), 'trivia').providerId).toBe(
       'trivia',
     )
-  })
-})
-
-describe('httpErrorKind', () => {
-  it('maps auth statuses, rate limits and everything else', () => {
-    expect(httpErrorKind(401)).toBe('auth')
-    expect(httpErrorKind(403)).toBe('auth')
-    expect(httpErrorKind(429)).toBe('rate_limit')
-    expect(httpErrorKind(500)).toBe('http')
-    expect(httpErrorKind(404)).toBe('http')
   })
 })

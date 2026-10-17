@@ -39,17 +39,47 @@ jobs:
         run: npm run typecheck
 
       # Unit tests run hermetically: vitest.config.ts pins
-      # VITE_USE_MOCK_DATA=false and a dummy VITE_QUIZAPI_KEY.
+      # VITE_USE_MOCK_DATA=false, and the live-provider tests stub
+      # fetch — no QuizAPI key is needed anywhere in this job.
       - name: Unit tests
         run: npm run test -- --run
 
       - name: Build
         run: npm run build
 
+  server:
+    name: Server (NestJS proxy)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Typecheck
+        run: npm run typecheck:server
+
+      # Hermetic: every test boots a local stub upstream and never
+      # reaches quizapi.io or the-trivia-api.com, so no QUIZAPI_KEY is
+      # configured here — a missing key is itself a covered case.
+      - name: Unit tests
+        run: npm run test:server
+
+      - name: Build
+        run: npm run build:server
+
   deploy:
     name: Deploy to Vercel
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    needs: [quality]
+    # The frontend talks only to this proxy, so a broken server is as
+    # blocking as a broken frontend.
+    needs: [quality, server]
     runs-on: ubuntu-latest
     timeout-minutes: 15
     env:

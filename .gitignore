@@ -26,8 +26,11 @@ dist-ssr
 *.sln
 *.sw?
 
-# .env files
+# .env files — the .example templates are the committed part
 .env
+.env*
+!.env.example
+!server/.env.example
 
 # OS
 .DS_Store
@@ -56,4 +59,3 @@ skills-lock.json
 # Local OpenCode pairing helper
 pair.bat
 .vercel
-.env*

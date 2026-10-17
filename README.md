@@ -6,31 +6,55 @@
 
 ```bash
 npm install
-npm run dev        # dev-сервер на http://localhost:5173
+cp .env.example .env          # клиентские env
+cp server/.env.example server/.env   # ключ QuizAPI — только на сервере
+npm run dev:all   # vite (:5173) + NestJS-прокси (:3000)
 ```
+
+По отдельности: `npm run dev` — только фронтенд (live-провайдеры будут
+отвечать ошибкой, пока прокси не поднят), `npm run dev:server` — только
+прокси. Мок-режим (`VITE_USE_MOCK_DATA=true`) прокси не требует вообще.
 
 Production-сборка и проверки:
 
 ```bash
-npm run build      # tsc -b && vite build
-npm run preview    # предпросмотр production-сборки
-npm run typecheck  # tsc -b
-npm run lint       # oxlint
-npm run test       # vitest (jsdom)
-npm run format     # prettier
-npm run e2e        # playwright (тесты-теги @smoke/@mobile/@i18n/@slow)
+npm run build            # tsc -b && vite build
+npm run build:server     # сборка прокси (server/dist)
+npm run preview          # предпросмотр production-сборки
+npm run typecheck        # tsc -b (фронтенд + e2e)
+npm run typecheck:server
+npm run lint             # oxlint
+npm run test             # vitest (jsdom)
+npm run test:server      # vitest (сервер, node)
+npm run format           # prettier
+npm run e2e              # playwright (тесты-теги @smoke/@mobile/@i18n/@slow)
 ```
 
 ## Переменные окружения
 
-Скопируйте `.env.example` в `.env` и заполните:
+Клиент и сервер разведены: `.env` читает только Vite, `server/.env` —
+только NestJS. **API-ключ не попадает в браузер и в бандл.**
+
+Клиент (`.env`, см. `.env.example`):
 
 | Переменная | Назначение |
 |---|---|
-| `VITE_QUIZAPI_KEY` | API-ключ QuizAPI (получается в dashboard на quizapi.io). Нужен только для провайдера quizapi — The Trivia API и моки работают без ключа |
 | `VITE_USE_MOCK_DATA` | `true` — приложение работает на встроенных мок-данных (`src/shared/api/mock-*.ts`) без ключа и сети; при каждой загрузке активный провайдер принудительно сбрасывается на `mock`. Ручной выбор mock в настройках недоступен — в переключателе он появляется лишь пока активен |
 
-`.env` не коммитится (в `.gitignore`). API-ключ живёт на клиенте — это осознанное решение для учебного/личного проекта; для production ключ следует вынести на прокси (базовый URL инкапсулирован в одном модуле — см. ниже).
+Сервер (`server/.env`, см. `server/.env.example`):
+
+| Переменная | Назначение |
+|---|---|
+| `QUIZAPI_KEY` | API-ключ QuizAPI (dashboard на quizapi.io). Нужен только для провайдера quizapi — The Trivia API и моки работают без ключа. Без ключа сервер запускается, а провайдер quizapi отдаёт типизированную ошибку `auth` |
+| `QUIZAPI_BASE_URL`, `TRIVIA_BASE_URL` | переопределение базовых URL апстримов (по умолчанию живые) |
+| `UPSTREAM_TIMEOUT_MS` | дедлайн запроса к апстриму, мс (по умолчанию `10000`) |
+| `CORS_ORIGIN` | включает CORS с указанным origin; в dev не нужен — `/api` same-origin через vite-прокси |
+| `PORT` | порт сервера (по умолчанию `3000`) |
+| `THROTTLE_TTL_MS`, `THROTTLE_LIMIT` | бюджет прокси на IP: `30` запросов за `60000` мс по умолчанию, `/health` вне бюджета |
+| `TRUST_PROXY` | сколько доверенных хопов перед сервером; обязателен за балансировщиком, иначе все клиенты делят один бюджет |
+
+`.env` и `server/.env` не коммитятся (в `.gitignore`), примеры — в
+`.env.example` и `server/.env.example`.
 
 ## Режимы
 
@@ -46,7 +70,8 @@ npm run e2e        # playwright (тесты-теги @smoke/@mobile/@i18n/@slow)
 - **TanStack Router** — типобезопасные search-params: конфигурация квиза живёт в URL. Маршруты `/quiz` и `/results` защищены `beforeLoad`-редиректом на `/setup`.
 - **TanStack Query** — серверное состояние вопросов активного провайдера (кэш, ретраи, состояния загрузки/ошибки).
 - **Zustand + `persist`** — клиентское состояние: сессия квиза, настройки, статистика, достижения, XP. Схемы персистентных сторов валидируются Zod при загрузке, сторы версионируются с миграциями.
-- **API-слой** (`src/shared/api/`) — клиенты провайдеров (quizapi, trivia, mock), Zod-схемы и адаптер изолированы; адаптер приводит ответы QuizAPI к внутренней модели `Question` и отбрасывает невалидные вопросы. Источник вопросов выбирается явно: реестр `providers.ts` + persist-стор `provider-store` — переключатель в `/settings`, диалог Retry/Change API при падении сессии, авто-смена с тостом на `/setup`; прозрачного фолбэка нет (см. `docs/api-notes.md` §28). Для разработки без ключа есть мок-клиент, включаемый `VITE_USE_MOCK_DATA`.
+- **Сервер-прокси** (`server/`, NestJS) — браузер ходит только в `/api/quiz/*`; классификация ошибок и обращение к апстримам живут на сервере, ключ QuizAPI тоже. Два эндпоинта: вопросы и объединённый каталог (сложности + категории), провайдер — в query. Ошибка уходит типизированным конвертом `{ error: { kind, providerId, status, retryAfter, message } }` — см. `docs/api-notes.md` §29. Прокси сам ограничивает расход ключа: бюджет 30 запросов за 60 с на IP (`/health` вне бюджета), собственный 429 отвечает без конверта — иначе клиент счёл бы его поломкой провайдера и стал бы переключаться. Каждый запрос пишется в access-лог (метод, путь, статус, длительность).
+- **API-слой** (`src/shared/api/`) — реестр провайдеров (`providers.ts`: quizapi, trivia, mock) и persist-стор активного провайдера (`provider-store`, входит в ключи всех quiz-запросов). Два live-провайдера — тонкие обёртки над прокси (`backend-client.ts` + Zod-контракт `backend.schemas.ts`); мок — единственный провайдер, считающий данные в браузере. Источник вопросов выбирается явно: переключатель в `/settings`, диалог Retry/Change API при падении сессии, авто-смена с тостом на `/setup`; прозрачного фолбэка нет (см. `docs/api-notes.md` §28).
 - **Бизнес-логика** — очки, XP/уровни, автомат сессии, режимы, правила достижений — чистые функции без привязки к React, покрыты тестами.
 - **i18n** — i18next, RU/EN, автоопределение по браузеру, выбор сохраняется. Все строки интерфейса — через ключи.
 - **Дизайн** — Tailwind CSS v4 с токенами в теме, светлая/тёмная темы, анимации Motion с учётом `prefers-reduced-motion` и настройки отключения в `/settings`.
@@ -55,17 +80,21 @@ npm run e2e        # playwright (тесты-теги @smoke/@mobile/@i18n/@slow)
 ## CI/CD и деплой
 
 - **Хостинг**: Vercel, проект `sanas1/quiz-app`, продакшен — https://quiz-app-three-weld-25.vercel.app.
+- **Один проект, два сервиса (Vercel Services, Beta)**: `frontend` (корень репозитория, Vite) и `backend` (`server/`, Container Runtime). Публичный трафик распределяет верхнеуровневый `rewrites`: `/api/(.*)` → backend, всё остальное → frontend; SPA-кэч `/(.*) → /index.html` живёт **внутри** frontend-сервиса, чтобы он не съедал API. Клиент ходит в относительный `/api/quiz/*`, поэтому API обязан быть same-origin — так и устроено.
+- **Бэкенд — контейнер** (`server/Dockerfile.vercel`): в образе `tsc` компилирует `server/`, запускается готовый `dist/main.js` на `PORT=80`. Это сделано намеренно: DI Nest построен на `design:paramtypes`, который esbuild-подобные сборки Vercel не эмитят (та же причина, по которой юнит-тесты идут через SWC). Сборка идёт из каталога сервиса, поэтому корневой lockfile npm workspaces недоступен — зависимости ставятся из `server/package.json` напрямую; ломающий бамп поймает `tsc` на стадии сборки.
+- **Деплой** идёт через Git-интеграцию (push в `main`): образ собирается и пушится в Vercel Container Registry на инфраструктуре Vercel. Локальный `vercel deploy` потребует установленного docker — на этой машине его нет, поэтому деплой через Git предпочтительнее.
+- **Переменные окружения Vercel**: `QUIZAPI_KEY` — Secret в **Production и Preview** (провайдер `quizapi` работает и в превью). `VITE_USE_MOCK_DATA=false` задано для Production — CI подхватывает их через `vercel pull`. Остальных env у фронта нет.
+- **SPA-роутинг**: сервис-кэч возвращает `index.html` на все пути, поэтому прямые ссылки вида `/setup` работают. Запросы к `/api/*` уходят в контейнер; неизвестный путь `/api/…` отдаёт 404 от бэкенда, а не index.html.
+- **`/health` остаётся внутренним**: наружу не выведен, чтобы внешний мониторинг не мешал контейнеру уходить в scale-to-zero (5 минут без трафика в проде, 30 секунд в превью).
 - **CI**: GitHub Actions, два workflow:
-  - `.github/workflows/ci.yml` — на каждый PR и push в `main`: lint → typecheck → unit-тесты → build. На push в `main` дополнительно деплой в production: `vercel pull` → `vercel build --prod` → `vercel deploy --prebuilt --prod` (build и deploy строго в один target — иначе prebuilt-деплой падает с рассинхроном окружений).
-  - `.github/workflows/e2e.yml` — Playwright: smoke-набор (тег `@smoke`) на push/PR, полный набор по расписанию (nightly, 03:00 UTC) и вручную (`workflow_dispatch`).
+  - `.github/workflows/ci.yml` — на каждый PR и push в `main`: lint → typecheck → unit-тесты → build (параллельно такой же проход для `server/`); деплой в production ждёт оба job. На push в `main` деплой: `vercel pull` → `vercel build --prod` → `vercel deploy --prebuilt --prod` (build и deploy строго в один target — иначе prebuilt-деплой падает с рассинхроном окружений).
+  - `.github/workflows/e2e.yml` — Playwright: smoke-набор (тег `@smoke`) на push/PR, полный набор по расписанию (nightly, 03:00 UTC) и вручную (`workflow_dispatch`). Тесты герметичны: мок-провайдер + перехват `/api/quiz/*`, прокси поднимать не нужно.
 - **Секреты GitHub Actions**: `VERCEL_TOKEN` (создаётся в dashboard Vercel → Account Settings → Tokens), `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID` (из `.vercel/project.json` после `vercel link`).
-- **Переменные окружения Vercel**: `VITE_QUIZAPI_KEY` и `VITE_USE_MOCK_DATA=false` заданы для Production в настройках проекта — CI подхватывает их через `vercel pull` при сборке.
-- **SPA-роутинг**: `vercel.json` содержит rewrite всех путей на `index.html`, поэтому прямые ссылки вида `/setup` работают (без этого Vercel отдаёт 404 на несуществующих файлах).
 
 ## Ограничения
 
 - **Тексты вопросов приходят от API на английском и не переводятся** — переводится только интерфейс.
-- Бесплатный тариф QuizAPI имеет rate limit (60 requests/min/IP); приложение показывает понятную ошибку при 429 и не делает бесконечных повторов, а в настройках можно переключиться на The Trivia API (бесплатно и без ключа).
+- Бесплатный тариф QuizAPI имеет rate limit (60 requests/min/IP); приложение показывает понятную ошибку при 429 (сервер форвардит заголовок `Retry-After` и подставляет его в сообщение) и не делает бесконечных повторов, а в настройках можно переключиться на The Trivia API (бесплатно и без ключа).
 - `EXPERT`-сложность API не используется: внутренняя модель ограничена easy/medium/hard, кнопка «Эксперт» на `/setup` отфильтровывается из metadata (иначе «Начать» молча возвращал бы на `/setup`).
 - Ручная пауза во время квиза отсутствует (см. выше).
 - Звуковых эффектов нет.
@@ -78,13 +107,16 @@ src/
   routes/         # маршруты TanStack Router (кодогенерация routeTree.gen.ts)
   features/       # modes, meta, stats, achievements, progress
   shared/
-    api/          # клиенты провайдеров (QuizAPI, Trivia API), реестр и стор провайдеров, схемы Zod, адаптер, моки
+    api/          # реестр и стор провайдеров, клиент прокси (backend-client), Zod-контракт ответов, моки
     ui/           # переиспользуемые компоненты
     lib/          # сторы, очки, утилиты
   views/          # экраны (home, setup, quiz, results, stats, achievements, settings)
   locales/        # ru.json, en.json
-e2e/              # Playwright-тесты
-docs/             # api-notes.md — заметки по API QuizAPI и The Trivia API, выбор провайдера
+server/           # NestJS-прокси: провайдеры upstream, схемы, адаптация, конверт ошибок, два эндпоинта /api/quiz/*
+e2e/              # Playwright-тесты (фикстуры ответов прокси — api-fixtures.ts)
+docs/             # api-notes.md — заметки по API, политика провайдеров и контракт прокси (§28–§29)
 ```
 
-Подробный план и зафиксированные решения — в `PLAN.md` (отклонения — §15).
+Подробный план и зафиксированные решения — в `PLAN.md` (отклонения — §15);
+политика выбора провайдера, обработка ошибок и контракт прокси — в
+`docs/api-notes.md` (§28–§29).
