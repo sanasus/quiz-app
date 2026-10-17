@@ -14,7 +14,7 @@ import {
 } from './fixtures'
 
 /**
- * Provider switching e2e — policy matrix in docs/api-notes.md §28.
+ * Provider switching e2e — policy matrix in docs/providers.md.
  *
  * The dev server runs with VITE_USE_MOCK_DATA=true: every page load
  * re-forces providerId to 'mock', so each scenario starts with

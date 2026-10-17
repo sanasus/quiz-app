@@ -2,7 +2,7 @@
  * Provider registry — the app talks to exactly one provider at a time.
  *
  * There is no automatic fallback (it was removed when the explicit
- * switch took its place, see docs/api-notes.md §28): on failure the
+ * switch took its place, see docs/providers.md): on failure the
  * policy layer decides
  * between retrying the same provider and switching to the other one.
  * The mock provider is a dev/e2e convenience, never reachable in

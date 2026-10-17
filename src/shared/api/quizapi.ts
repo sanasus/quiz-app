@@ -25,7 +25,7 @@ const QUIZ_QUERY_BASE = ['quiz'] as const
  * Retry only cheap connectivity failures — network alone. A timeout
  * means the request hung: fail fast so the dialog / auto-switch can
  * offer a provider change immediately, with no 2×15s wait (error-policy
- * matrix, docs/api-notes.md §28).
+ * matrix, docs/providers.md).
  */
 export function retryQuestions(count: number, error: Error): boolean {
   if (error instanceof QuizApiError) {

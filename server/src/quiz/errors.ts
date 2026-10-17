@@ -2,7 +2,7 @@
  * Typed upstream errors.
  *
  * The coarse `kind` is what the client's provider-switch policy keys off
- * (docs/api-notes.md §28): `network` → retry the same provider;
+ * (docs/providers.md): `network` → retry the same provider;
  * anything else (auth / rate_limit / parse / http / timeout) means the
  * provider is broken and is a candidate for switching. The HTTP
  * exception filter (stage 3) turns these into the wire envelope, so the

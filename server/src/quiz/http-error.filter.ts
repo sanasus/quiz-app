@@ -4,7 +4,7 @@
  *   { "error": { kind, providerId, status, retryAfter, message } }
  *
  * The `kind` is exactly what the client's provider-switch policy keys
- * off (docs/api-notes.md §28), so the client can construct a
+ * off (docs/providers.md), so the client can construct a
  * QuizApiError without re-guessing. The HTTP status is mapped so the
  * client's own status-based heuristics (if any) also stay sane:
  *

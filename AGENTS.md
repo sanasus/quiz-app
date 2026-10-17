@@ -30,12 +30,20 @@ Run `typecheck` before committing — `noUnusedLocals` and `noUnusedParameters` 
 - **Providers**: `src/app/providers.tsx` — wraps `QueryClientProvider` → `I18nextProvider` → `RouterProvider` (ReactQueryDevtools unconditionally mounted)
 - **Routes**: TanStack Router with `autoCodeSplitting: true`. Codegen at `src/routeTree.gen.ts` — do not edit; run `build` to regenerate.
 - **State**: React Query (`retry: 2`, `staleTime: 5 min`, `gcTime: 10 min`) + Zustand (client state)
-- **API layer**: `src/shared/api/` — provider registry (`providers.ts`: quizapi/trivia/mock), active provider in the `provider-store` persist store (part of every query key). The two live providers dispatch through `backend-client.ts` to our own NestJS proxy (`/api/quiz/questions`, `/api/quiz/catalog`); upstream schemas, adaptation and error classification live server-side (`server/src/quiz/`). `backend.schemas.ts` is the client half of that wire contract. Mock is the only provider that computes data in the browser. No transparent fallback — switching is explicit: settings selector, `ApiErrorDialog` on /quiz, auto-switch + toast on /setup (see `docs/api-notes.md` §28, proxy contract §29)
+- **API layer**: `src/shared/api/` — provider registry (`providers.ts`: quizapi/trivia/mock), active provider in the `provider-store` persist store (part of every query key). The two live providers dispatch through `backend-client.ts` to our own NestJS proxy (`/api/quiz/questions`, `/api/quiz/catalog`); upstream schemas, adaptation and error classification live server-side (`server/src/quiz/`). `backend.schemas.ts` is the client half of that wire contract. Mock is the only provider that computes data in the browser. No transparent fallback — switching is explicit: settings selector, `ApiErrorDialog` on /quiz, auto-switch + toast on /setup (see `docs/providers.md`, `docs/proxy-server.md`)
 - **Proxy server**: `server/` (npm workspace `@quiz-app/server`) — NestJS, global prefix `api` (health excluded). `UpstreamError.kind` is the switch-policy signal and is returned in a typed envelope `{ error: { kind, providerId, status, retryAfter, message } }` by `http-error.filter.ts`; the client trusts that envelope over the HTTP status, which the proxy rewrites. An answer *without* the envelope is reported as `network` — a failure of our own server, never a reason to switch providers.
 - **i18n**: `src/app/i18n.ts` — en/ru, `fallbackLng: 'en'`, detection order: querystring → localStorage → navigator
 - **Alias**: `@` → `src/` (both vite and tsconfig)
 - **tsconfig**: `tsconfig.json` is a root file with project references; compiler options live in `tsconfig.app.json`
 - **Structure**: `src/features/` (domain code), `src/shared/` (api, lib, types, ui), `src/routes/`, `src/locales/`
+
+## Documentation
+- `docs/README.md` — docs index (what to read for what)
+- `docs/providers.md` — question-source (provider) registry, error-kind policy, explicit provider switching, mock-data rule
+- `docs/proxy-server.md` — NestJS proxy contract (`/api/quiz/*`), error envelope, server env, Vercel deploy
+- `docs/quizapi-upstream.md` — external QuizAPI v1 reference (only the endpoints we use: questions browse, metadata, categories)
+- `docs/trivia-upstream.md` — external The Trivia API v2 reference, category mapping, CC BY-NC attribution
+- `PLAN.md` — remaining work (§1) and accepted deviations from the original plan (§2)
 
 ## Testing
 - Config: `vitest.config.ts` — jsdom env, globals enabled, setup at `src/test/setup.ts`

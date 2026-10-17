@@ -10,8 +10,8 @@
  *   GET /api/quiz/catalog?provider=
  *
  * Failure mapping — the client half of the provider-switch contract
- * (docs/api-notes.md §28). The rule: *only the server's typed
- * envelope decides a switch.*
+ * (docs/providers.md, wire envelope in docs/proxy-server.md). The
+ * rule: *only the server's typed envelope decides a switch.*
  *
  *   fetch rejected        → classifyError → network (retry) / timeout (switch)
  *   proxy answered !ok
