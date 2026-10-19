@@ -25,7 +25,7 @@ export function Modal({
 }: ModalProps) {
   return (
     <div
-      className="fixed inset-0 z-40 flex items-center justify-center bg-black/50 px-4"
+      className="fixed inset-0 z-[55] flex items-center justify-center bg-black/50 px-4"
       role="presentation"
       onClick={onDismiss}
       onKeyDown={
