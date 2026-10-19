@@ -10,6 +10,7 @@
 
 import { useNavigate } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
+import { TriangleAlert } from 'lucide-react'
 import { Button } from '../../shared/ui/button'
 import { useQuizSessionStore } from '../../shared/lib/session-store'
 import { isDifficulty } from '../../shared/lib/difficulties'
@@ -97,78 +98,85 @@ export function SetupScreen() {
     <div className="mx-auto max-w-lg px-4 py-8">
       <PageTitle>{t('setup.title')}</PageTitle>
 
-      <Card
-        padding="lg"
-        className="flex flex-col gap-6 transition-shadow hover:shadow-card-hover"
-      >
-        {/* Category — custom dropdown */}
-        <Field label={t('setup.category')} labelId="category-label">
-          <CategoryDropdown
-            topics={catalog?.topics ?? []}
-            selectedCategory={config.category}
-            onSelect={(cat) => store.updateConfig({ category: cat ?? 'all' })}
-            loading={loading}
-          />
-        </Field>
-
-        {/* Difficulty */}
-        <Field
-          role="group"
-          aria-labelledby="difficulty-label"
-          label={t('setup.difficulty')}
-          labelId="difficulty-label"
+      {/* A failed setup fetch the auto-switch doesn't handle (user's
+          network, or the fallback provider failing too) replaces the
+          form: nothing in it can work without the catalog, and below
+          the form the error fell off-screen on mobile. */}
+      {inlineError ? (
+        <Card
+          padding="lg"
+          role="alert"
+          className="flex flex-col items-center gap-4 text-center"
         >
-          <DifficultySelector
-            difficulties={difficulties}
-            selectedDifficulty={config.difficulty}
-            onSelect={(difficulty) => store.updateConfig({ difficulty })}
-            loading={loading}
+          <TriangleAlert
+            className="h-12 w-12 text-danger-ink"
+            aria-hidden="true"
           />
-        </Field>
+          <p className="text-subheading text-text">{t('setup.load_error')}</p>
+          <p className="max-w-full break-words text-caption text-text-2">
+            {inlineError}
+          </p>
+          <Button onClick={retry}>{t('common.retry')}</Button>
+        </Card>
+      ) : (
+        <Card
+          padding="lg"
+          className="flex flex-col gap-6 transition-shadow hover:shadow-card-hover"
+        >
+          {/* Category — custom dropdown */}
+          <Field label={t('setup.category')} labelId="category-label">
+            <CategoryDropdown
+              topics={catalog?.topics ?? []}
+              selectedCategory={config.category}
+              onSelect={(cat) => store.updateConfig({ category: cat ?? 'all' })}
+              loading={loading}
+            />
+          </Field>
 
-        {/* Question count — does not apply to survival (it loads the
+          {/* Difficulty */}
+          <Field
+            role="group"
+            aria-labelledby="difficulty-label"
+            label={t('setup.difficulty')}
+            labelId="difficulty-label"
+          >
+            <DifficultySelector
+              difficulties={difficulties}
+              selectedDifficulty={config.difficulty}
+              onSelect={(difficulty) => store.updateConfig({ difficulty })}
+              loading={loading}
+            />
+          </Field>
+
+          {/* Question count — does not apply to survival (it loads the
             first batch of 10 and keeps batching until the API runs
             out), so the setting is hidden for that mode */}
-        {config.mode !== 'survival' ? (
-          <QuestionCountSlider
-            value={config.questionCount}
-            onChange={(count) => store.updateConfig({ questionCount: count })}
-          />
-        ) : null}
+          {config.mode !== 'survival' ? (
+            <QuestionCountSlider
+              value={config.questionCount}
+              onChange={(count) => store.updateConfig({ questionCount: count })}
+            />
+          ) : null}
 
-        {/* Mode */}
-        <Field
-          data-testid="mode-selector"
-          role="group"
-          aria-labelledby="mode-label"
-          label={t('setup.mode')}
-          labelId="mode-label"
-        >
-          <ModeSelector
-            modes={MODE_LABELS}
-            selectedMode={config.mode}
-            onSelect={(mode) => store.updateConfig({ mode })}
-          />
-        </Field>
+          {/* Mode */}
+          <Field
+            data-testid="mode-selector"
+            role="group"
+            aria-labelledby="mode-label"
+            label={t('setup.mode')}
+            labelId="mode-label"
+          >
+            <ModeSelector
+              modes={MODE_LABELS}
+              selectedMode={config.mode}
+              onSelect={(mode) => store.updateConfig({ mode })}
+            />
+          </Field>
 
-        {/* Start button */}
-        <StartButton loading={loading} onClick={handleStart} />
-      </Card>
-
-      {/* A failed setup fetch the auto-switch doesn't handle (user's
-          network, or the fallback provider failing too). */}
-      {inlineError ? (
-        <div
-          role="alert"
-          className="mt-6 flex flex-col gap-3 rounded-lg border border-danger bg-danger/10 p-4"
-        >
-          <p className="text-danger-ink">{t('setup.load_error')}</p>
-          <p className="break-words text-caption text-text-2">{inlineError}</p>
-          <Button size="sm" className="self-start" onClick={retry}>
-            {t('common.retry')}
-          </Button>
-        </div>
-      ) : null}
+          {/* Start button */}
+          <StartButton loading={loading} onClick={handleStart} />
+        </Card>
+      )}
 
       {toast ? (
         <AppToast
