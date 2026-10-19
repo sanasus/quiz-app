@@ -103,9 +103,7 @@ export function HomeScreen() {
           <p className="mb-1 text-caption uppercase tracking-wide text-text-3">
             {t('home.last_results')}
           </p>
-          <p className="text-stat text-primary-ink">
-            {last.score}
-          </p>
+          <p className="text-stat text-primary-ink">{last.score}</p>
           <p className="text-body text-text-2">
             {last.correctCount}/{last.totalQuestions} · {last.accuracy}%
           </p>
