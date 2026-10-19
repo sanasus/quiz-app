@@ -167,7 +167,10 @@ export function ResultsScreen() {
           </h2>
           <div className="flex flex-col gap-3">
             {result.mistakes.map((m, idx) => (
-              <div key={idx} className="rounded-lg bg-muted p-3">
+              <div
+                key={idx}
+                className="rounded-tile bg-bg p-3 shadow-neu-inset-sm"
+              >
                 <p className="mb-1 font-medium text-text">{m.question.text}</p>
                 <div className="flex flex-col gap-1 text-sm">
                   <span className="text-danger-ink">

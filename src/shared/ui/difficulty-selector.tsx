@@ -42,7 +42,7 @@ const DifficultySelector = ({
             ${
               selectedDifficulty === d.value
                 ? 'border-primary ring-2 ring-primary/30 bg-primary/20 text-primary-ink scale-[1.03] cursor-pointer'
-                : 'border-border bg-bg text-text-2 hover:border-primary/50 hover:bg-primary/5 hover:text-text cursor-pointer active:scale-[0.98]'
+                : 'border-transparent bg-bg text-text-2 shadow-neu hover:shadow-neu-lift hover:text-text cursor-pointer'
             }`}
         >
           {t(d.labelKey)}

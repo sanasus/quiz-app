@@ -13,7 +13,7 @@ const variants: Record<ButtonVariant, string> = {
   secondary:
     'border-2 border-primary bg-bg text-primary-ink shadow-neu hover:-translate-y-0.5 hover:shadow-neu-lift active:translate-y-0.5 active:shadow-neu-inset disabled:hover:translate-y-0 disabled:hover:shadow-neu',
   ghost:
-    'border border-border-strong bg-bg text-text-2 shadow-neu hover:-translate-y-0.5 hover:shadow-neu-lift hover:text-text active:translate-y-0.5 active:shadow-neu-inset',
+    'border border-transparent bg-bg text-text-2 shadow-neu hover:-translate-y-0.5 hover:shadow-neu-lift hover:text-text active:translate-y-0.5 active:shadow-neu-inset',
   danger:
     'bg-danger text-on-danger shadow-neu hover:bg-danger-hover hover:-translate-y-0.5 hover:shadow-neu-lift active:translate-y-0.5 active:shadow-neu-inset',
 }

@@ -39,7 +39,7 @@ export function AchievementsScreen() {
           </span>
         </div>
         <div
-          className="h-3 overflow-hidden rounded-full bg-muted"
+          className="h-3 overflow-hidden rounded-full bg-bg shadow-neu-inset-sm"
           role="progressbar"
           aria-valuemin={0}
           aria-valuemax={progress.need}

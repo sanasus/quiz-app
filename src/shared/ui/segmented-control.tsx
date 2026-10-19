@@ -84,8 +84,8 @@ export function SegmentedControl<T extends string>({
             onClick={() => onChange(option.value)}
             className={`flex-1 min-w-20 rounded-tile border-2 px-3 py-2 text-sm font-semibold transition-colors cursor-pointer ${
               checked
-                ? 'border-primary bg-primary/10 text-primary-ink shadow-edge'
-                : 'border-border-strong bg-surface text-text-2 hover:bg-surface-hover hover:text-text'
+                ? 'border-primary bg-bg text-primary-ink shadow-neu-inset'
+                : 'border-transparent bg-bg text-text-2 shadow-neu hover:shadow-neu-lift hover:text-text'
             }`}
           >
             {option.icon ? (
@@ -130,20 +130,20 @@ export function Toggle({
       data-testid={testId}
       onClick={() => onChange(!pressed)}
       className={`flex w-full cursor-pointer items-center justify-between gap-3 rounded-tile border-2 border-transparent py-1 text-left transition-colors ${
-        pressed ? 'border-primary/40 bg-primary/5' : 'hover:bg-surface-hover'
+        pressed ? 'border-primary/40' : ''
       }`}
     >
       <span className="text-sm text-text-2">{label}</span>
       <span
         className={`relative block h-8 w-16 shrink-0 rounded-pill border-2 transition-colors ${
           pressed
-            ? 'border-primary bg-primary/20'
-            : 'border-border-strong bg-surface'
+            ? 'border-primary bg-bg shadow-neu-inset-sm'
+            : 'border-transparent bg-bg shadow-neu-inset-sm'
         }`}
       >
         <span
           aria-hidden="true"
-          className={`absolute top-0.5 h-6 w-6 rounded-full shadow transition-[left,background-color] ${
+          className={`absolute top-0.5 h-6 w-6 rounded-full shadow-neu transition-[left,background-color] ${
             pressed ? 'left-8 bg-primary' : 'left-0.5 bg-text-3'
           }`}
         />

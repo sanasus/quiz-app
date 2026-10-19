@@ -27,7 +27,7 @@ export const QuizExplanation = memo(function QuizExplanation({
   return (
     <div
       ref={ref}
-      className="mt-3 scroll-mb-24 rounded-lg border border-border bg-muted p-4"
+      className="mt-3 scroll-mb-24 rounded-tile bg-bg p-4 shadow-neu-inset"
     >
       <h4 className="mb-2 font-semibold text-text">{t('quiz.explanation')}</h4>
       <p className="text-sm text-text-2">{explanation}</p>

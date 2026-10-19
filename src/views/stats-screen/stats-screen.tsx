@@ -174,7 +174,7 @@ export function StatsScreen() {
               </span>
             </div>
             <div
-              className="h-2 overflow-hidden rounded-full bg-muted"
+              className="h-3 overflow-hidden rounded-full bg-bg shadow-neu-inset-sm"
               role="progressbar"
               aria-valuemin={0}
               aria-valuemax={progress.need}
@@ -282,7 +282,7 @@ export function StatsScreen() {
                   .map((day) => (
                     <span
                       key={day}
-                      className="rounded-full bg-muted px-3 py-1 text-xs text-text-2"
+                      className="rounded-full bg-bg shadow-neu-inset-sm px-3 py-1 text-xs text-text-2"
                     >
                       {formatDate(day)}
                     </span>

@@ -85,7 +85,7 @@ export function QuizHeader({
       {/* Timer bar — fill shrinks with the remaining time. */}
       {hasTimer && timeLimit ? (
         <div
-          className="mt-3 h-2 overflow-hidden rounded-pill bg-muted"
+          className="mt-3 h-3 overflow-hidden rounded-pill bg-bg shadow-neu-inset-sm"
           aria-hidden="true"
         >
           <div
