@@ -4,6 +4,7 @@
 
 import type { SessionResult } from '../../shared/types/quiz'
 import type { SessionSummary } from '../../shared/types/meta'
+import { formatCategorySlug } from '../stats/stats-logic'
 
 export function toSessionSummary(result: SessionResult): SessionSummary {
   return {
@@ -20,5 +21,6 @@ export function toSessionSummary(result: SessionResult): SessionSummary {
     mode: result.mode,
     difficulty: result.difficulty,
     category: result.category,
+    categoryName: formatCategorySlug(result.category),
   }
 }

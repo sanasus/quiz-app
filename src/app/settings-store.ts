@@ -7,9 +7,16 @@
 import { create } from 'zustand'
 import { createJSONStorage, persist } from 'zustand/middleware'
 import { z } from 'zod'
+import { assertMigrationsMatchVersion } from '../shared/lib/persist-guards'
 
 /** Bump when the schema changes. */
 export const SETTINGS_STORE_VERSION = 1
+
+/** Key = old version, value = upgrade step; one step per version bump. */
+const migrations: Record<number, (data: unknown) => unknown> = {
+  // v0 payloads predate the schema: reset to defaults.
+  0: () => ({ ...DEFAULT_SETTINGS }),
+}
 
 export const themeSettingSchema = z.enum(['light', 'dark', 'system'])
 
@@ -62,8 +69,18 @@ export const useSettingsStore = create<SettingsStore>()(
       version: SETTINGS_STORE_VERSION,
       storage: createJSONStorage(() => localStorage),
       migrate: (persisted, version) => {
-        if (version < SETTINGS_STORE_VERSION) return { ...DEFAULT_SETTINGS }
-        return persisted
+        assertMigrationsMatchVersion(
+          'settings',
+          SETTINGS_STORE_VERSION,
+          Object.keys(migrations).length,
+        )
+        let data: unknown = persisted
+        for (let v = version; v < SETTINGS_STORE_VERSION; v++) {
+          const step = migrations[v]
+          if (!step) return { ...DEFAULT_SETTINGS }
+          data = step(data)
+        }
+        return data
       },
       merge: (persisted, current) => {
         // Corrupt data must never break the app — fall back to defaults.
