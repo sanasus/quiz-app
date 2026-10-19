@@ -3,6 +3,7 @@
  */
 
 import { useTranslation } from 'react-i18next'
+import { Field } from './field'
 
 export interface QuestionCountSliderProps {
   value: number
@@ -20,13 +21,7 @@ const QuestionCountSlider = ({
   const { t } = useTranslation()
 
   return (
-    <div className="group">
-      <label
-        htmlFor="question-count"
-        className="mb-2 block text-sm font-medium text-text-2 group-hover:text-primary transition-colors cursor-default"
-      >
-        {t('setup.question_count')}
-      </label>
+    <Field label={t('setup.question_count')} htmlFor="question-count">
       <input
         id="question-count"
         type="range"
@@ -42,7 +37,7 @@ const QuestionCountSlider = ({
       >
         {value}
       </div>
-    </div>
+    </Field>
   )
 }
 

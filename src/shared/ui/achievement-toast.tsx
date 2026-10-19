@@ -12,6 +12,8 @@ import { useTranslation } from 'react-i18next'
 import { X } from 'lucide-react'
 import { useMotionEnabled } from '../lib/use-motion-enabled'
 import type { Achievement } from '../types/meta'
+import { cardClass } from './card-styles'
+import { IconButton } from './icon-button'
 
 export interface AchievementToastItem extends Achievement {
   /** Unique key per appearance (same id may unlock again after a reset). */
@@ -73,7 +75,11 @@ export function AchievementToast({
                 : { opacity: 0 }
             }
             transition={{ type: 'spring', stiffness: 400, damping: 28 }}
-            className="pointer-events-auto flex w-full max-w-sm items-center gap-3 rounded-card border-2 border-warning bg-surface p-4 shadow-lg"
+            className={cardClass(
+              'overlay',
+              'md',
+              'pointer-events-auto flex w-full max-w-sm items-center gap-3 border-2 border-warning',
+            )}
           >
             <span aria-hidden="true" className="text-3xl">
               {toast.icon}
@@ -89,14 +95,12 @@ export function AchievementToast({
                 {t(toast.descriptionKey)}
               </p>
             </div>
-            <button
-              type="button"
+            <IconButton
               aria-label={t('common.close')}
               onClick={() => onDismiss(toast.toastKey)}
-              className="shrink-0 rounded-full p-2 text-text-3 shadow-neu transition-shadow hover:text-text hover:shadow-neu-lift active:shadow-neu-inset-sm"
             >
               <X className="h-4 w-4" aria-hidden="true" />
-            </button>
+            </IconButton>
           </motion.div>
         ))}
       </AnimatePresence>

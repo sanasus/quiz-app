@@ -4,6 +4,7 @@ import type { QuizMode } from '../../../shared/types/quiz'
 import { getMode } from '../../../features/modes'
 import { useMotionEnabled } from '../../../shared/lib/use-motion-enabled'
 import { AnimatedNumber } from '../../../shared/ui/animated-number'
+import { ProgressBar } from '../../../shared/ui/progress-bar'
 
 export interface QuizHeaderProps {
   progress: number
@@ -84,17 +85,13 @@ export function QuizHeader({
 
       {/* Timer bar — fill shrinks with the remaining time. */}
       {hasTimer && timeLimit ? (
-        <div
-          className="mt-3 h-3 overflow-hidden rounded-pill bg-bg shadow-neu-inset-sm"
-          aria-hidden="true"
-        >
-          <div
-            className={`h-full rounded-pill transition-[width] duration-1000 ease-linear ${
-              lowTime ? 'bg-danger' : 'bg-primary'
-            }`}
-            style={{ width: `${fill}%` }}
-          />
-        </div>
+        <ProgressBar
+          className="mt-3"
+          value={fill}
+          max={100}
+          fillClassName={lowTime ? 'bg-danger' : 'bg-primary'}
+          animate="transition-[width] duration-1000 ease-linear"
+        />
       ) : null}
     </div>
   )

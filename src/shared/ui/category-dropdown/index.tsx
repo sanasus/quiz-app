@@ -9,6 +9,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { CategorySkeleton } from '../skeletons'
 import { ChevronDown } from 'lucide-react'
+import { Card } from '../card'
 
 export interface CategoryDropdownTopic {
   id: string
@@ -115,7 +116,7 @@ const CategoryDropdown = ({
 
       {/* Dropdown panel */}
       {open && (
-        <div className="absolute z-50 mt-1 w-full rounded-card bg-surface shadow-card animate-in">
+        <Card padding="none" className="absolute z-50 mt-1 w-full animate-in">
           {/* "All" option at top */}
           <button
             type="button"
@@ -189,7 +190,7 @@ const CategoryDropdown = ({
               )
             })}
           </div>
-        </div>
+        </Card>
       )}
     </div>
   )

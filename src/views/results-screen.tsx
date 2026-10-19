@@ -14,6 +14,9 @@ import {
 } from '../shared/ui/achievement-toast'
 import { AnimatedNumber } from '../shared/ui/animated-number'
 import { Confetti } from '../shared/ui/confetti'
+import { Card } from '../shared/ui/card'
+import { PageTitle, SectionTitle } from '../shared/ui/heading'
+import { StatTile } from '../shared/ui/stat-tile'
 
 /** Accuracy (%) at or above which the win confetti fires. */
 const CONFETTI_THRESHOLD = 70
@@ -79,12 +82,10 @@ export function ResultsScreen() {
       <Confetti show={accuracy >= CONFETTI_THRESHOLD} />
 
       {/* Title */}
-      <h1 className="mb-6 text-center text-3xl font-bold text-text">
-        {t('results.title')}
-      </h1>
+      <PageTitle>{t('results.title')}</PageTitle>
 
       {/* Score card */}
-      <div className="mb-6 rounded-card bg-surface p-6 text-center shadow-card">
+      <Card padding="lg" className="mb-6 text-center">
         <div
           data-testid="result-score"
           className="mb-2 text-5xl font-extrabold text-primary"
@@ -104,73 +105,47 @@ export function ResultsScreen() {
             +{metrics.xpGained} XP
           </div>
         )}
-      </div>
+      </Card>
 
       {/* Stats grid */}
       <div className="mb-6 grid grid-cols-2 gap-4 sm:grid-cols-4">
-        <div className="rounded-tile bg-surface p-4 text-center shadow-sm">
-          <div
-            data-testid="result-correct"
-            className="text-2xl font-bold text-success"
-          >
-            <AnimatedNumber
-              value={result.correctCount}
-              from={0}
-              className="tabular-nums"
-            />
-          </div>
-          <div className="text-xs text-text-2">{t('results.correct')}</div>
-        </div>
-        <div className="rounded-tile bg-surface p-4 text-center shadow-sm">
-          <div
-            data-testid="result-incorrect"
-            className="text-2xl font-bold text-danger"
-          >
-            <AnimatedNumber
-              value={result.incorrectCount}
-              from={0}
-              className="tabular-nums"
-            />
-          </div>
-          <div className="text-xs text-text-2">{t('results.incorrect')}</div>
-        </div>
-        <div className="rounded-tile bg-surface p-4 text-center shadow-sm">
-          <div
-            data-testid="result-accuracy"
-            className="text-2xl font-bold text-text"
-          >
-            <AnimatedNumber
-              value={accuracy}
-              from={0}
-              className="tabular-nums"
-            />
-            %
-          </div>
-          <div className="text-xs text-text-2">{t('results.accuracy')}</div>
-        </div>
-        <div className="rounded-tile bg-surface p-4 text-center shadow-sm">
-          <div
-            data-testid="result-time"
-            className="text-2xl font-bold text-text"
-          >
-            {formatTime(result.timeSpent)}
-          </div>
-          <div className="text-xs text-text-2">{t('results.time_spent')}</div>
-        </div>
+        <StatTile
+          label={t('results.correct')}
+          tone="text-success"
+          valueTestId="result-correct"
+        >
+          <AnimatedNumber
+            value={result.correctCount}
+            from={0}
+            className="tabular-nums"
+          />
+        </StatTile>
+        <StatTile
+          label={t('results.incorrect')}
+          tone="text-danger"
+          valueTestId="result-incorrect"
+        >
+          <AnimatedNumber
+            value={result.incorrectCount}
+            from={0}
+            className="tabular-nums"
+          />
+        </StatTile>
+        <StatTile label={t('results.accuracy')} valueTestId="result-accuracy">
+          <AnimatedNumber value={accuracy} from={0} className="tabular-nums" />%
+        </StatTile>
+        <StatTile label={t('results.time_spent')} valueTestId="result-time">
+          {formatTime(result.timeSpent)}
+        </StatTile>
       </div>
 
       {/* Mistakes list */}
       {result.mistakes.length > 0 && (
-        <div className="mb-6 rounded-card bg-surface p-4 shadow-card">
-          <h2 className="mb-3 text-lg font-semibold text-text">
-            {t('results.mistakes_title')}
-          </h2>
+        <Card className="mb-6">
+          <SectionTitle>{t('results.mistakes_title')}</SectionTitle>
           <div className="flex flex-col gap-3">
             {result.mistakes.map((m, idx) => (
-              <div
-                key={idx}
-                className="rounded-tile bg-bg p-3 shadow-neu-inset-sm"
-              >
+              <Card key={idx} variant="inset" padding="sm">
                 <p className="mb-1 font-medium text-text">{m.question.text}</p>
                 <div className="flex flex-col gap-1 text-sm">
                   <span className="text-danger-ink">
@@ -194,10 +169,10 @@ export function ResultsScreen() {
                       .join(', ')}
                   </span>
                 </div>
-              </div>
+              </Card>
             ))}
           </div>
-        </div>
+        </Card>
       )}
 
       {/* Actions */}
