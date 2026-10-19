@@ -4,10 +4,12 @@
 
 import { useTranslation } from 'react-i18next'
 import { Link } from '@tanstack/react-router'
+import { Lock } from 'lucide-react'
 import { ACHIEVEMENTS } from '../../features/achievements/registry'
 import { useAchievementsStore } from '../../features/achievements/achievements-store'
 import { useProgressStore } from '../../features/progress/progress-store'
 import { xpProgress } from '../../features/progress/xp'
+import { buttonClass } from '../../shared/ui/button-styles'
 import { Card } from '../../shared/ui/card'
 import { PageTitle } from '../../shared/ui/heading'
 import { ProgressBar } from '../../shared/ui/progress-bar'
@@ -58,25 +60,25 @@ export function AchievementsScreen() {
       <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         {ACHIEVEMENTS.map((a) => {
           const date = unlocked[a.id]
+          const Icon = date ? a.icon : Lock
           return (
             <li
               key={a.id}
               data-testid={`achievement-${a.id}`}
               data-unlocked={date ? 'true' : 'false'}
-              aria-label={t(a.titleKey)}
-              className={cardClass(
-                'tile',
-                'md',
-                cx('flex items-start gap-3', !date && 'opacity-50 grayscale'),
-              )}
+              className={cardClass('tile', 'md', 'flex items-start gap-3')}
             >
-              <span aria-hidden="true" className="text-3xl">
-                {date ? a.icon : '🔒'}
-              </span>
+              <Icon
+                aria-hidden="true"
+                className={cx(
+                  'h-8 w-8 shrink-0',
+                  date ? 'text-warning-text' : 'text-text-3',
+                )}
+              />
               <div className="min-w-0">
                 <p className="font-bold text-text">{t(a.titleKey)}</p>
                 <p className="text-body text-text-2">{t(a.descriptionKey)}</p>
-                <p className="mt-1 text-caption text-text-3">
+                <p className="mt-1 text-caption text-text-2">
                   {date
                     ? t('achievements.unlocked_on', {
                         date: formatDate(date),
@@ -90,11 +92,8 @@ export function AchievementsScreen() {
       </ul>
 
       <div className="mt-6 text-center">
-        <Link
-          to="/stats"
-          className="text-body font-semibold text-primary hover:underline"
-        >
-          {t('app.nav.stats')} →
+        <Link to="/stats" className={buttonClass('secondary', 'md')}>
+          {t('app.nav.stats')}
         </Link>
       </div>
     </div>

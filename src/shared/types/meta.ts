@@ -2,6 +2,7 @@
  * Meta-layer types: statistics, achievements, XP/levels.
  */
 
+import type { LucideIcon } from 'lucide-react'
 import type { QuizMode } from './quiz'
 
 // ---------------------------------------------------------------------------
@@ -62,7 +63,7 @@ export interface StatsState {
 
 export interface Achievement {
   id: string
-  icon: string
+  icon: LucideIcon
   titleKey: string
   descriptionKey: string
   /**
