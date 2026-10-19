@@ -16,6 +16,7 @@ import { checkAchievements } from '../achievements/registry'
 import type { Achievement } from '../../shared/types/meta'
 import { useProgressStore } from '../progress/progress-store'
 import { toSessionSummary } from './to-session-summary'
+import { useProviderStore } from '../../shared/api/provider-store'
 
 export interface SessionMetrics {
   /** XP earned by the session. */
@@ -40,7 +41,10 @@ export function useSessionMetrics(): SessionMetrics | null {
     // Already folded into stats (remount / Strict Mode re-run) — bail out.
     if (statsStore.history[0]?.finishedAt === finishedAt) return
 
-    const summary = toSessionSummary(result)
+    const summary = {
+      ...toSessionSummary(result),
+      providerId: useProviderStore.getState().providerId,
+    }
 
     // Order matters: achievements see the post-session stats (cumulative
     // rules like «expert» count this session too), XP uses the session.

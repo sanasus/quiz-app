@@ -11,12 +11,14 @@ import { ProgressRing } from '../../shared/ui/progress-ring'
 import { StatTile } from '../../shared/ui/stat-tile'
 import { useProgressStore } from '../../features/progress/progress-store'
 import { useStatsStore } from '../../features/stats/stats-store'
+import { useProviderStore } from '../../shared/api/provider-store'
 import { xpProgress } from '../../features/progress/xp'
 
 export function HomeScreen() {
   const { t, i18n } = useTranslation()
   const xp = useProgressStore((s) => s.xp)
   const history = useStatsStore((s) => s.history)
+  const providerId = useProviderStore((s) => s.providerId)
   const bestStreak = useStatsStore((s) => s.bestStreak)
   const totalSessions = useStatsStore((s) => s.totalSessions)
 
@@ -40,7 +42,9 @@ export function HomeScreen() {
         <Link to="/setup" className={buttonClass('primary', 'lg')}>
           {t('home.start')}
         </Link>
-        {last ? (
+        {/* Category slugs differ per provider: only offer the shortcut when
+            the last session ran on the active one. */}
+        {last && last.providerId === providerId ? (
           <Link
             to="/quiz"
             search={{
