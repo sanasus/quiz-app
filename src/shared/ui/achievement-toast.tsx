@@ -81,9 +81,10 @@ export function AchievementToast({
               'pointer-events-auto flex w-full max-w-sm items-center gap-3 border-2 border-warning',
             )}
           >
-            <span aria-hidden="true" className="text-3xl">
-              {toast.icon}
-            </span>
+            <toast.icon
+              aria-hidden="true"
+              className="h-8 w-8 shrink-0 text-warning-text"
+            />
             <div className="min-w-0 flex-1">
               <p className="text-caption uppercase tracking-wide text-text-2">
                 {t('achievements.unlocked')}

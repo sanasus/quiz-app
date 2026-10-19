@@ -5,13 +5,14 @@
  */
 
 import type { KeyboardEvent } from 'react'
+import type { LucideIcon } from 'lucide-react'
 import { segmentClass } from './segment-styles'
 
 export interface SegmentedOption<T extends string> {
   value: T
   label: string
-  /** Optional leading emoji, decorative. */
-  icon?: string
+  /** Optional leading icon, decorative. */
+  icon?: LucideIcon
 }
 
 export interface SegmentedControlProps<T extends string> {
@@ -74,6 +75,7 @@ export function SegmentedControl<T extends string>({
     >
       {options.map((option) => {
         const checked = option.value === value
+        const Icon = option.icon
         return (
           <button
             key={option.value}
@@ -85,10 +87,11 @@ export function SegmentedControl<T extends string>({
             onClick={() => onChange(option.value)}
             className={`flex-1 min-w-20 ${segmentClass(checked)}`}
           >
-            {option.icon ? (
-              <span aria-hidden="true" className="mr-1">
-                {option.icon}
-              </span>
+            {Icon ? (
+              <Icon
+                aria-hidden="true"
+                className="mr-1.5 inline-block h-4 w-4 align-text-bottom"
+              />
             ) : null}
             {option.label}
           </button>

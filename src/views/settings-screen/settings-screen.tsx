@@ -5,6 +5,8 @@
 
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { Brain, Dices, FlaskConical, Monitor, Moon, Sun } from 'lucide-react'
+import type { LucideIcon } from 'lucide-react'
 import { useSettingsStore } from '../../app/settings-store'
 import type { ThemeSetting } from '../../app/settings-store'
 import { SegmentedControl, Toggle } from '../../shared/ui/segmented-control'
@@ -23,23 +25,23 @@ import { PageTitle } from '../../shared/ui/heading'
 const THEME_OPTIONS: ReadonlyArray<{
   value: ThemeSetting
   labelKey: 'settings.light' | 'settings.dark' | 'settings.system'
-  icon: string
+  icon: LucideIcon
 }> = [
-  { value: 'light', labelKey: 'settings.light', icon: '☀️' },
-  { value: 'dark', labelKey: 'settings.dark', icon: '🌙' },
-  { value: 'system', labelKey: 'settings.system', icon: '💻' },
+  { value: 'light', labelKey: 'settings.light', icon: Sun },
+  { value: 'dark', labelKey: 'settings.dark', icon: Moon },
+  { value: 'system', labelKey: 'settings.system', icon: Monitor },
 ]
 
 const LANGUAGE_OPTIONS = [
-  { value: 'en', label: 'English', icon: '🇬🇧' },
-  { value: 'ru', label: 'Русский', icon: '🇷🇺' },
+  { value: 'en', label: 'English' },
+  { value: 'ru', label: 'Русский' },
 ] as const
 
-// Decorative per-provider emoji (same pattern as THEME_OPTIONS).
-const PROVIDER_ICONS: Record<ProviderId, string> = {
-  quizapi: '🧠',
-  trivia: '🎲',
-  mock: '🧪',
+// Decorative per-provider icon (same pattern as THEME_OPTIONS).
+const PROVIDER_ICONS: Record<ProviderId, LucideIcon> = {
+  quizapi: Brain,
+  trivia: Dices,
+  mock: FlaskConical,
 }
 
 export function SettingsScreen() {
@@ -91,7 +93,6 @@ export function SettingsScreen() {
             options={LANGUAGE_OPTIONS.map((o) => ({
               value: o.value,
               label: o.label,
-              icon: o.icon,
             }))}
             value={(i18n.language === 'ru' ? 'ru' : 'en') as 'en' | 'ru'}
             onChange={changeLanguage}

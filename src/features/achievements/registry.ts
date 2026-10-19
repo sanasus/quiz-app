@@ -6,6 +6,15 @@
  * «category expert» see their own session's contribution).
  */
 
+import {
+  CalendarCheck,
+  Droplet,
+  Flame,
+  Gem,
+  GraduationCap,
+  ShieldCheck,
+  Zap,
+} from 'lucide-react'
 import type {
   Achievement,
   SessionSummary,
@@ -25,21 +34,21 @@ export const STREAK_10 = 10
 export const ACHIEVEMENTS: Achievement[] = [
   {
     id: 'first_blood',
-    icon: '🩸',
+    icon: Droplet,
     titleKey: 'achievements.first_blood',
     descriptionKey: 'achievements.first_blood_desc',
     check: (stats) => stats.totalSessions >= 1,
   },
   {
     id: 'streak_10',
-    icon: '🔥',
+    icon: Flame,
     titleKey: 'achievements.streak_10',
     descriptionKey: 'achievements.streak_10_desc',
     check: (_stats, session) => session.bestStreak >= STREAK_10,
   },
   {
     id: 'perfectionist',
-    icon: '💎',
+    icon: Gem,
     titleKey: 'achievements.perfectionist',
     descriptionKey: 'achievements.perfectionist_desc',
     check: (_stats, session) =>
@@ -49,7 +58,7 @@ export const ACHIEVEMENTS: Achievement[] = [
   },
   {
     id: 'speedster',
-    icon: '⚡',
+    icon: Zap,
     titleKey: 'achievements.speedster',
     descriptionKey: 'achievements.speedster_desc',
     check: (_stats, session) =>
@@ -59,7 +68,7 @@ export const ACHIEVEMENTS: Achievement[] = [
   },
   {
     id: 'survivor',
-    icon: '🛡️',
+    icon: ShieldCheck,
     titleKey: 'achievements.survivor',
     descriptionKey: 'achievements.survivor_desc',
     check: (_stats, session) =>
@@ -68,7 +77,7 @@ export const ACHIEVEMENTS: Achievement[] = [
   },
   {
     id: 'expert',
-    icon: '🎓',
+    icon: GraduationCap,
     titleKey: 'achievements.expert',
     descriptionKey: 'achievements.expert_desc',
     check: (stats) =>
@@ -76,7 +85,7 @@ export const ACHIEVEMENTS: Achievement[] = [
   },
   {
     id: 'persistent',
-    icon: '📅',
+    icon: CalendarCheck,
     titleKey: 'achievements.persistent',
     descriptionKey: 'achievements.persistent_desc',
     check: (stats) => consecutiveDays(stats.playDays) >= PERSISTENT_DAYS,
