@@ -155,7 +155,7 @@
   },
   "provider": {
     "quizapi": "QuizAPI",
-    "trivia": "The Trivia API",
+    "trivia": "Trivia API",
     "mock": "Mock data"
   },
   "provider_switch": {
