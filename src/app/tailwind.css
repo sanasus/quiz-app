@@ -30,6 +30,9 @@
   --color-info-hover: #0a5ea8;
   --color-on-info: #ffffff;
 
+  /* Streak flame — fire orange, an icon colour (3:1 on bg and surface). */
+  --color-streak: #d9480f;
+
   /* Base palette */
   --color-bg: #e6e2f6;
   --color-bg-2: #dcd7f0;
@@ -181,6 +184,8 @@
   --color-info: #74b9ff;
   --color-info-hover: #5aa8f8;
   --color-on-info: #06263f;
+
+  --color-streak: #ff7a45;
 
   --color-bg: #211d33;
   --color-bg-2: #1a1729;

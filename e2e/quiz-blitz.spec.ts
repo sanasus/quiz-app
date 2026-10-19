@@ -18,7 +18,7 @@ test.describe('Blitz mode', { tag: ['@slow'] }, () => {
 
   test('displays score and streak in header', async ({ page }) => {
     await expect(page.getByText(/Score:/)).toBeVisible()
-    await expect(page.getByText(/🔥/)).toBeVisible()
+    await expect(page.getByText(/Streak/)).toBeVisible()
   })
 
   // ---------------------------------------------------------------------------
