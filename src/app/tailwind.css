@@ -78,6 +78,14 @@
   --shadow-edge: 0 4px 0 1px rgb(25 20 54 / 0.16);
   /* Hover: button rises 2px, so the edge grows 2px — its bottom stays put. 1px spread: top-down light, shadow below and at the sides. */
   --shadow-edge-lift: 0 6px 0 1px rgb(25 20 54 / 0.16);
+  /* Neumorphic: top light (white) + bottom shade, soft; inset when pressed. */
+  --shadow-neu:
+    0 -3px 8px rgb(255 255 255 / 0.9), 0 5px 12px rgb(25 20 54 / 0.2);
+  --shadow-neu-lift:
+    0 -4px 12px rgb(255 255 255 / 1), 0 9px 20px rgb(25 20 54 / 0.26);
+  --shadow-neu-inset:
+    inset 0 -2px 6px rgb(255 255 255 / 0.7),
+    inset 0 4px 8px rgb(25 20 54 / 0.25);
 
   /* ---------------------------------------------------------------- */
   /* Animations                                                        */
@@ -151,6 +159,12 @@
   --shadow-pop: 0 8px 24px -10px rgb(162 155 254 / 0.5);
   --shadow-edge: 0 4px 0 1px rgb(0 0 0 / 0.45);
   --shadow-edge-lift: 0 6px 0 1px rgb(0 0 0 / 0.45);
+  --shadow-neu:
+    0 -3px 8px rgb(255 255 255 / 0.06), 0 5px 12px rgb(0 0 0 / 0.55);
+  --shadow-neu-lift:
+    0 -4px 12px rgb(255 255 255 / 0.09), 0 9px 20px rgb(0 0 0 / 0.65);
+  --shadow-neu-inset:
+    inset 0 -2px 6px rgb(255 255 255 / 0.05), inset 0 4px 8px rgb(0 0 0 / 0.6);
 }
 
 /* Global base styles */
