@@ -157,7 +157,7 @@ const CategoryDropdown = ({
 
                   {/* Categories */}
                   {isExpanded && (
-                    <div className="px-3 pb-2 grid grid-cols-2 gap-1.5">
+                    <div className="grid grid-cols-2 gap-3 px-2 pb-4 pt-3">
                       {topic.categories.map((cat) => {
                         const isSelected = selectedCategory === cat.slug
 
