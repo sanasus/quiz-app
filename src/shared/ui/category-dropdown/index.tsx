@@ -98,12 +98,11 @@ const CategoryDropdown = ({
         aria-expanded={open}
         aria-labelledby="category-label category-value"
         onClick={() => setOpen((prev) => !prev)}
-        className={`flex w-full items-center gap-2 rounded-lg border-[3px] px-4 py-2.5 text-left text-sm font-bold transition-colors cursor-pointer
-          ${
-            open
-              ? 'border-primary ring-2 ring-primary/20 bg-primary/5 text-primary-ink'
-              : 'border-transparent bg-bg text-text shadow-neu-inset hover:border-primary/50'
-          }`}
+        className={`flex w-full items-center gap-2 rounded-tile border-2 bg-bg px-4 py-2.5 text-left text-sm font-bold transition-[box-shadow,color,border-color] cursor-pointer ${
+          open
+            ? 'border-primary text-primary-ink shadow-neu-inset'
+            : 'border-transparent text-text shadow-neu hover:shadow-neu-lift'
+        }`}
       >
         <span id="category-value" className="flex-1 truncate">
           {displayText}
@@ -124,12 +123,11 @@ const CategoryDropdown = ({
               onSelect(null)
               setOpen(false)
             }}
-            className={`flex w-full items-center gap-2 px-4 py-2.5 text-sm font-bold transition-colors cursor-pointer
-              ${
-                selectedCategory === null
-                  ? 'bg-primary/10 text-primary-ink'
-                  : 'text-text-2 hover:bg-primary/5'
-              }`}
+            className={`m-2 flex w-[calc(100%-1rem)] items-center gap-2 rounded-tile border-2 px-4 py-2 text-sm font-bold transition-[box-shadow,color,border-color] cursor-pointer ${
+              selectedCategory === null || selectedCategory === 'all'
+                ? 'border-primary text-primary-ink shadow-neu-inset'
+                : 'border-transparent text-text-2 hover:text-text hover:shadow-neu'
+            }`}
           >
             <span>{t('common.all_categories')}</span>
           </button>
@@ -148,7 +146,7 @@ const CategoryDropdown = ({
                   <button
                     type="button"
                     onClick={() => handleTopicToggle(topic.id)}
-                    className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm font-bold text-text-2 hover:bg-primary/5 transition-colors cursor-pointer"
+                    className="flex w-full items-center gap-2 rounded-tile px-3 py-2 text-sm font-bold text-text-2 transition-[box-shadow,color] cursor-pointer hover:text-text hover:shadow-neu"
                   >
                     <span className="flex-1 text-left">{topic.name}</span>
                     <ChevronDown
@@ -168,12 +166,11 @@ const CategoryDropdown = ({
                             key={cat.id}
                             type="button"
                             onClick={() => handleCategorySelect(cat.slug)}
-                            className={`flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors cursor-pointer
-                              ${
-                                isSelected
-                                  ? 'bg-primary/20 text-primary-ink border-2 border-primary'
-                                  : 'text-text-2 hover:bg-primary/5 hover:text-text border-2 border-transparent'
-                              }`}
+                            className={`flex items-center gap-2 rounded-tile border-2 px-3 py-2 text-sm font-medium transition-[box-shadow,color,border-color] cursor-pointer ${
+                              isSelected
+                                ? 'border-primary text-primary-ink shadow-neu-inset'
+                                : 'border-transparent text-text-2 shadow-neu hover:text-text hover:shadow-neu-lift'
+                            }`}
                           >
                             <span className="truncate">{cat.name}</span>
                             {cat.quizCount != null && (
