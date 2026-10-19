@@ -45,7 +45,7 @@ export function NavItem({
       to={to}
       aria-current={active ? 'page' : undefined}
       className={cx(
-        'inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 text-sm font-medium transition-colors hover:bg-muted hover:text-text',
+        'inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 text-body font-medium transition-colors hover:bg-muted hover:text-text',
         active ? 'text-text shadow-neu-inset-sm' : 'text-text-2',
       )}
     >

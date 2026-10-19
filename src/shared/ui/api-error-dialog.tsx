@@ -54,12 +54,12 @@ export function ApiErrorDialog({
       </h2>
       <p
         id="api-error-message"
-        className={`text-sm text-text-2 ${errorMessage ? 'mb-2' : 'mb-6'}`}
+        className={`text-body text-text-2 ${errorMessage ? 'mb-2' : 'mb-6'}`}
       >
         {t('api_error.message', { provider: t(providerLabelKey) })}
       </p>
       {errorMessage ? (
-        <p className="mb-6 break-words text-xs text-text-2 opacity-75">
+        <p className="mb-6 break-words text-caption text-text-2 opacity-75">
           {errorMessage}
         </p>
       ) : null}

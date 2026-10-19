@@ -145,7 +145,7 @@ export function SettingsScreen() {
             value={providerId}
             onChange={handleProviderChange}
           />
-          <p className="text-xs text-text-2">
+          <p className="text-caption text-text-2">
             {t('settings.api_provider_hint')}
           </p>
         </section>
@@ -162,7 +162,7 @@ export function SettingsScreen() {
         onCancel={() => setPendingProvider(null)}
       />
 
-      <p className="mt-4 text-center text-sm text-text-3">
+      <p className="mt-4 text-center text-body text-text-3">
         {t('settings.theme_hint')}
       </p>
     </div>

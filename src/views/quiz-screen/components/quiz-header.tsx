@@ -44,7 +44,7 @@ export function QuizHeader({
     <div className="mb-6">
       <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
         <div>
-          <h2 className="text-xl font-bold text-text">
+          <h2 className="text-heading text-text">
             {t('quiz.question')} {progress}/{total}
           </h2>
         </div>

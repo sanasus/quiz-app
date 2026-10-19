@@ -33,7 +33,7 @@ export function HomeScreen() {
 
   return (
     <div className="mx-auto flex max-w-md flex-col items-center gap-6 px-4 py-10 animate-fade-in">
-      <h1 className="px-2 text-center text-3xl font-bold text-primary-ink sm:text-4xl">
+      <h1 className="px-2 text-center text-title text-primary-ink sm:text-display">
         {t('home.welcome')}
       </h1>
 
@@ -72,7 +72,7 @@ export function HomeScreen() {
           max={progress.need}
           label={t('home.xp_progress')}
         >
-          <span className="text-xs uppercase tracking-wide text-text-3">
+          <span className="text-caption uppercase tracking-wide text-text-3">
             {t('home.level')}
           </span>
           <span className="text-3xl font-bold leading-none text-text">
@@ -81,7 +81,7 @@ export function HomeScreen() {
         </ProgressRing>
         <div className="min-w-0">
           <p className="text-lg font-bold text-text">{xp} XP</p>
-          <p className="text-sm text-text-2">
+          <p className="text-body text-text-2">
             {progress.into}/{progress.need}
           </p>
         </div>
@@ -100,16 +100,16 @@ export function HomeScreen() {
       {/* Last session result */}
       {last ? (
         <Card className="w-full text-center" data-testid="home-last-result">
-          <p className="mb-1 text-xs uppercase tracking-wide text-text-3">
+          <p className="mb-1 text-caption uppercase tracking-wide text-text-3">
             {t('home.last_results')}
           </p>
-          <p className="text-2xl font-extrabold text-primary-ink">
+          <p className="text-stat text-primary-ink">
             {last.score}
           </p>
-          <p className="text-sm text-text-2">
+          <p className="text-body text-text-2">
             {last.correctCount}/{last.totalQuestions} · {last.accuracy}%
           </p>
-          <p className="mt-1 text-xs text-text-3">
+          <p className="mt-1 text-caption text-text-3">
             {formatSessionDate(last.finishedAt)}
           </p>
         </Card>

@@ -6,7 +6,7 @@ import { cx } from '../lib/cx'
 export function PageTitle({ className, ...rest }: ComponentProps<'h1'>) {
   return (
     <h1
-      className={cx('mb-6 text-center text-3xl font-bold text-text', className)}
+      className={cx('mb-6 text-center text-title text-text', className)}
       {...rest}
     />
   )
@@ -14,9 +14,6 @@ export function PageTitle({ className, ...rest }: ComponentProps<'h1'>) {
 
 export function SectionTitle({ className, ...rest }: ComponentProps<'h2'>) {
   return (
-    <h2
-      className={cx('mb-3 text-lg font-semibold text-text', className)}
-      {...rest}
-    />
+    <h2 className={cx('mb-3 text-subheading text-text', className)} {...rest} />
   )
 }
