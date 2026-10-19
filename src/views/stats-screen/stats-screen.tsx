@@ -5,6 +5,7 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { buttonClass } from '../../shared/ui/button-styles'
+import { Button } from '../../shared/ui/button'
 import { Link } from '@tanstack/react-router'
 import { useStatsStore } from '../../features/stats/stats-store'
 import {
@@ -293,13 +294,9 @@ export function StatsScreen() {
 
           {/* Reset */}
           <div className="text-center">
-            <button
-              type="button"
-              onClick={() => setConfirmReset(true)}
-              className="rounded-lg border-2 border-danger px-6 py-2.5 font-semibold text-danger transition-colors hover:bg-danger/10"
-            >
+            <Button variant="danger-soft" onClick={() => setConfirmReset(true)}>
               {t('stats.reset')}
-            </button>
+            </Button>
           </div>
 
           <ConfirmDialog

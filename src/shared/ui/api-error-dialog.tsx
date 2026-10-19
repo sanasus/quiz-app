@@ -9,6 +9,7 @@
 
 import { useEffect, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
+import { Button } from './button'
 
 export interface ApiErrorDialogProps {
   open: boolean
@@ -72,24 +73,23 @@ export function ApiErrorDialog({
           </p>
         ) : null}
         <div className="flex justify-end gap-3">
-          <button
-            type="button"
+          <Button
+            variant="ghost"
+            size="sm"
             // Wrapped on purpose: passing the raw handler would leak
             // the click event into a `changeProvider(next?)` caller,
             // which would swallow it as a provider id.
             onClick={() => onChangeApi()}
             disabled={busy}
-            className="rounded-lg border-2 border-border px-4 py-2 font-semibold text-text transition-colors hover:bg-muted disabled:cursor-not-allowed disabled:opacity-50"
             data-testid="api-error-change"
           >
             {t('api_error.change_api')}
-          </button>
-          <button
+          </Button>
+          <Button
             ref={retryRef}
-            type="button"
+            size="sm"
             onClick={() => onRetry()}
             disabled={busy}
-            className="rounded-lg bg-primary px-4 py-2 font-semibold text-on-primary transition-colors hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-50"
             data-testid="api-error-retry"
           >
             {retrying ? (
@@ -103,7 +103,7 @@ export function ApiErrorDialog({
             ) : (
               t('common.retry')
             )}
-          </button>
+          </Button>
         </div>
       </div>
     </div>

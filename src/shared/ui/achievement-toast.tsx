@@ -93,7 +93,7 @@ export function AchievementToast({
               type="button"
               aria-label={t('common.close')}
               onClick={() => onDismiss(toast.toastKey)}
-              className="shrink-0 rounded-md p-1.5 text-text-3 transition-colors hover:bg-muted hover:text-text"
+              className="shrink-0 rounded-full p-2 text-text-3 shadow-neu transition-shadow hover:text-text hover:shadow-neu-lift active:shadow-neu-inset-sm"
             >
               <X className="h-4 w-4" aria-hidden="true" />
             </button>

@@ -113,7 +113,7 @@ export function RootLayout() {
                   key={r.path}
                   to={r.path}
                   aria-current={pathname === r.path ? 'page' : undefined}
-                  className={`inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium transition-colors hover:bg-muted hover:text-text ${
+                  className={`inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 text-sm font-medium transition-colors hover:bg-muted hover:text-text ${
                     pathname === r.path
                       ? 'shadow-neu-inset-sm text-text'
                       : 'text-text-2'
@@ -130,7 +130,7 @@ export function RootLayout() {
               type="button"
               onClick={toggleLang}
               data-testid="lang-toggle"
-              className="rounded-md bg-bg px-3 py-1.5 text-xs font-semibold text-text shadow-neu transition-shadow hover:shadow-neu-lift"
+              className="rounded-full bg-bg px-4 py-1.5 text-xs font-semibold text-text shadow-neu transition-shadow hover:shadow-neu-lift active:shadow-neu-inset-sm"
               aria-label={t('app.language_current', { code: currentCode })}
             >
               {currentCode}
