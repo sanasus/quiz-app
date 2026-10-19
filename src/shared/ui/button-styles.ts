@@ -9,12 +9,12 @@ const base =
 const variants: Record<ButtonVariant, string> = {
   // Hard bottom edge that collapses on press — the "game" button.
   primary:
-    'bg-primary text-on-primary shadow-edge hover:bg-primary-hover hover:-translate-y-px active:translate-y-1 active:shadow-none disabled:hover:translate-y-0 disabled:hover:bg-primary',
+    'bg-primary text-on-primary shadow-edge hover:bg-primary-hover hover:-translate-y-0.5 hover:shadow-edge-lift active:translate-y-1 active:shadow-none disabled:hover:translate-y-0 disabled:hover:shadow-edge disabled:hover:bg-primary',
   secondary:
     'border-2 border-primary text-primary-ink hover:bg-primary/10 disabled:hover:bg-transparent',
   ghost: 'border border-border-strong text-text-2 hover:bg-muted',
   danger:
-    'bg-danger text-on-danger shadow-edge hover:bg-danger-hover active:translate-y-1 active:shadow-none',
+    'bg-danger text-on-danger shadow-edge hover:bg-danger-hover hover:-translate-y-0.5 hover:shadow-edge-lift active:translate-y-1 active:shadow-none',
 }
 
 const sizes: Record<ButtonSize, string> = {

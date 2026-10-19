@@ -76,6 +76,8 @@
   --shadow-pop: 0 8px 24px -10px rgb(108 92 231 / 0.55);
   /* Hard offset edge for "volumetric" buttons (collapse on :active). */
   --shadow-edge: 0 4px 0 0 rgb(25 20 54 / 0.16);
+  /* Hover: button rises 2px, so the edge grows 2px — its bottom stays put. */
+  --shadow-edge-lift: 0 6px 0 0 rgb(25 20 54 / 0.16);
 
   /* ---------------------------------------------------------------- */
   /* Animations                                                        */
@@ -148,6 +150,7 @@
     0 2px 4px rgb(0 0 0 / 0.45), 0 16px 34px -14px rgb(0 0 0 / 0.7);
   --shadow-pop: 0 8px 24px -10px rgb(162 155 254 / 0.5);
   --shadow-edge: 0 4px 0 0 rgb(0 0 0 / 0.45);
+  --shadow-edge-lift: 0 6px 0 0 rgb(0 0 0 / 0.45);
 }
 
 /* Global base styles */
