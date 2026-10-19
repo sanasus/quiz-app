@@ -10,6 +10,7 @@
 
 import { useNavigate } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
+import { Button } from '../../shared/ui/button'
 import { useQuizSessionStore } from '../../shared/lib/session-store'
 import { isDifficulty } from '../../shared/lib/difficulties'
 import { useCatalog } from '../../shared/api/quizapi'
@@ -171,13 +172,9 @@ export function SetupScreen() {
         >
           <p className="text-danger-ink">{t('setup.load_error')}</p>
           <p className="break-words text-xs text-text-2">{inlineError}</p>
-          <button
-            type="button"
-            onClick={retry}
-            className="self-start rounded-lg bg-primary px-4 py-2 text-on-primary"
-          >
+          <Button size="sm" className="self-start" onClick={retry}>
             {t('common.retry')}
-          </button>
+          </Button>
         </div>
       ) : null}
 

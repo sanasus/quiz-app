@@ -4,6 +4,7 @@
 
 import { useEffect, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
+import { Button } from './button'
 
 interface ConfirmDialogProps {
   open: boolean
@@ -65,21 +66,17 @@ export function ConfirmDialog({
           {message}
         </p>
         <div className="flex justify-end gap-3">
-          <button
-            type="button"
-            onClick={onCancel}
-            className="rounded-lg border-2 border-border px-4 py-2 font-semibold text-text transition-colors hover:bg-muted"
-          >
+          <Button variant="ghost" size="sm" onClick={onCancel}>
             {cancelLabel ?? t('common.cancel')}
-          </button>
-          <button
+          </Button>
+          <Button
             ref={confirmRef}
-            type="button"
+            variant="danger"
+            size="sm"
             onClick={onConfirm}
-            className="rounded-lg bg-danger px-4 py-2 font-semibold text-on-danger transition-colors hover:bg-danger/90"
           >
             {confirmLabel ?? t('common.confirm')}
-          </button>
+          </Button>
         </div>
       </div>
     </div>

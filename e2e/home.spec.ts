@@ -5,7 +5,7 @@ test.describe('Home page', () => {
     await page.goto('/')
     // Wait for page to be fully loaded
     await expect(
-      page.getByRole('heading', { name: '🏠 Welcome to QuizApp!' }),
+      page.getByRole('heading', { name: 'Welcome to QuizApp!' }),
     ).toBeVisible()
   })
 
@@ -15,7 +15,7 @@ test.describe('Home page', () => {
     async ({ page }) => {
       // Check heading is visible (includes emoji prefix)
       await expect(
-        page.getByRole('heading', { name: '🏠 Welcome to QuizApp!' }),
+        page.getByRole('heading', { name: 'Welcome to QuizApp!' }),
       ).toBeVisible()
 
       // Check start button is visible and links to /setup

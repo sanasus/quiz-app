@@ -4,6 +4,7 @@
 
 import { Link } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
+import { buttonClass } from '../../shared/ui/button-styles'
 import { useProgressStore } from '../../features/progress/progress-store'
 import { useStatsStore } from '../../features/stats/stats-store'
 import { xpProgress } from '../../features/progress/xp'
@@ -25,7 +26,7 @@ export function HomeScreen() {
   return (
     <div className="flex min-h-[60vh] flex-col items-center justify-center gap-6 animate-fade-in">
       <h1 className="px-2 text-center text-3xl font-bold text-primary sm:text-4xl">
-        🏠 {t('home.welcome')}
+        {t('home.welcome')}
       </h1>
 
       {/* Level / XP */}
@@ -77,10 +78,7 @@ export function HomeScreen() {
         </div>
       )}
 
-      <Link
-        to="/setup"
-        className="rounded-lg bg-primary px-6 py-3 text-lg font-bold text-on-primary shadow-md transition-[transform,box-shadow,background-color] hover:bg-primary-hover hover:shadow-lg hover:-translate-y-0.5 active:scale-[0.98] cursor-pointer"
-      >
+      <Link to="/setup" className={buttonClass('primary', 'lg')}>
         {t('home.start')}
       </Link>
     </div>

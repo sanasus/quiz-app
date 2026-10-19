@@ -78,7 +78,7 @@ export function SettingsScreen() {
       data-testid="settings-screen"
     >
       <h1 className="mb-8 text-center text-3xl font-bold text-text">
-        ⚙️ {t('settings.title')}
+        {t('settings.title')}
       </h1>
 
       <div className="flex flex-col gap-8 rounded-card border border-border bg-surface p-6 shadow-card">

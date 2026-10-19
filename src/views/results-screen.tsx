@@ -5,6 +5,7 @@
 import { useCallback, useState } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
+import { Button } from '../shared/ui/button'
 import { useQuizSessionStore } from '../shared/lib/session-store'
 import { useSessionMetrics } from '../features/meta/use-session-metrics'
 import {
@@ -199,21 +200,11 @@ export function ResultsScreen() {
       {/* Actions */}
       <div className="flex flex-col gap-3 sm:flex-row sm:justify-center">
         {result.mistakes.length > 0 && (
-          <button
-            type="button"
-            onClick={handleRepeatMistakes}
-            className="rounded-lg border-2 border-primary px-6 py-2.5 font-semibold text-primary transition-colors hover:bg-primary/10"
-          >
+          <Button variant="secondary" onClick={handleRepeatMistakes}>
             {t('results.repeat_mistakes')}
-          </button>
+          </Button>
         )}
-        <button
-          type="button"
-          onClick={handleNewQuiz}
-          className="rounded-lg bg-primary px-6 py-2.5 font-semibold text-on-primary shadow-sm transition-colors hover:bg-primary-hover"
-        >
-          {t('results.new_quiz')}
-        </button>
+        <Button onClick={handleNewQuiz}>{t('results.new_quiz')}</Button>
       </div>
 
       {/* Achievement unlock toasts */}

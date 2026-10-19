@@ -9,6 +9,7 @@
 
 import { useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
+import { X } from 'lucide-react'
 
 export interface AppToastProps {
   message: string
@@ -49,7 +50,7 @@ export function AppToast({
           onClick={onDismiss}
           className="shrink-0 rounded-md p-1.5 text-text-3 transition-colors hover:bg-muted hover:text-text"
         >
-          <span aria-hidden="true">✕</span>
+          <X className="h-4 w-4" aria-hidden="true" />
         </button>
       </div>
     </div>

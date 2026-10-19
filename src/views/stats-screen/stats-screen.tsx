@@ -4,6 +4,7 @@
 
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { buttonClass } from '../../shared/ui/button-styles'
 import { Link } from '@tanstack/react-router'
 import { useStatsStore } from '../../features/stats/stats-store'
 import {
@@ -108,7 +109,7 @@ export function StatsScreen() {
   return (
     <div className="mx-auto max-w-2xl px-4 py-8">
       <h1 className="mb-6 text-center text-3xl font-bold text-text">
-        📊 {t('stats.title')}
+        {t('stats.title')}
       </h1>
 
       {isEmpty ? (
@@ -116,7 +117,7 @@ export function StatsScreen() {
           <p className="mb-4 text-text-2">{t('stats.empty')}</p>
           <Link
             to="/setup"
-            className="inline-block rounded-lg bg-primary px-6 py-2.5 font-semibold text-on-primary transition-colors hover:bg-primary-hover"
+            className={buttonClass('primary', 'md', 'inline-flex')}
           >
             {t('home.start')}
           </Link>

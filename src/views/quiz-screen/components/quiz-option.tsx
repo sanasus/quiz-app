@@ -1,5 +1,6 @@
 import { memo } from 'react'
 import { motion } from 'motion/react'
+import { Check, X } from 'lucide-react'
 import { useMotionEnabled } from '../../../shared/lib/use-motion-enabled'
 
 export interface QuizOptionProps {
@@ -85,14 +86,13 @@ export const QuizOption = memo(function QuizOption({
         </span>
         <span className="min-w-0 break-words">{text}</span>
         {showResult && isCorrect ? (
-          <span className="ml-auto text-success-ink" aria-hidden="true">
-            ✓
-          </span>
+          <Check
+            className="ml-auto h-4 w-4 text-success-ink"
+            aria-hidden="true"
+          />
         ) : null}
         {showResult && isSelected && !isCorrect ? (
-          <span className="ml-auto text-danger-ink" aria-hidden="true">
-            ✗
-          </span>
+          <X className="ml-auto h-4 w-4 text-danger-ink" aria-hidden="true" />
         ) : null}
       </div>
     </motion.button>

@@ -8,6 +8,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { CategorySkeleton } from '../skeletons'
+import { ChevronDown } from 'lucide-react'
 
 export interface CategoryDropdownTopic {
   id: string
@@ -106,12 +107,10 @@ const CategoryDropdown = ({
         <span id="category-value" className="flex-1 truncate">
           {displayText}
         </span>
-        <span
+        <ChevronDown
           aria-hidden="true"
-          className={`text-xs text-text-2 transition-transform duration-200 ${open ? 'rotate-180' : ''}`}
-        >
-          ▼
-        </span>
+          className={`h-4 w-4 text-text-2 transition-transform duration-200 ${open ? 'rotate-180' : ''}`}
+        />
       </button>
 
       {/* Dropdown panel */}
@@ -151,12 +150,10 @@ const CategoryDropdown = ({
                     className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm font-bold text-text-2 hover:bg-primary/5 transition-colors cursor-pointer"
                   >
                     <span className="flex-1 text-left">{topic.name}</span>
-                    <span
+                    <ChevronDown
                       aria-hidden="true"
-                      className={`text-xs transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`}
-                    >
-                      ▼
-                    </span>
+                      className={`h-4 w-4 transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`}
+                    />
                   </button>
 
                   {/* Categories */}

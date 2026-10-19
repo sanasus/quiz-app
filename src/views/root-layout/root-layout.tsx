@@ -5,14 +5,22 @@
 
 import { Link, Outlet, useRouterState } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
+import {
+  Award,
+  BarChart3,
+  Home,
+  Play,
+  Settings,
+  type LucideIcon,
+} from 'lucide-react'
 import { useProviderStore } from '../../shared/api/provider-store'
 
-const routes = [
-  { path: '/', label: '🏠', key: 'app.nav.home' },
-  { path: '/setup', label: '🎯', key: 'app.nav.new_quiz' },
-  { path: '/stats', label: '📊', key: 'app.nav.stats' },
-  { path: '/achievements', label: '🏅', key: 'app.nav.achievements' },
-  { path: '/settings', label: '⚙️', key: 'app.nav.settings' },
+const routes: { path: string; icon: LucideIcon; key: string }[] = [
+  { path: '/', icon: Home, key: 'app.nav.home' },
+  { path: '/setup', icon: Play, key: 'app.nav.new_quiz' },
+  { path: '/stats', icon: BarChart3, key: 'app.nav.stats' },
+  { path: '/achievements', icon: Award, key: 'app.nav.achievements' },
+  { path: '/settings', icon: Settings, key: 'app.nav.settings' },
 ]
 
 // Attribution links for The Trivia API: its license (CC BY-NC 4.0)
@@ -105,11 +113,12 @@ export function RootLayout() {
                   key={r.path}
                   to={r.path}
                   aria-current={pathname === r.path ? 'page' : undefined}
-                  className={`rounded-md px-3 py-1.5 text-sm font-medium transition-colors hover:bg-muted hover:text-text ${
+                  className={`inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium transition-colors hover:bg-muted hover:text-text ${
                     pathname === r.path ? 'bg-muted text-text' : 'text-text-2'
                   }`}
                 >
-                  {r.label} {t(r.key)}
+                  <r.icon className="h-4 w-4" aria-hidden="true" />
+                  {t(r.key)}
                 </Link>
               ))}
             </nav>
@@ -138,13 +147,12 @@ export function RootLayout() {
               to={r.path}
               aria-label={t(r.key)}
               aria-current={pathname === r.path ? 'page' : undefined}
-              className={`flex flex-1 flex-col items-center justify-center py-2 text-xs transition-colors hover:text-text ${
+              className={`flex flex-1 flex-col items-center justify-center gap-0.5 py-2 text-[11px] transition-colors hover:text-text ${
                 pathname === r.path ? 'text-text' : 'text-text-3'
               }`}
             >
-              <span className="text-base" aria-hidden="true">
-                {r.label}
-              </span>
+              <r.icon className="h-5 w-5" aria-hidden="true" />
+              <span aria-hidden="true">{t(r.key)}</span>
             </Link>
           ))}
         </nav>
