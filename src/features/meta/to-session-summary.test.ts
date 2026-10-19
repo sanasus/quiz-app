@@ -38,7 +38,15 @@ describe('toSessionSummary', () => {
       mode: 'classic',
       difficulty: 'medium',
       category: 'Code',
+      categoryName: 'Code',
     })
+  })
+
+  it('derives a readable category name from the slug', () => {
+    const summary = toSessionSummary(
+      makeResult({ category: 'arts_and_literature' }),
+    )
+    expect(summary.categoryName).toBe('Arts and literature')
   })
 
   it('guards division by zero', () => {

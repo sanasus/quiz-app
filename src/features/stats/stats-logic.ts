@@ -38,17 +38,33 @@ export function toIsoDate(timestamp: number): string {
   return `${y}-${m}-${day}`
 }
 
+/**
+ * Readable name from a category slug: `arts_and_literature` →
+ * `Arts and literature`. Used when no real name is known (old data).
+ */
+export function formatCategorySlug(slug: string): string {
+  const words = slug
+    .replace(/[_\-\s]+/g, ' ')
+    .trim()
+    .toLowerCase()
+  return words.charAt(0).toUpperCase() + words.slice(1)
+}
+
 function addToMap(
   map: Record<string, CategoryStat>,
   key: string,
   correct: number,
   total: number,
+  label?: string,
 ): Record<string, CategoryStat> {
   const prev = map[key] ?? { correct: 0, total: 0 }
-  return {
-    ...map,
-    [key]: { correct: prev.correct + correct, total: prev.total + total },
+  const next: CategoryStat = {
+    correct: prev.correct + correct,
+    total: prev.total + total,
   }
+  const nextLabel = label ?? prev.label
+  if (nextLabel !== undefined) next.label = nextLabel
+  return { ...map, [key]: next }
 }
 
 /**
@@ -79,6 +95,7 @@ export function applySessionToStats(
       summary.category,
       summary.correctCount,
       summary.totalQuestions,
+      summary.categoryName ?? formatCategorySlug(summary.category),
     ),
     byDifficulty: addToMap(
       stats.byDifficulty,

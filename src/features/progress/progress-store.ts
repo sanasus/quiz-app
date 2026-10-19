@@ -10,9 +10,16 @@ import { createJSONStorage, persist } from 'zustand/middleware'
 import { z } from 'zod'
 import { sessionXp } from './xp'
 import type { SessionSummary } from '../../shared/types/meta'
+import { assertMigrationsMatchVersion } from '../../shared/lib/persist-guards'
 
 /** Bump when the schema changes. */
 export const PROGRESS_STORE_VERSION = 1
+
+/** Key = old version, value = upgrade step; one step per version bump. */
+const migrations: Record<number, (data: unknown) => unknown> = {
+  // v0 → v1 is a no-op rename.
+  0: (data) => data,
+}
 
 export const progressDataSchema = z.object({
   xp: z.number().int().nonnegative(),
@@ -45,9 +52,18 @@ export const useProgressStore = create<ProgressStore>()(
       version: PROGRESS_STORE_VERSION,
       storage: createJSONStorage(() => localStorage),
       migrate: (persisted, version) => {
-        // v0 → v1 is a no-op rename; anything older is wiped.
-        if (version < 0) return { xp: 0 }
-        return persisted
+        assertMigrationsMatchVersion(
+          'progress',
+          PROGRESS_STORE_VERSION,
+          Object.keys(migrations).length,
+        )
+        let data: unknown = persisted
+        for (let v = version; v < PROGRESS_STORE_VERSION; v++) {
+          const step = migrations[v]
+          if (!step) return { xp: 0 }
+          data = step(data)
+        }
+        return data
       },
       merge: (persisted, current) => {
         // Corrupt data must never break the app — fall back to 0 XP.

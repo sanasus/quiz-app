@@ -11,6 +11,7 @@ import { useStatsStore } from '../../features/stats/stats-store'
 import {
   averageStreak,
   bucketAccuracy,
+  formatCategorySlug,
   HISTORY_LIMIT,
   overallAccuracy,
 } from '../../features/stats/stats-logic'
@@ -103,6 +104,12 @@ export function StatsScreen() {
       timeStyle: 'short',
     }).format(new Date(timestamp))
 
+  /** Real name for a category slug; `all` is localized, the rest is stored. */
+  const categoryLabel = (slug: string, stored?: string): string =>
+    slug === 'all'
+      ? t('common.category_all')
+      : (stored ?? formatCategorySlug(slug))
+
   const handleReset = () => {
     resetStats()
     resetProgress()
@@ -181,7 +188,9 @@ export function StatsScreen() {
                   key={name}
                   className="flex items-center justify-between text-body"
                 >
-                  <span className="text-text">{name}</span>
+                  <span className="text-text">
+                    {categoryLabel(name, bucket.label)}
+                  </span>
                   <span className="text-text-2">
                     {bucket.correct}/{bucket.total} ·{' '}
                     <span className="font-semibold text-text">
@@ -233,7 +242,8 @@ export function StatsScreen() {
                     {formatSessionDate(s.finishedAt)}
                   </span>
                   <span className="text-text-2">
-                    {t(`setup.${s.mode}`, s.mode)} · {s.category} ·{' '}
+                    {t(`setup.${s.mode}`, s.mode)} ·{' '}
+                    {categoryLabel(s.category, s.categoryName)} ·{' '}
                     {s.correctCount}/{s.totalQuestions} ·{' '}
                     <span className="font-semibold text-text">{s.score}</span>
                   </span>

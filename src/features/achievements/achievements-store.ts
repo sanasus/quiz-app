@@ -6,9 +6,15 @@ import { create } from 'zustand'
 import { createJSONStorage, persist } from 'zustand/middleware'
 import { z } from 'zod'
 import type { UnlockedMap } from './registry'
+import { assertMigrationsMatchVersion } from '../../shared/lib/persist-guards'
 
 /** Bump when the schema changes. */
 export const ACHIEVEMENTS_STORE_VERSION = 1
+
+/** Key = old version, value = upgrade step; one step per version bump. */
+const migrations: Record<number, (data: unknown) => unknown> = {
+  0: (data) => data,
+}
 
 export const achievementsDataSchema = z.object({
   unlocked: z.record(z.string(), z.string().regex(/^\d{4}-\d{2}-\d{2}$/)),
@@ -44,8 +50,18 @@ export const useAchievementsStore = create<AchievementsStore>()(
       version: ACHIEVEMENTS_STORE_VERSION,
       storage: createJSONStorage(() => localStorage),
       migrate: (persisted, version) => {
-        if (version < 0) return { unlocked: {} }
-        return persisted
+        assertMigrationsMatchVersion(
+          'achievements',
+          ACHIEVEMENTS_STORE_VERSION,
+          Object.keys(migrations).length,
+        )
+        let data: unknown = persisted
+        for (let v = version; v < ACHIEVEMENTS_STORE_VERSION; v++) {
+          const step = migrations[v]
+          if (!step) return { unlocked: {} }
+          data = step(data)
+        }
+        return data
       },
       merge: (persisted, current) => {
         // Corrupt data must never break the app — fall back to empty.

@@ -6,15 +6,21 @@
  */
 
 import { z } from 'zod'
+import { assertMigrationsMatchVersion } from '../../shared/lib/persist-guards'
 import type { StatsState } from '../../shared/types/meta'
-import { createInitialStats, HISTORY_LIMIT } from './stats-logic'
+import {
+  createInitialStats,
+  formatCategorySlug,
+  HISTORY_LIMIT,
+} from './stats-logic'
 
 /** Bump when the schema changes; add a step to `migrations`. */
-export const STATS_STORE_VERSION = 1
+export const STATS_STORE_VERSION = 2
 
 const categoryStatSchema = z.object({
   correct: z.number().int().nonnegative(),
   total: z.number().int().nonnegative(),
+  label: z.string().optional(),
 })
 
 const sessionSummarySchema = z.object({
@@ -28,6 +34,7 @@ const sessionSummarySchema = z.object({
   mode: z.enum(['classic', 'timed', 'blitz', 'survival']),
   difficulty: z.enum(['easy', 'medium', 'hard']),
   category: z.string(),
+  categoryName: z.string().optional(),
   providerId: z.string().optional(),
 })
 
@@ -49,6 +56,8 @@ export type StatsData = z.infer<typeof statsDataSchema>
 /**
  * Versioned migrations: key = old version, value = upgrade step.
  * v0 → v1: introduce bestStreak/streakSum/playDays with defaults.
+ * v1 → v2: old data only has category slugs, so derive a readable label
+ * from each slug (`arts_and_literature` → `Arts and literature`).
  */
 const migrations: Record<
   number,
@@ -60,6 +69,32 @@ const migrations: Record<
     streakSum: 0,
     playDays: [],
   }),
+  1: (data) => {
+    const byCategory = isRecord(data.byCategory) ? data.byCategory : {}
+    const history = Array.isArray(data.history) ? data.history : []
+    return {
+      ...data,
+      byCategory: Object.fromEntries(
+        Object.entries(byCategory).map(([slug, bucket]) => [
+          slug,
+          isRecord(bucket) && bucket.label === undefined
+            ? { ...bucket, label: formatCategorySlug(slug) }
+            : bucket,
+        ]),
+      ),
+      history: history.map((entry: unknown) =>
+        isRecord(entry) &&
+        entry.categoryName === undefined &&
+        typeof entry.category === 'string'
+          ? { ...entry, categoryName: formatCategorySlug(entry.category) }
+          : entry,
+      ),
+    }
+  },
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value)
 }
 
 /**
@@ -71,6 +106,11 @@ export function parsePersistedStats(
   persisted: unknown,
   version: number,
 ): StatsState {
+  assertMigrationsMatchVersion(
+    'stats',
+    STATS_STORE_VERSION,
+    Object.keys(migrations).length,
+  )
   let data: unknown = persisted
   for (let v = version; v < STATS_STORE_VERSION; v++) {
     const step = migrations[v]

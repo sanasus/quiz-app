@@ -12,9 +12,15 @@ import { createJSONStorage, persist } from 'zustand/middleware'
 import { z } from 'zod'
 import { DEFAULT_PROVIDER_ID, USE_MOCK } from './providers'
 import type { ProviderId } from './providers'
+import { assertMigrationsMatchVersion } from '../lib/persist-guards'
 
 /** Bump when the persisted shape changes. */
 export const PROVIDER_STORE_VERSION = 1
+
+/** Key = old version, value = upgrade step; one step per version bump. */
+const migrations: Record<number, (data: unknown) => unknown> = {
+  0: (data) => data,
+}
 
 export const providerIdSchema = z.enum(['quizapi', 'trivia', 'mock'])
 
@@ -39,6 +45,20 @@ export const useProviderStore = create<ProviderStore>()(
       name: 'quiz-provider',
       version: PROVIDER_STORE_VERSION,
       storage: createJSONStorage(() => localStorage),
+      migrate: (persisted, version) => {
+        assertMigrationsMatchVersion(
+          'provider',
+          PROVIDER_STORE_VERSION,
+          Object.keys(migrations).length,
+        )
+        let data: unknown = persisted
+        for (let v = version; v < PROVIDER_STORE_VERSION; v++) {
+          const step = migrations[v]
+          if (!step) return undefined
+          data = step(data)
+        }
+        return data
+      },
       merge: (persisted, current) => {
         // Corrupt data must never break the app — fall back to the
         // default. Mock mode always wins over the persisted choice.
