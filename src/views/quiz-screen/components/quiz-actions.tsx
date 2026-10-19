@@ -1,5 +1,6 @@
 import { memo } from 'react'
 import { useTranslation } from 'react-i18next'
+import { Button } from '../../../shared/ui/button'
 import { AnimatedNumber } from '../../../shared/ui/animated-number'
 
 export interface QuizActionsProps {
@@ -40,29 +41,18 @@ export const QuizActions = memo(function QuizActions({
       <div className="flex gap-3">
         {status !== 'answered' ? (
           <>
-            <button
-              onClick={onSkip}
-              className="rounded-lg border border-border px-4 py-2 text-sm text-text-2 transition-colors hover:bg-muted"
-            >
+            <Button variant="ghost" size="sm" onClick={onSkip}>
               {t('quiz.skip')}
-            </button>
-            <button
-              onClick={onSubmit}
-              disabled={!hasSelection}
-              className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-on-primary transition-colors hover:bg-primary-hover disabled:opacity-50"
-            >
+            </Button>
+            <Button size="sm" onClick={onSubmit} disabled={!hasSelection}>
               {t('quiz.submit')}
-            </button>
+            </Button>
           </>
         ) : null}
         {status === 'answered' ? (
-          <button
-            onClick={onNext}
-            disabled={nextDisabled}
-            className="rounded-lg bg-primary px-6 py-2 text-sm font-semibold text-on-primary transition-colors hover:bg-primary-hover disabled:cursor-wait disabled:opacity-60"
-          >
+          <Button size="sm" onClick={onNext} disabled={nextDisabled}>
             {nextDisabled ? t('quiz.loading_next') : t('quiz.next')}
-          </button>
+          </Button>
         ) : null}
       </div>
     </div>

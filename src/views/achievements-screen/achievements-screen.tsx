@@ -8,6 +8,11 @@ import { ACHIEVEMENTS } from '../../features/achievements/registry'
 import { useAchievementsStore } from '../../features/achievements/achievements-store'
 import { useProgressStore } from '../../features/progress/progress-store'
 import { xpProgress } from '../../features/progress/xp'
+import { Card } from '../../shared/ui/card'
+import { PageTitle } from '../../shared/ui/heading'
+import { ProgressBar } from '../../shared/ui/progress-bar'
+import { cardClass } from '../../shared/ui/card-styles'
+import { cx } from '../../shared/lib/cx'
 
 export function AchievementsScreen() {
   const { t, i18n } = useTranslation()
@@ -24,12 +29,10 @@ export function AchievementsScreen() {
 
   return (
     <div className="mx-auto max-w-2xl px-4 py-8">
-      <h1 className="mb-6 text-center text-3xl font-bold text-text">
-        🏅 {t('achievements.title')}
-      </h1>
+      <PageTitle>{t('achievements.title')}</PageTitle>
 
       {/* Level / XP */}
-      <div className="mb-6 rounded-xl bg-surface p-4 shadow-md">
+      <Card className="mb-6">
         <div className="mb-2 flex items-baseline justify-between">
           <span className="text-lg font-bold text-text">
             {t('home.level')} {progress.level}
@@ -38,28 +41,18 @@ export function AchievementsScreen() {
             {xp} XP · {progress.into}/{progress.need}
           </span>
         </div>
-        <div
-          className="h-3 overflow-hidden rounded-full bg-muted"
-          role="progressbar"
-          aria-valuemin={0}
-          aria-valuemax={progress.need}
-          aria-valuenow={progress.into}
-          aria-label={t('achievements.xp_progress')}
-        >
-          <div
-            className="h-full rounded-full bg-primary"
-            style={{
-              width: `${Math.min(100, (progress.into / progress.need) * 100)}%`,
-            }}
-          />
-        </div>
+        <ProgressBar
+          value={progress.into}
+          max={progress.need}
+          label={t('achievements.xp_progress')}
+        />
         <p className="mt-2 text-right text-xs text-text-3">
           {t('achievements.unlocked_count', {
             unlocked: unlockedCount,
             total: ACHIEVEMENTS.length,
           })}
         </p>
-      </div>
+      </Card>
 
       {/* Grid */}
       <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -71,9 +64,11 @@ export function AchievementsScreen() {
               data-testid={`achievement-${a.id}`}
               data-unlocked={date ? 'true' : 'false'}
               aria-label={t(a.titleKey)}
-              className={`flex items-start gap-3 rounded-xl bg-surface p-4 shadow-sm ${
-                date ? '' : 'opacity-50 grayscale'
-              }`}
+              className={cardClass(
+                'tile',
+                'md',
+                cx('flex items-start gap-3', !date && 'opacity-50 grayscale'),
+              )}
             >
               <span aria-hidden="true" className="text-3xl">
                 {date ? a.icon : '🔒'}

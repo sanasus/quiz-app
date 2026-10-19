@@ -2,7 +2,7 @@
  * Provider registry — maps the `provider` query value onto an upstream
  * adapter. The client picks one provider per request; there is no
  * server-side fallback (the explicit client switch stays the single
- * source of truth, see docs/api-notes.md §28).
+ * source of truth, see docs/providers.md).
  *
  * Built once at bootstrap from env config and injected as a singleton.
  */

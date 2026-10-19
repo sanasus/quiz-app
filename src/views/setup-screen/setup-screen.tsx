@@ -10,6 +10,7 @@
 
 import { useNavigate } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
+import { Button } from '../../shared/ui/button'
 import { useQuizSessionStore } from '../../shared/lib/session-store'
 import { isDifficulty } from '../../shared/lib/difficulties'
 import { useCatalog } from '../../shared/api/quizapi'
@@ -23,6 +24,9 @@ import StartButton from '../../shared/ui/start-button'
 import { AppToast } from '../../shared/ui/app-toast'
 import { MODE_IDS } from '../../features/modes'
 import { useProviderFallback } from './hooks/use-provider-fallback'
+import { Card } from '../../shared/ui/card'
+import { PageTitle } from '../../shared/ui/heading'
+import { Field } from '../../shared/ui/field'
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -91,42 +95,36 @@ export function SetupScreen() {
 
   return (
     <div className="mx-auto max-w-lg px-4 py-8">
-      <h1 className="mb-6 text-center text-3xl font-bold text-text">
-        {t('setup.title')}
-      </h1>
+      <PageTitle>{t('setup.title')}</PageTitle>
 
-      <div className="flex flex-col gap-6 rounded-xl bg-surface p-6 shadow-md transition-shadow hover:shadow-lg">
+      <Card
+        padding="lg"
+        className="flex flex-col gap-6 transition-shadow hover:shadow-card-hover"
+      >
         {/* Category — custom dropdown */}
-        <div className="group">
-          <label
-            id="category-label"
-            className="mb-2 block text-sm font-medium text-text-2 group-hover:text-primary transition-colors cursor-default"
-          >
-            {t('setup.category')}
-          </label>
+        <Field label={t('setup.category')} labelId="category-label">
           <CategoryDropdown
             topics={catalog?.topics ?? []}
             selectedCategory={config.category}
             onSelect={(cat) => store.updateConfig({ category: cat ?? 'all' })}
             loading={loading}
           />
-        </div>
+        </Field>
 
         {/* Difficulty */}
-        <div className="group" role="group" aria-labelledby="difficulty-label">
-          <label
-            id="difficulty-label"
-            className="mb-2 block text-sm font-medium text-text-2 group-hover:text-primary transition-colors cursor-default"
-          >
-            {t('setup.difficulty')}
-          </label>
+        <Field
+          role="group"
+          aria-labelledby="difficulty-label"
+          label={t('setup.difficulty')}
+          labelId="difficulty-label"
+        >
           <DifficultySelector
             difficulties={difficulties}
             selectedDifficulty={config.difficulty}
             onSelect={(difficulty) => store.updateConfig({ difficulty })}
             loading={loading}
           />
-        </div>
+        </Field>
 
         {/* Question count — does not apply to survival (it loads the
             first batch of 10 and keeps batching until the API runs
@@ -139,28 +137,23 @@ export function SetupScreen() {
         ) : null}
 
         {/* Mode */}
-        <div
-          className="group"
+        <Field
           data-testid="mode-selector"
           role="group"
           aria-labelledby="mode-label"
+          label={t('setup.mode')}
+          labelId="mode-label"
         >
-          <label
-            id="mode-label"
-            className="mb-2 block text-sm font-medium text-text-2 group-hover:text-primary transition-colors cursor-default"
-          >
-            {t('setup.mode')}
-          </label>
           <ModeSelector
             modes={MODE_LABELS}
             selectedMode={config.mode}
             onSelect={(mode) => store.updateConfig({ mode })}
           />
-        </div>
+        </Field>
 
         {/* Start button */}
         <StartButton loading={loading} onClick={handleStart} />
-      </div>
+      </Card>
 
       {/* A failed setup fetch the auto-switch doesn't handle (user's
           network, or the fallback provider failing too). */}
@@ -171,13 +164,9 @@ export function SetupScreen() {
         >
           <p className="text-danger-ink">{t('setup.load_error')}</p>
           <p className="break-words text-xs text-text-2">{inlineError}</p>
-          <button
-            type="button"
-            onClick={retry}
-            className="self-start rounded-lg bg-primary px-4 py-2 text-on-primary"
-          >
+          <Button size="sm" className="self-start" onClick={retry}>
             {t('common.retry')}
-          </button>
+          </Button>
         </div>
       ) : null}
 

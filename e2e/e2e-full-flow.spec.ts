@@ -12,7 +12,7 @@ test(
     // 1. Start from home
     await page.goto('/')
     await expect(
-      page.getByRole('heading', { name: '🏠 Welcome to QuizApp!' }),
+      page.getByRole('heading', { name: 'Welcome to QuizApp!' }),
     ).toBeVisible()
 
     // 2. Navigate to setup

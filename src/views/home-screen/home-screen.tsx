@@ -4,9 +4,12 @@
 
 import { Link } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
+import { buttonClass } from '../../shared/ui/button-styles'
 import { useProgressStore } from '../../features/progress/progress-store'
 import { useStatsStore } from '../../features/stats/stats-store'
 import { xpProgress } from '../../features/progress/xp'
+import { Card } from '../../shared/ui/card'
+import { ProgressBar } from '../../shared/ui/progress-bar'
 
 export function HomeScreen() {
   const { t, i18n } = useTranslation()
@@ -25,14 +28,11 @@ export function HomeScreen() {
   return (
     <div className="flex min-h-[60vh] flex-col items-center justify-center gap-6 animate-fade-in">
       <h1 className="px-2 text-center text-3xl font-bold text-primary sm:text-4xl">
-        🏠 {t('home.welcome')}
+        {t('home.welcome')}
       </h1>
 
       {/* Level / XP */}
-      <div
-        className="w-full max-w-xs rounded-xl bg-surface p-4 shadow-md"
-        data-testid="home-level"
-      >
+      <Card className="w-full max-w-xs" data-testid="home-level">
         <div className="mb-2 flex items-baseline justify-between">
           <span className="font-bold text-text">
             {t('home.level')} {progress.level}
@@ -41,27 +41,17 @@ export function HomeScreen() {
             {xp} XP · {progress.into}/{progress.need}
           </span>
         </div>
-        <div
-          className="h-2 overflow-hidden rounded-full bg-muted"
-          role="progressbar"
-          aria-valuemin={0}
-          aria-valuemax={progress.need}
-          aria-valuenow={progress.into}
-          aria-label={t('home.xp_progress')}
-        >
-          <div
-            className="h-full rounded-full bg-primary"
-            style={{
-              width: `${Math.min(100, (progress.into / progress.need) * 100)}%`,
-            }}
-          />
-        </div>
-      </div>
+        <ProgressBar
+          value={progress.into}
+          max={progress.need}
+          label={t('home.xp_progress')}
+        />
+      </Card>
 
       {/* Last session result */}
       {last && (
-        <div
-          className="w-full max-w-xs rounded-xl bg-surface p-4 text-center shadow-md"
+        <Card
+          className="w-full max-w-xs text-center"
           data-testid="home-last-result"
         >
           <p className="mb-1 text-xs uppercase tracking-wide text-text-3">
@@ -74,13 +64,10 @@ export function HomeScreen() {
           <p className="mt-1 text-xs text-text-3">
             {formatSessionDate(last.finishedAt)}
           </p>
-        </div>
+        </Card>
       )}
 
-      <Link
-        to="/setup"
-        className="rounded-lg bg-primary px-6 py-3 text-lg font-bold text-on-primary shadow-md transition-[transform,box-shadow,background-color] hover:bg-primary-hover hover:shadow-lg hover:-translate-y-0.5 active:scale-[0.98] cursor-pointer"
-      >
+      <Link to="/setup" className={buttonClass('primary', 'lg')}>
         {t('home.start')}
       </Link>
     </div>

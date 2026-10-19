@@ -17,6 +17,8 @@ import {
   useQuizSessionStore,
 } from '../../shared/lib/session-store'
 import { useChangeProvider } from '../../features/provider/use-change-provider'
+import { Card } from '../../shared/ui/card'
+import { PageTitle } from '../../shared/ui/heading'
 
 const THEME_OPTIONS: ReadonlyArray<{
   value: ThemeSetting
@@ -77,11 +79,9 @@ export function SettingsScreen() {
       className="mx-auto max-w-lg animate-fade-in px-4 py-8"
       data-testid="settings-screen"
     >
-      <h1 className="mb-8 text-center text-3xl font-bold text-text">
-        ⚙️ {t('settings.title')}
-      </h1>
+      <PageTitle className="mb-8">{t('settings.title')}</PageTitle>
 
-      <div className="flex flex-col gap-8 rounded-card border border-border bg-surface p-6 shadow-card">
+      <Card padding="lg" className="flex flex-col gap-8">
         {/* Language */}
         <section className="flex flex-col gap-3">
           <h2 className="font-semibold text-text">{t('settings.language')}</h2>
@@ -149,7 +149,7 @@ export function SettingsScreen() {
             {t('settings.api_provider_hint')}
           </p>
         </section>
-      </div>
+      </Card>
 
       {/* Switching during a live session must be confirmed — the
           switch resets the session and returns to /setup. */}

@@ -1,0 +1,135 @@
+# Выбор провайдера вопросов и политика ошибок
+
+## 1. Провайдеры
+
+**Провайдеры** — реестр `PROVIDERS` в `src/shared/api/providers.ts`:
+
+- `quizapi` — quizapi.io, требует API-ключ, который хранится только на
+  сервере (`QUIZAPI_KEY`, см. docs/proxy-server.md);
+- `trivia` — The Trivia API v2, `https://the-trivia-api.com/v2`,
+  бесплатно и без ключа; справка по The Trivia API v2 — в
+  docs/trivia-upstream.md;
+- `mock` — встроенные мок-данные (dev/e2e): включается только через
+  `VITE_USE_MOCK_DATA=true`; в переключателе настроек опция mock
+  появляется лишь пока mock — активный источник (ручного возврата нет,
+  при следующей загрузке решает env-флаг). Единственный провайдер,
+  который считает данные в браузере: он не ходит в прокси
+  (docs/proxy-server.md).
+
+## 2. Активный провайдер
+
+Активный провайдер — `providerId` в persist-сторе `quiz-provider`
+(`src/shared/api/provider-store.ts`, `version: 1`); он входит в ключи
+всех quiz-запросов `['quiz', providerId, ...]`, поэтому запросы разных
+провайдеров не делят кэш. При `USE_MOCK` merge стора форсирует `mock`
+при каждой загрузке страницы. По умолчанию
+`DEFAULT_PROVIDER_ID = USE_MOCK ? 'mock' : 'quizapi'`.
+
+## 3. Правило: моки для всего API
+
+> **При добавлении любого нового API-эндпоинта — обязательно создай
+> мок-данные.**
+
+Все моки хранятся в `src/shared/api/mock-*.ts` и включаются через
+`VITE_USE_MOCK_DATA=true` в `.env`.
+
+- `mock-data.ts` — `mockDelay()`, `fetchMockMetadata()`
+- `mock-categories.ts` — `fetchMockCategories()`
+- `mock-questions.ts` — `fetchMockQuestions()`
+
+Каждый мок должен:
+
+1. Иметь асинхронную функцию с `await mockDelay()` (800ms) для
+   видимости skeleton-загрузчиков.
+2. Возвращать данные, совместимые с внутренними типами (`Question`,
+   `Topic`, `Category`, `ApiMetadata`).
+3. Покрывать все фильтры, которые использует UI (difficulty, category,
+   questionCount).
+
+## 4. Явное переключение
+
+Прозрачного авто-фолбэка (раньше `withFallback`) нет — источник
+вопросов меняется только явно:
+
+1. **Селектор в `/settings`** («Question source») — `changeProvider(id)`;
+   при активной сессии требуется подтверждение (диалог предупреждает о
+   сбросе).
+2. **Диалог на `/quiz`** (`ApiErrorDialog`) — когда упали вопросы
+   сессии: начальный запрос или survival-батч. «Question source
+   unavailable»: Retry (повтор того же провайдера) или Change API
+   (переключение на `alternateProviderId`). Закрыть диалог нельзя —
+   Escape и клики по подложке игнорируются.
+3. **Авто-смена на `/setup`** — если каталог (сложности + категории)
+   упал broken-ошибкой (см. ниже), приложение само переключается на
+   другого провайдера и показывает тост «Question source changed».
+
+Любая смена провайдера делает одно и то же
+(`src/features/provider/use-change-provider.ts`): `setProviderId` →
+`removeQueries(['quiz'])` → `reset()` сессии → навигация на `/setup`.
+
+## 5. Политика ошибок
+
+Все ошибки API типизированы (`QuizApiError.kind`,
+`src/shared/api/errors.ts`):
+
+| kind | Смысл | Реакция |
+| --- | --- | --- |
+| `network` | обрыв сети пользователя | ретраи того же провайдера (до 2); на `/setup` — inline-alert с Retry, провайдер **не** меняется |
+| `timeout` | провайдер завис дольше 10 с (HAR-подтверждено) | провайдер сломан: на `/quiz` — диалог Retry/Change API; на `/setup` — авто-смена + тост, без авто-retry |
+| `auth`, `rate_limit`, `parse`, `http` | провайдер сломан | на `/quiz` — диалог Retry/Change API; на `/setup` — авто-смена + тост |
+
+Ретраи: `retryQuestions` — только network до 2 повторов; timeout и
+остальные kind падают сразу (fail fast — смена провайдера без ожидания
+повторов). Каталог использует дефолт React Query (2 повтора). Браузер
+ограничивает свой запрос к прокси `AbortSignal.timeout(15_000)` —
+дольше апстрим-таймаута сервера (10 с), чтобы ответ 504 успевал прийти
+раньше собственного abort и уходил как `timeout`, а не как обрыв
+соединения.
+
+## 6. Survival-батчи
+
+Режим «Выживание» грузит вопросы порциями, а не всю выдачу целиком.
+Живой quizapi-вызов идёт с `random=true` — перемешанные выдачи не дают
+устойчивой пагинации, поэтому дубликаты между батчами отсекаются на
+клиенте по `id` (см. `addQuestionBatch` в
+`src/shared/lib/session-store.ts`; `added === 0` →
+`questionsExhausted`). При этом клиент шлёт `limit`/`offset` в каждом
+запросе (`backend-client.ts`, сервер Stateless): провайдер quizapi
+форвардит `offset` апстриму рядом с `random=true`, trivia v2 `offset`
+сейчас игнорирует (см. docs/trivia-upstream.md). Гарантированно не
+пересекающиеся слайсы есть только в моке (`mock-questions.ts`), где
+один и тот же пул режется по `offset` на не пересекающиеся слайсы:
+начальная порция —
+`getInitialFetchLimit` (для «Выживания» всегда 10, настройка
+количества вопросов не действует), далее батчи по
+`SURVIVAL_BATCH_SIZE = 10`, пока пул не кончится.
+
+## 7. Атрибуция CC BY-NC 4.0
+
+Атрибуция **CC BY-NC 4.0** обязательна — футер показывает её только при
+активном trivia (ключи `app.footer_trivia_*` в `src/locales/en.json` и
+`ru.json`). Подробности — в docs/trivia-upstream.md.
+
+## 8. Код
+
+**Код:** клиент — `src/shared/api/backend-client.ts`, реестр и
+альтернатива — `src/shared/api/providers.ts`, стор —
+`src/shared/api/provider-store.ts`, zod-схемы ответов прокси —
+`src/shared/api/backend.schemas.ts`, тесты —
+`src/shared/api/quizapi-dispatch.test.ts`, `providers.test.ts`,
+`provider-store.test.ts`; e2e — `e2e/provider-switch.spec.ts`
+(фикстуры ответов прокси — `e2e/api-fixtures.ts`).
+
+## 9. Открытые вопросы
+
+1. **Оба провайдера упали.** Пользователь может переключаться
+   туда-сюда сколько угодно: авто-смена на `/setup` ограничена одним
+   разом за mount (`switchedFrom` в
+   `src/views/setup-screen/hooks/use-provider-fallback.ts`), но ручные
+   переключения — из диалога на `/quiz` и из настроек — ничем не
+   ограничены. Варианты: помнить, куда уже переключались, и блокировать
+   повторно; разрешать только Retry у последнего упавшего провайдера;
+   либо единая «деградированная» страница. Решение не принято.
+2. **Legal-review атрибуции.** Футер показывает CC BY-NC 4.0 только при
+   активном trivia; юридически это не согласовано. Фолбэк-вариант —
+   показывать обе подписи всегда.

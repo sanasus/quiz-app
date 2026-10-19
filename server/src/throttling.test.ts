@@ -2,7 +2,7 @@
  * Rate limiting — the proxy's own budget, not the provider's.
  *
  * The client's policy switches providers when it sees the typed error
- * envelope (docs/api-notes.md §29). So the throttle must answer
+ * envelope (docs/proxy-server.md). So the throttle must answer
  * with Nest's plain 429 body: wearing the envelope would make the app
  * blame — and switch away from — a perfectly healthy provider because
  * *we* hit a local limit. This file pins that, and the exemption for

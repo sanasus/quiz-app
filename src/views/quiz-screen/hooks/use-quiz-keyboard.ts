@@ -4,7 +4,7 @@
  * - 1–6: toggle the option in that position
  * - Enter: submit the selection, or advance when already answered
  * - Esc: clear the current selection (manual pause was rejected by
- *   design — PLAN.md §15.1; timed modes pause automatically while the
+ *   design — PLAN.md §2.1; timed modes pause automatically while the
  *   answer is shown)
  *
  * Keys are ignored while focus sits in a form control or on a button

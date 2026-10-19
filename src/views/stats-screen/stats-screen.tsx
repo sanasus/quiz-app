@@ -4,6 +4,8 @@
 
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { buttonClass } from '../../shared/ui/button-styles'
+import { Button } from '../../shared/ui/button'
 import { Link } from '@tanstack/react-router'
 import { useStatsStore } from '../../features/stats/stats-store'
 import {
@@ -16,6 +18,11 @@ import { useProgressStore } from '../../features/progress/progress-store'
 import { useAchievementsStore } from '../../features/achievements/achievements-store'
 import { xpProgress } from '../../features/progress/xp'
 import { ConfirmDialog } from '../../shared/ui/confirm-dialog'
+import { Card } from '../../shared/ui/card'
+import { Chip } from '../../shared/ui/chip'
+import { PageTitle, SectionTitle } from '../../shared/ui/heading'
+import { StatTile } from '../../shared/ui/stat-tile'
+import { ProgressBar } from '../../shared/ui/progress-bar'
 
 /**
  * Rough number of history rows that fit without scrolling; beyond this
@@ -47,10 +54,8 @@ function AccuracyChart({
   })
 
   return (
-    <div className="mb-6 rounded-xl bg-surface p-4 shadow-md">
-      <h2 className="mb-3 text-lg font-semibold text-text">
-        {t('stats.chart_title')}
-      </h2>
+    <Card className="mb-6">
+      <SectionTitle>{t('stats.chart_title')}</SectionTitle>
       <svg
         viewBox={`0 0 ${W} ${H}`}
         className="h-28 w-full"
@@ -70,7 +75,7 @@ function AccuracyChart({
         <span>{t('stats.chart_oldest')}</span>
         <span>{t('stats.chart_latest')}</span>
       </div>
-    </div>
+    </Card>
   )
 }
 
@@ -107,63 +112,49 @@ export function StatsScreen() {
 
   return (
     <div className="mx-auto max-w-2xl px-4 py-8">
-      <h1 className="mb-6 text-center text-3xl font-bold text-text">
-        📊 {t('stats.title')}
-      </h1>
+      <PageTitle>{t('stats.title')}</PageTitle>
 
       {isEmpty ? (
-        <div className="rounded-xl bg-surface p-8 text-center shadow-md">
+        <Card padding="xl" className="text-center">
           <p className="mb-4 text-text-2">{t('stats.empty')}</p>
           <Link
             to="/setup"
-            className="inline-block rounded-lg bg-primary px-6 py-2.5 font-semibold text-on-primary transition-colors hover:bg-primary-hover"
+            className={buttonClass('primary', 'md', 'inline-flex')}
           >
             {t('home.start')}
           </Link>
-        </div>
+        </Card>
       ) : (
         <>
           {/* Totals */}
           <div className="mb-6 grid grid-cols-2 gap-4 sm:grid-cols-4">
-            <div className="rounded-xl bg-surface p-4 text-center shadow-sm">
-              <div
-                data-testid="stats-sessions"
-                className="text-2xl font-bold text-text"
-              >
-                {stats.totalSessions}
-              </div>
-              <div className="text-xs text-text-2">
-                {t('stats.total_sessions')}
-              </div>
-            </div>
-            <div className="rounded-xl bg-surface p-4 text-center shadow-sm">
-              <div
-                data-testid="stats-accuracy"
-                className="text-2xl font-bold text-primary"
-              >
-                {overallAccuracy(stats)}%
-              </div>
-              <div className="text-xs text-text-2">{t('stats.accuracy')}</div>
-            </div>
-            <div className="rounded-xl bg-surface p-4 text-center shadow-sm">
-              <div className="text-2xl font-bold text-success">
-                {averageStreak(stats)}
-              </div>
-              <div className="text-xs text-text-2">{t('stats.avg_streak')}</div>
-            </div>
-            <div className="rounded-xl bg-surface p-4 text-center shadow-sm">
-              <div
-                data-testid="stats-best-score"
-                className="text-2xl font-bold text-warning-text"
-              >
-                {stats.bestScore}
-              </div>
-              <div className="text-xs text-text-2">{t('stats.best_score')}</div>
-            </div>
+            <StatTile
+              label={t('stats.total_sessions')}
+              valueTestId="stats-sessions"
+            >
+              {stats.totalSessions}
+            </StatTile>
+            <StatTile
+              label={t('stats.accuracy')}
+              tone="text-primary"
+              valueTestId="stats-accuracy"
+            >
+              {overallAccuracy(stats)}%
+            </StatTile>
+            <StatTile label={t('stats.avg_streak')} tone="text-success">
+              {averageStreak(stats)}
+            </StatTile>
+            <StatTile
+              label={t('stats.best_score')}
+              tone="text-warning-text"
+              valueTestId="stats-best-score"
+            >
+              {stats.bestScore}
+            </StatTile>
           </div>
 
           {/* Level / XP */}
-          <div className="mb-6 rounded-xl bg-surface p-4 shadow-md">
+          <Card className="mb-6">
             <div className="mb-2 flex items-baseline justify-between">
               <span className="font-semibold text-text">
                 {t('home.level')} {progress.level}
@@ -172,30 +163,18 @@ export function StatsScreen() {
                 {xp} {t('stats.xp_unit')}
               </span>
             </div>
-            <div
-              className="h-2 overflow-hidden rounded-full bg-muted"
-              role="progressbar"
-              aria-valuemin={0}
-              aria-valuemax={progress.need}
-              aria-valuenow={progress.into}
-              aria-label={t('stats.xp_progress')}
-            >
-              <div
-                className="h-full rounded-full bg-primary transition-[width]"
-                style={{
-                  width: `${Math.min(100, (progress.into / progress.need) * 100)}%`,
-                }}
-              />
-            </div>
-          </div>
+            <ProgressBar
+              value={progress.into}
+              max={progress.need}
+              label={t('stats.xp_progress')}
+            />
+          </Card>
 
           <AccuracyChart history={stats.history} />
 
           {/* Accuracy by category */}
-          <div className="mb-6 rounded-xl bg-surface p-4 shadow-md">
-            <h2 className="mb-3 text-lg font-semibold text-text">
-              {t('stats.by_category')}
-            </h2>
+          <Card className="mb-6">
+            <SectionTitle>{t('stats.by_category')}</SectionTitle>
             <ul className="flex flex-col gap-2">
               {Object.entries(stats.byCategory).map(([name, bucket]) => (
                 <li
@@ -212,13 +191,11 @@ export function StatsScreen() {
                 </li>
               ))}
             </ul>
-          </div>
+          </Card>
 
           {/* Accuracy by difficulty */}
-          <div className="mb-6 rounded-xl bg-surface p-4 shadow-md">
-            <h2 className="mb-3 text-lg font-semibold text-text">
-              {t('stats.by_difficulty')}
-            </h2>
+          <Card className="mb-6">
+            <SectionTitle>{t('stats.by_difficulty')}</SectionTitle>
             <ul className="flex flex-col gap-2">
               {Object.entries(stats.byDifficulty).map(([name, bucket]) => (
                 <li
@@ -235,16 +212,13 @@ export function StatsScreen() {
                 </li>
               ))}
             </ul>
-          </div>
+          </Card>
 
           {/* History — scrollable when the list gets long */}
-          <div className="mb-6 rounded-xl bg-surface p-4 shadow-md">
-            <h2
-              id="history-heading"
-              className="mb-3 text-lg font-semibold text-text"
-            >
+          <Card className="mb-6">
+            <SectionTitle id="history-heading">
               {t('stats.history')}
-            </h2>
+            </SectionTitle>
             <ul
               aria-labelledby="history-heading"
               tabIndex={stats.history.length > HISTORY_VISIBLE_ROWS ? 0 : -1}
@@ -266,39 +240,28 @@ export function StatsScreen() {
                 </li>
               ))}
             </ul>
-          </div>
+          </Card>
 
           {/* Play days */}
           {stats.playDays.length > 0 && (
-            <div className="mb-6 rounded-xl bg-surface p-4 shadow-md">
-              <h2 className="mb-3 text-lg font-semibold text-text">
-                {t('stats.play_days')}
-              </h2>
+            <Card className="mb-6">
+              <SectionTitle>{t('stats.play_days')}</SectionTitle>
               <div className="flex flex-wrap gap-2">
                 {[...stats.playDays]
                   .reverse()
                   .slice(0, 14)
                   .map((day) => (
-                    <span
-                      key={day}
-                      className="rounded-full bg-muted px-3 py-1 text-xs text-text-2"
-                    >
-                      {formatDate(day)}
-                    </span>
+                    <Chip key={day}>{formatDate(day)}</Chip>
                   ))}
               </div>
-            </div>
+            </Card>
           )}
 
           {/* Reset */}
           <div className="text-center">
-            <button
-              type="button"
-              onClick={() => setConfirmReset(true)}
-              className="rounded-lg border-2 border-danger px-6 py-2.5 font-semibold text-danger transition-colors hover:bg-danger/10"
-            >
+            <Button variant="danger-soft" onClick={() => setConfirmReset(true)}>
               {t('stats.reset')}
-            </button>
+            </Button>
           </div>
 
           <ConfirmDialog

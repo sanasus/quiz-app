@@ -14,7 +14,7 @@ import {
 } from './fixtures'
 
 /**
- * Provider switching e2e — policy matrix in docs/api-notes.md §28.
+ * Provider switching e2e — policy matrix in docs/providers.md.
  *
  * The dev server runs with VITE_USE_MOCK_DATA=true: every page load
  * re-forces providerId to 'mock', so each scenario starts with
@@ -37,7 +37,7 @@ test.describe('Provider switching', () => {
       await expect(dropdown).toContainText('Physics')
 
       // SPA navigation only — a reload would re-force providerId.
-      await page.getByRole('link', { name: '⚙️ Settings' }).click()
+      await page.getByRole('link', { name: 'Settings' }).click()
       await expect(page).toHaveURL(/\/settings/)
 
       // No active session → no confirmation dialog, straight to /setup.
@@ -171,7 +171,7 @@ test.describe('Provider switching', () => {
     await expect(toast).toHaveCount(0, { timeout: 10_000 })
 
     // The provider stayed on trivia after the toast cycle.
-    await page.getByRole('link', { name: '⚙️ Settings' }).click()
+    await page.getByRole('link', { name: 'Settings' }).click()
     await expect(page).toHaveURL(/\/settings/)
     await expect(
       page

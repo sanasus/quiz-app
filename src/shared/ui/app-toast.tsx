@@ -9,6 +9,9 @@
 
 import { useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
+import { X } from 'lucide-react'
+import { Card } from './card'
+import { IconButton } from './icon-button'
 
 export interface AppToastProps {
   message: string
@@ -38,20 +41,18 @@ export function AppToast({
       aria-live="polite"
       className="fixed inset-x-0 top-4 z-50 flex justify-center px-4"
     >
-      <div className="flex w-full max-w-sm items-center gap-3 rounded-xl border-2 border-primary bg-surface p-4 shadow-lg">
+      <Card
+        variant="overlay"
+        className="flex w-full max-w-sm items-center gap-3 border-2 border-primary"
+      >
         <div className="min-w-0 flex-1">
           {title ? <p className="mb-0.5 font-bold text-text">{title}</p> : null}
           <p className="text-sm text-text">{message}</p>
         </div>
-        <button
-          type="button"
-          aria-label={t('common.close')}
-          onClick={onDismiss}
-          className="shrink-0 rounded-md p-1.5 text-text-3 transition-colors hover:bg-muted hover:text-text"
-        >
-          <span aria-hidden="true">✕</span>
-        </button>
-      </div>
+        <IconButton aria-label={t('common.close')} onClick={onDismiss}>
+          <X className="h-4 w-4" aria-hidden="true" />
+        </IconButton>
+      </Card>
     </div>
   )
 }

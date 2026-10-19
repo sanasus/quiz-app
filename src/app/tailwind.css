@@ -31,29 +31,33 @@
   --color-on-info: #ffffff;
 
   /* Base palette */
-  --color-bg: #f6f4ff;
-  --color-bg-2: #efeaff;
-  --color-bg-3: #e7e0ff;
-  --color-surface: #ffffff;
-  --color-surface-hover: #f2eeff;
-  --color-border: #e2dbf7;
+  --color-bg: #e6e2f6;
+  --color-bg-2: #dcd7f0;
+  --color-bg-3: #d2ccea;
+  --color-surface: #e6e2f6;
+  --color-surface-hover: #ebe8f8;
+  --color-border: #cfc9e6;
+  /* 3:1 on bg and surface — borders that define a control, not a divider. */
+  --color-border-strong: #7468a6;
   --color-text: #191436;
   --color-text-2: #47406b;
-  --color-text-3: #716a97;
+  --color-text-3: #5f5886;
   --color-foreground: #191436;
-  --color-card: #ffffff;
+  --color-card: #e6e2f6;
   --color-card-foreground: #191436;
-  --color-popover: #ffffff;
+  --color-popover: #e6e2f6;
   --color-popover-foreground: #191436;
-  --color-muted: #efeaff;
-  --color-muted-foreground: #716a97;
-  --color-accent: #efeaff;
+  --color-muted: #dcd7f0;
+  --color-muted-foreground: #5f5886;
+  --color-accent: #dcd7f0;
   --color-accent-foreground: #191436;
 
   /* ---------------------------------------------------------------- */
   /* Type                                                              */
   /* ---------------------------------------------------------------- */
-  --font-display: var(--font-sans), system-ui, sans-serif;
+  --font-sans:
+    'Inter Variable', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-display: var(--font-sans);
 
   /* ---------------------------------------------------------------- */
   /* Radii — thick, game-like                                          */
@@ -61,17 +65,6 @@
   --radius-card: 1.25rem;
   --radius-tile: 1rem;
   --radius-pill: 9999px;
-
-  /* ---------------------------------------------------------------- */
-  /* Shadows                                                           */
-  /* ---------------------------------------------------------------- */
-  --shadow-card:
-    0 1px 2px rgb(25 20 54 / 0.06), 0 10px 28px -14px rgb(25 20 54 / 0.3);
-  --shadow-card-hover:
-    0 2px 4px rgb(25 20 54 / 0.08), 0 16px 34px -14px rgb(25 20 54 / 0.36);
-  --shadow-pop: 0 8px 24px -10px rgb(108 92 231 / 0.55);
-  /* Hard offset edge for "volumetric" buttons (collapse on :active). */
-  --shadow-edge: 0 4px 0 0 rgb(25 20 54 / 0.16);
 
   /* ---------------------------------------------------------------- */
   /* Animations                                                        */
@@ -94,6 +87,49 @@
 /* Dark theme — explicit attribute set by the settings store            */
 /* (system preference is resolved to light/dark before first paint).    */
 /* -------------------------------------------------------------------- */
+/* Shadows live outside @theme: Tailwind inlines @theme shadow values into
+   its utilities, which would freeze the light values in the dark theme. */
+:root {
+  --shadow-card:
+    -8px -8px 18px rgb(255 255 255 / 0.85), 8px 8px 18px rgb(25 20 54 / 0.16);
+  --shadow-card-hover:
+    -10px -10px 22px rgb(255 255 255 / 0.95), 10px 10px 22px rgb(25 20 54 / 0.2);
+  --shadow-neu:
+    -4px -4px 10px rgb(255 255 255 / 0.85), 4px 4px 10px rgb(25 20 54 / 0.16);
+  --shadow-neu-lift:
+    -6px -6px 14px rgb(255 255 255 / 0.95), 7px 7px 16px rgb(25 20 54 / 0.22);
+  --shadow-neu-inset:
+    inset 3px 3px 7px rgb(25 20 54 / 0.18),
+    inset -3px -3px 7px rgb(255 255 255 / 0.8);
+  --shadow-neu-inset-sm:
+    inset 2px 2px 4px rgb(25 20 54 / 0.2),
+    inset -2px -2px 4px rgb(255 255 255 / 0.8);
+}
+
+@utility shadow-card {
+  box-shadow: var(--shadow-card);
+}
+
+@utility shadow-card-hover {
+  box-shadow: var(--shadow-card-hover);
+}
+
+@utility shadow-neu {
+  box-shadow: var(--shadow-neu);
+}
+
+@utility shadow-neu-lift {
+  box-shadow: var(--shadow-neu-lift);
+}
+
+@utility shadow-neu-inset {
+  box-shadow: var(--shadow-neu-inset);
+}
+
+@utility shadow-neu-inset-sm {
+  box-shadow: var(--shadow-neu-inset-sm);
+}
+
 [data-theme='dark'] {
   --color-primary: #a29bfe;
   --color-primary-hover: #8f86f7;
@@ -119,30 +155,40 @@
   --color-info-hover: #5aa8f8;
   --color-on-info: #06263f;
 
-  --color-bg: #0f0d1a;
-  --color-bg-2: #171331;
-  --color-bg-3: #211c40;
-  --color-surface: #1a1630;
-  --color-surface-hover: #241f45;
-  --color-border: #322b57;
+  --color-bg: #211d33;
+  --color-bg-2: #1a1729;
+  --color-bg-3: #151222;
+  --color-surface: #211d33;
+  --color-surface-hover: #282340;
+  --color-border: #342e50;
+  --color-border-strong: #7a6fb5;
   --color-text: #ede9fe;
   --color-text-2: #b8b0d8;
   --color-text-3: #948cb8;
   --color-foreground: #ede9fe;
-  --color-card: #1a1630;
+  --color-card: #211d33;
   --color-card-foreground: #ede9fe;
-  --color-popover: #1a1630;
+  --color-popover: #211d33;
   --color-popover-foreground: #ede9fe;
-  --color-muted: #241f45;
+  --color-muted: #1a1729;
   --color-muted-foreground: #948cb8;
-  --color-accent: #241f45;
+  --color-accent: #1a1729;
   --color-accent-foreground: #ede9fe;
 
-  --shadow-card: 0 1px 2px rgb(0 0 0 / 0.4), 0 10px 28px -14px rgb(0 0 0 / 0.6);
+  --shadow-card:
+    -8px -8px 18px rgb(255 255 255 / 0.04), 8px 8px 18px rgb(0 0 0 / 0.5);
   --shadow-card-hover:
-    0 2px 4px rgb(0 0 0 / 0.45), 0 16px 34px -14px rgb(0 0 0 / 0.7);
-  --shadow-pop: 0 8px 24px -10px rgb(162 155 254 / 0.5);
-  --shadow-edge: 0 4px 0 0 rgb(0 0 0 / 0.45);
+    -10px -10px 22px rgb(255 255 255 / 0.06), 10px 10px 22px rgb(0 0 0 / 0.6);
+  --shadow-neu:
+    -4px -4px 10px rgb(255 255 255 / 0.04), 4px 4px 10px rgb(0 0 0 / 0.5);
+  --shadow-neu-lift:
+    -6px -6px 14px rgb(255 255 255 / 0.06), 7px 7px 16px rgb(0 0 0 / 0.6);
+  --shadow-neu-inset:
+    inset 3px 3px 7px rgb(0 0 0 / 0.55),
+    inset -3px -3px 7px rgb(255 255 255 / 0.04);
+  --shadow-neu-inset-sm:
+    inset 2px 2px 4px rgb(0 0 0 / 0.6),
+    inset -2px -2px 4px rgb(255 255 255 / 0.04);
 }
 
 /* Global base styles */
@@ -160,7 +206,7 @@
   body {
     font-family: var(--font-sans), system-ui, sans-serif;
     color: var(--color-text, #191436);
-    background: var(--color-bg, #f6f4ff);
+    background: var(--color-bg, #e6e2f6);
     line-height: 1.6;
     margin: 0;
     -webkit-font-smoothing: antialiased;
@@ -209,13 +255,40 @@
   transition-duration: 0.01ms !important;
 }
 
+/* Neumorphic range: inset track, raised thumb. */
+input[type='range'] {
+  appearance: none;
+  height: 0.75rem;
+  border-radius: var(--radius-pill);
+  background: var(--color-bg);
+  box-shadow: var(--shadow-neu-inset-sm);
+}
+input[type='range']::-webkit-slider-thumb {
+  appearance: none;
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 9999px;
+  background: var(--color-primary);
+  box-shadow: var(--shadow-neu);
+  cursor: pointer;
+}
+input[type='range']::-moz-range-thumb {
+  width: 1.5rem;
+  height: 1.5rem;
+  border: 0;
+  border-radius: 9999px;
+  background: var(--color-primary);
+  box-shadow: var(--shadow-neu);
+  cursor: pointer;
+}
+
 /* Scrollbar styling */
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
 }
 ::-webkit-scrollbar-track {
-  background: var(--color-bg-2, #efeaff);
+  background: var(--color-bg-2, #dcd7f0);
 }
 ::-webkit-scrollbar-thumb {
   background: var(--color-border, #e2dbf7);
