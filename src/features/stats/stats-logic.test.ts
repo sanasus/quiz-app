@@ -84,7 +84,11 @@ describe('applySessionToStats', () => {
       makeSummary({ category: 'Code', difficulty: 'easy' }),
     )
 
-    expect(stats.byCategory.Code).toEqual({ correct: 16, total: 20 })
+    expect(stats.byCategory.Code).toEqual({
+      correct: 16,
+      total: 20,
+      label: 'Code',
+    })
     expect(stats.byDifficulty.hard).toEqual({ correct: 8, total: 10 })
     expect(stats.byDifficulty.easy).toEqual({ correct: 8, total: 10 })
   })

@@ -5,7 +5,7 @@ test.describe('Navigation', () => {
     await page.goto('/')
     // Wait for page to be ready
     await expect(
-      page.getByRole('heading', { name: '🏠 Welcome to QuizApp!' }),
+      page.getByRole('heading', { name: 'Welcome to QuizApp!' }),
     ).toBeVisible()
   })
 
@@ -14,10 +14,10 @@ test.describe('Navigation', () => {
     { tag: ['@smoke'] },
     async ({ page }) => {
       // Home
-      await page.getByRole('link', { name: '🏠 Home' }).click()
+      await page.getByRole('link', { name: 'Home' }).click()
       await expect(page).toHaveURL((url) => url.pathname === '/')
       await expect(
-        page.getByRole('heading', { name: '🏠 Welcome to QuizApp!' }),
+        page.getByRole('heading', { name: 'Welcome to QuizApp!' }),
       ).toBeVisible()
 
       // New Quiz — the /setup entry point
@@ -28,24 +28,24 @@ test.describe('Navigation', () => {
       ).toBeVisible()
 
       // Stats
-      await page.getByRole('link', { name: '📊 Statistics' }).click()
+      await page.getByRole('link', { name: 'Statistics' }).click()
       await expect(page).toHaveURL(/\/stats/)
       await expect(
-        page.getByRole('heading', { name: '📊 Stats' }),
+        page.getByRole('heading', { name: 'Stats' }),
       ).toBeVisible()
 
       // Achievements
-      await page.getByRole('link', { name: '🏅 Achievements' }).click()
+      await page.getByRole('link', { name: 'Achievements' }).click()
       await expect(page).toHaveURL(/\/achievements/)
       await expect(
-        page.getByRole('heading', { name: '🏅 Achievements' }),
+        page.getByRole('heading', { name: 'Achievements' }),
       ).toBeVisible()
 
       // Settings
-      await page.getByRole('link', { name: '⚙️ Settings' }).click()
+      await page.getByRole('link', { name: 'Settings' }).click()
       await expect(page).toHaveURL(/\/settings/)
       await expect(
-        page.getByRole('heading', { name: '⚙️ Settings' }),
+        page.getByRole('heading', { name: 'Settings' }),
       ).toBeVisible()
     },
   )
@@ -73,7 +73,7 @@ test.describe('Navigation', () => {
       await bottomNav.getByRole('link', { name: 'Home' }).click()
       await expect(page).toHaveURL((url) => url.pathname === '/')
       await expect(
-        page.getByRole('heading', { name: '🏠 Welcome to QuizApp!' }),
+        page.getByRole('heading', { name: 'Welcome to QuizApp!' }),
       ).toBeVisible()
     },
   )

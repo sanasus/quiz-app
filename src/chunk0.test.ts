@@ -32,7 +32,7 @@ describe('Chunk 0 — project scaffold', () => {
     expect(languages).toContain('en')
   })
 
-  it('should have all 7 routes from PLAN.md §5', () => {
+  it('should have all 7 routes', () => {
     const expectedPaths = [
       '/',
       '/setup',

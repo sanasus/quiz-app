@@ -5,12 +5,14 @@
  */
 
 import type { KeyboardEvent } from 'react'
+import type { LucideIcon } from 'lucide-react'
+import { segmentClass } from './segment-styles'
 
 export interface SegmentedOption<T extends string> {
   value: T
   label: string
-  /** Optional leading emoji, decorative. */
-  icon?: string
+  /** Optional leading icon, decorative. */
+  icon?: LucideIcon
 }
 
 export interface SegmentedControlProps<T extends string> {
@@ -73,6 +75,7 @@ export function SegmentedControl<T extends string>({
     >
       {options.map((option) => {
         const checked = option.value === value
+        const Icon = option.icon
         return (
           <button
             key={option.value}
@@ -82,16 +85,10 @@ export function SegmentedControl<T extends string>({
             tabIndex={checked ? 0 : -1}
             data-value={option.value}
             onClick={() => onChange(option.value)}
-            className={`flex-1 min-w-20 rounded-tile border-2 px-3 py-2 text-sm font-semibold transition-colors cursor-pointer ${
-              checked
-                ? 'border-primary bg-primary/10 text-primary-ink shadow-edge'
-                : 'border-border bg-surface text-text-2 hover:bg-surface-hover hover:text-text'
-            }`}
+            className={`flex min-w-20 flex-1 items-center justify-center gap-1.5 ${segmentClass(checked)}`}
           >
-            {option.icon ? (
-              <span aria-hidden="true" className="mr-1">
-                {option.icon}
-              </span>
+            {Icon ? (
+              <Icon aria-hidden="true" className="h-4 w-4 shrink-0" />
             ) : null}
             {option.label}
           </button>
@@ -130,18 +127,20 @@ export function Toggle({
       data-testid={testId}
       onClick={() => onChange(!pressed)}
       className={`flex w-full cursor-pointer items-center justify-between gap-3 rounded-tile border-2 border-transparent py-1 text-left transition-colors ${
-        pressed ? 'border-primary/40 bg-primary/5' : 'hover:bg-surface-hover'
+        pressed ? 'border-primary/40' : ''
       }`}
     >
-      <span className="text-sm text-text-2">{label}</span>
+      <span className="text-body text-text-2">{label}</span>
       <span
         className={`relative block h-8 w-16 shrink-0 rounded-pill border-2 transition-colors ${
-          pressed ? 'border-primary bg-primary/20' : 'border-border bg-surface'
+          pressed
+            ? 'border-primary bg-bg shadow-neu-inset-sm'
+            : 'border-transparent bg-bg shadow-neu-inset-sm'
         }`}
       >
         <span
           aria-hidden="true"
-          className={`absolute top-0.5 h-6 w-6 rounded-full shadow transition-[left,background-color] ${
+          className={`absolute top-0.5 h-6 w-6 rounded-full shadow-neu transition-[left,background-color] ${
             pressed ? 'left-8 bg-primary' : 'left-0.5 bg-text-3'
           }`}
         />

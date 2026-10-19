@@ -9,8 +9,11 @@
 import { useEffect, useState } from 'react'
 import { AnimatePresence, motion } from 'motion/react'
 import { useTranslation } from 'react-i18next'
+import { X } from 'lucide-react'
 import { useMotionEnabled } from '../lib/use-motion-enabled'
 import type { Achievement } from '../types/meta'
+import { cardClass } from './card-styles'
+import { IconButton } from './icon-button'
 
 export interface AchievementToastItem extends Achievement {
   /** Unique key per appearance (same id may unlock again after a reset). */
@@ -72,30 +75,33 @@ export function AchievementToast({
                 : { opacity: 0 }
             }
             transition={{ type: 'spring', stiffness: 400, damping: 28 }}
-            className="pointer-events-auto flex w-full max-w-sm items-center gap-3 rounded-xl border-2 border-warning bg-surface p-4 shadow-lg"
+            className={cardClass(
+              'overlay',
+              'md',
+              'pointer-events-auto flex w-full max-w-sm items-center gap-3 border-2 border-warning',
+            )}
           >
-            <span aria-hidden="true" className="text-3xl">
-              {toast.icon}
-            </span>
+            <toast.icon
+              aria-hidden="true"
+              className="h-8 w-8 shrink-0 text-warning-text"
+            />
             <div className="min-w-0 flex-1">
-              <p className="text-xs uppercase tracking-wide text-text-2">
+              <p className="text-caption uppercase tracking-wide text-text-2">
                 {t('achievements.unlocked')}
               </p>
               <p className="truncate font-bold text-text">
                 {t(toast.titleKey)}
               </p>
-              <p className="truncate text-sm text-text-2">
+              <p className="truncate text-body text-text-2">
                 {t(toast.descriptionKey)}
               </p>
             </div>
-            <button
-              type="button"
+            <IconButton
               aria-label={t('common.close')}
               onClick={() => onDismiss(toast.toastKey)}
-              className="shrink-0 rounded-md p-1.5 text-text-3 transition-colors hover:bg-muted hover:text-text"
             >
-              <span aria-hidden="true">✕</span>
-            </button>
+              <X className="h-4 w-4" aria-hidden="true" />
+            </IconButton>
           </motion.div>
         ))}
       </AnimatePresence>

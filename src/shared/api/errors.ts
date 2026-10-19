@@ -3,7 +3,7 @@
  *
  * Every failure surfaced from a fetch function is a QuizApiError with a
  * coarse `kind` — the provider-switch policy
- * (docs/api-notes.md §28) keys off it: network → retry the same
+ * (docs/providers.md) keys off it: network → retry the same
  * provider; timeout (the request hung) and anything else (auth,
  * rate_limit, parse, http) mean the provider is broken and is a
  * candidate for switching.

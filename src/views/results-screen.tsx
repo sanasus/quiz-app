@@ -5,6 +5,7 @@
 import { useCallback, useState } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
+import { Button } from '../shared/ui/button'
 import { useQuizSessionStore } from '../shared/lib/session-store'
 import { useSessionMetrics } from '../features/meta/use-session-metrics'
 import {
@@ -13,6 +14,9 @@ import {
 } from '../shared/ui/achievement-toast'
 import { AnimatedNumber } from '../shared/ui/animated-number'
 import { Confetti } from '../shared/ui/confetti'
+import { Card } from '../shared/ui/card'
+import { PageTitle, SectionTitle } from '../shared/ui/heading'
+import { StatTile } from '../shared/ui/stat-tile'
 
 /** Accuracy (%) at or above which the win confetti fires. */
 const CONFETTI_THRESHOLD = 70
@@ -78,12 +82,10 @@ export function ResultsScreen() {
       <Confetti show={accuracy >= CONFETTI_THRESHOLD} />
 
       {/* Title */}
-      <h1 className="mb-6 text-center text-3xl font-bold text-text">
-        {t('results.title')}
-      </h1>
+      <PageTitle>{t('results.title')}</PageTitle>
 
       {/* Score card */}
-      <div className="mb-6 rounded-xl bg-surface p-6 text-center shadow-md">
+      <Card padding="lg" className="mb-6 text-center">
         <div
           data-testid="result-score"
           className="mb-2 text-5xl font-extrabold text-primary"
@@ -103,72 +105,49 @@ export function ResultsScreen() {
             +{metrics.xpGained} XP
           </div>
         )}
-      </div>
+      </Card>
 
       {/* Stats grid */}
       <div className="mb-6 grid grid-cols-2 gap-4 sm:grid-cols-4">
-        <div className="rounded-xl bg-surface p-4 text-center shadow-sm">
-          <div
-            data-testid="result-correct"
-            className="text-2xl font-bold text-success"
-          >
-            <AnimatedNumber
-              value={result.correctCount}
-              from={0}
-              className="tabular-nums"
-            />
-          </div>
-          <div className="text-xs text-text-2">{t('results.correct')}</div>
-        </div>
-        <div className="rounded-xl bg-surface p-4 text-center shadow-sm">
-          <div
-            data-testid="result-incorrect"
-            className="text-2xl font-bold text-danger"
-          >
-            <AnimatedNumber
-              value={result.incorrectCount}
-              from={0}
-              className="tabular-nums"
-            />
-          </div>
-          <div className="text-xs text-text-2">{t('results.incorrect')}</div>
-        </div>
-        <div className="rounded-xl bg-surface p-4 text-center shadow-sm">
-          <div
-            data-testid="result-accuracy"
-            className="text-2xl font-bold text-text"
-          >
-            <AnimatedNumber
-              value={accuracy}
-              from={0}
-              className="tabular-nums"
-            />
-            %
-          </div>
-          <div className="text-xs text-text-2">{t('results.accuracy')}</div>
-        </div>
-        <div className="rounded-xl bg-surface p-4 text-center shadow-sm">
-          <div
-            data-testid="result-time"
-            className="text-2xl font-bold text-text"
-          >
-            {formatTime(result.timeSpent)}
-          </div>
-          <div className="text-xs text-text-2">{t('results.time_spent')}</div>
-        </div>
+        <StatTile
+          label={t('results.correct')}
+          tone="text-success"
+          valueTestId="result-correct"
+        >
+          <AnimatedNumber
+            value={result.correctCount}
+            from={0}
+            className="tabular-nums"
+          />
+        </StatTile>
+        <StatTile
+          label={t('results.incorrect')}
+          tone="text-danger"
+          valueTestId="result-incorrect"
+        >
+          <AnimatedNumber
+            value={result.incorrectCount}
+            from={0}
+            className="tabular-nums"
+          />
+        </StatTile>
+        <StatTile label={t('results.accuracy')} valueTestId="result-accuracy">
+          <AnimatedNumber value={accuracy} from={0} className="tabular-nums" />%
+        </StatTile>
+        <StatTile label={t('results.time_spent')} valueTestId="result-time">
+          {formatTime(result.timeSpent)}
+        </StatTile>
       </div>
 
       {/* Mistakes list */}
       {result.mistakes.length > 0 && (
-        <div className="mb-6 rounded-xl bg-surface p-4 shadow-md">
-          <h2 className="mb-3 text-lg font-semibold text-text">
-            {t('results.mistakes_title')}
-          </h2>
+        <Card className="mb-6">
+          <SectionTitle>{t('results.mistakes_title')}</SectionTitle>
           <div className="flex flex-col gap-3">
             {result.mistakes.map((m, idx) => (
-              <div key={idx} className="rounded-lg bg-muted p-3">
+              <Card key={idx} variant="inset" padding="sm">
                 <p className="mb-1 font-medium text-text">{m.question.text}</p>
-                <div className="flex flex-col gap-1 text-sm">
+                <div className="flex flex-col gap-1 text-body">
                   <span className="text-danger-ink">
                     ❌{' '}
                     {m.selectedOptionIds
@@ -190,30 +169,20 @@ export function ResultsScreen() {
                       .join(', ')}
                   </span>
                 </div>
-              </div>
+              </Card>
             ))}
           </div>
-        </div>
+        </Card>
       )}
 
       {/* Actions */}
       <div className="flex flex-col gap-3 sm:flex-row sm:justify-center">
         {result.mistakes.length > 0 && (
-          <button
-            type="button"
-            onClick={handleRepeatMistakes}
-            className="rounded-lg border-2 border-primary px-6 py-2.5 font-semibold text-primary transition-colors hover:bg-primary/10"
-          >
+          <Button variant="secondary" onClick={handleRepeatMistakes}>
             {t('results.repeat_mistakes')}
-          </button>
+          </Button>
         )}
-        <button
-          type="button"
-          onClick={handleNewQuiz}
-          className="rounded-lg bg-primary px-6 py-2.5 font-semibold text-on-primary shadow-sm transition-colors hover:bg-primary-hover"
-        >
-          {t('results.new_quiz')}
-        </button>
+        <Button onClick={handleNewQuiz}>{t('results.new_quiz')}</Button>
       </div>
 
       {/* Achievement unlock toasts */}

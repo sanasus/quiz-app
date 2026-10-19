@@ -5,6 +5,8 @@
 
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { Brain, Dices, FlaskConical, Monitor, Moon, Sun } from 'lucide-react'
+import type { LucideIcon } from 'lucide-react'
 import { useSettingsStore } from '../../app/settings-store'
 import type { ThemeSetting } from '../../app/settings-store'
 import { SegmentedControl, Toggle } from '../../shared/ui/segmented-control'
@@ -17,27 +19,29 @@ import {
   useQuizSessionStore,
 } from '../../shared/lib/session-store'
 import { useChangeProvider } from '../../features/provider/use-change-provider'
+import { Card } from '../../shared/ui/card'
+import { PageTitle } from '../../shared/ui/heading'
 
 const THEME_OPTIONS: ReadonlyArray<{
   value: ThemeSetting
   labelKey: 'settings.light' | 'settings.dark' | 'settings.system'
-  icon: string
+  icon: LucideIcon
 }> = [
-  { value: 'light', labelKey: 'settings.light', icon: '☀️' },
-  { value: 'dark', labelKey: 'settings.dark', icon: '🌙' },
-  { value: 'system', labelKey: 'settings.system', icon: '💻' },
+  { value: 'light', labelKey: 'settings.light', icon: Sun },
+  { value: 'dark', labelKey: 'settings.dark', icon: Moon },
+  { value: 'system', labelKey: 'settings.system', icon: Monitor },
 ]
 
 const LANGUAGE_OPTIONS = [
-  { value: 'en', label: 'English', icon: '🇬🇧' },
-  { value: 'ru', label: 'Русский', icon: '🇷🇺' },
+  { value: 'en', label: 'English' },
+  { value: 'ru', label: 'Русский' },
 ] as const
 
-// Decorative per-provider emoji (same pattern as THEME_OPTIONS).
-const PROVIDER_ICONS: Record<ProviderId, string> = {
-  quizapi: '🧠',
-  trivia: '🎲',
-  mock: '🧪',
+// Decorative per-provider icon (same pattern as THEME_OPTIONS).
+const PROVIDER_ICONS: Record<ProviderId, LucideIcon> = {
+  quizapi: Brain,
+  trivia: Dices,
+  mock: FlaskConical,
 }
 
 export function SettingsScreen() {
@@ -77,11 +81,9 @@ export function SettingsScreen() {
       className="mx-auto max-w-lg animate-fade-in px-4 py-8"
       data-testid="settings-screen"
     >
-      <h1 className="mb-8 text-center text-3xl font-bold text-text">
-        ⚙️ {t('settings.title')}
-      </h1>
+      <PageTitle className="mb-8">{t('settings.title')}</PageTitle>
 
-      <div className="flex flex-col gap-8 rounded-card border border-border bg-surface p-6 shadow-card">
+      <Card padding="lg" className="flex flex-col gap-8">
         {/* Language */}
         <section className="flex flex-col gap-3">
           <h2 className="font-semibold text-text">{t('settings.language')}</h2>
@@ -91,7 +93,6 @@ export function SettingsScreen() {
             options={LANGUAGE_OPTIONS.map((o) => ({
               value: o.value,
               label: o.label,
-              icon: o.icon,
             }))}
             value={(i18n.language === 'ru' ? 'ru' : 'en') as 'en' | 'ru'}
             onChange={changeLanguage}
@@ -145,11 +146,11 @@ export function SettingsScreen() {
             value={providerId}
             onChange={handleProviderChange}
           />
-          <p className="text-xs text-text-2">
+          <p className="text-caption text-text-2">
             {t('settings.api_provider_hint')}
           </p>
         </section>
-      </div>
+      </Card>
 
       {/* Switching during a live session must be confirmed — the
           switch resets the session and returns to /setup. */}
@@ -162,7 +163,7 @@ export function SettingsScreen() {
         onCancel={() => setPendingProvider(null)}
       />
 
-      <p className="mt-4 text-center text-sm text-text-3">
+      <p className="mt-4 text-center text-body text-text-3">
         {t('settings.theme_hint')}
       </p>
     </div>

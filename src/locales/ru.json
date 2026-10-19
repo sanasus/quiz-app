@@ -3,11 +3,10 @@
     "title": "QuizApp",
     "skip_to_content": "Перейти к содержимому",
     "language_current": "Текущий язык: {{code}}",
-    "footer_quizapi": "QuizApp · на основе QuizAPI",
-    "footer_trivia_prefix": "QuizApp · на основе ",
-    "footer_trivia_mid": " (",
-    "footer_trivia_suffix": ")",
-    "footer_mock": "QuizApp · Мок-данные (разработка)",
+    "footer_prefix": "QuizApp · на основе ",
+    "footer_and": " и ",
+    "footer_mid": " (",
+    "footer_suffix": ")",
     "nav": {
       "home": "Главная",
       "new_quiz": "Новый тест",
@@ -19,6 +18,9 @@
   "home": {
     "welcome": "Добро пожаловать в QuizApp!",
     "start": "Начать тест",
+    "best_streak": "Лучшая серия",
+    "sessions": "Сессий",
+    "repeat_last": "Повторить",
     "last_results": "Последние результаты",
     "level": "Уровень",
     "xp_progress": "Прогресс опыта"
@@ -152,7 +154,7 @@
   },
   "provider": {
     "quizapi": "QuizAPI",
-    "trivia": "The Trivia API",
+    "trivia": "Trivia API",
     "mock": "Мок-данные"
   },
   "provider_switch": {

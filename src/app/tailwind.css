@@ -30,30 +30,64 @@
   --color-info-hover: #0a5ea8;
   --color-on-info: #ffffff;
 
+  /* Streak flame — fire orange, an icon colour (3:1 on bg and surface). */
+  --color-streak: #d9480f;
+
   /* Base palette */
-  --color-bg: #f6f4ff;
-  --color-bg-2: #efeaff;
-  --color-bg-3: #e7e0ff;
-  --color-surface: #ffffff;
-  --color-surface-hover: #f2eeff;
-  --color-border: #e2dbf7;
+  --color-bg: #e6e2f6;
+  --color-bg-2: #dcd7f0;
+  --color-bg-3: #d2ccea;
+  --color-surface: #e6e2f6;
+  --color-surface-hover: #ebe8f8;
+  --color-border: #cfc9e6;
+  /* 3:1 on bg and surface — borders that define a control, not a divider. */
+  --color-border-strong: #7468a6;
   --color-text: #191436;
   --color-text-2: #47406b;
-  --color-text-3: #716a97;
+  --color-text-3: #5f5886;
   --color-foreground: #191436;
-  --color-card: #ffffff;
+  --color-card: #e6e2f6;
   --color-card-foreground: #191436;
-  --color-popover: #ffffff;
+  --color-popover: #e6e2f6;
   --color-popover-foreground: #191436;
-  --color-muted: #efeaff;
-  --color-muted-foreground: #716a97;
-  --color-accent: #efeaff;
+  --color-muted: #dcd7f0;
+  --color-muted-foreground: #5f5886;
+  --color-accent: #dcd7f0;
   --color-accent-foreground: #191436;
 
   /* ---------------------------------------------------------------- */
   /* Type                                                              */
   /* ---------------------------------------------------------------- */
-  --font-display: var(--font-sans), system-ui, sans-serif;
+  --font-sans:
+    'Inter Variable', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-display: var(--font-sans);
+
+  /* ---------------------------------------------------------------- */
+  /* Type roles — use these instead of raw text-xl / text-3xl.         */
+  /* Each role carries its size, line height and weight.               */
+  /* ---------------------------------------------------------------- */
+  --text-display: 2.25rem;
+  --text-display--line-height: 2.5rem;
+  --text-display--font-weight: 700;
+  --text-title: 1.875rem;
+  --text-title--line-height: 2.25rem;
+  --text-title--font-weight: 700;
+  --text-heading: 1.25rem;
+  --text-heading--line-height: 1.75rem;
+  --text-heading--font-weight: 700;
+  --text-subheading: 1.125rem;
+  --text-subheading--line-height: 1.75rem;
+  --text-subheading--font-weight: 600;
+  --text-stat: 1.5rem;
+  --text-stat--line-height: 2rem;
+  --text-stat--font-weight: 700;
+  --text-body: 0.875rem;
+  --text-body--line-height: 1.25rem;
+  --text-label: 0.875rem;
+  --text-label--line-height: 1.25rem;
+  --text-label--font-weight: 500;
+  --text-caption: 0.75rem;
+  --text-caption--line-height: 1rem;
 
   /* ---------------------------------------------------------------- */
   /* Radii — thick, game-like                                          */
@@ -61,17 +95,6 @@
   --radius-card: 1.25rem;
   --radius-tile: 1rem;
   --radius-pill: 9999px;
-
-  /* ---------------------------------------------------------------- */
-  /* Shadows                                                           */
-  /* ---------------------------------------------------------------- */
-  --shadow-card:
-    0 1px 2px rgb(25 20 54 / 0.06), 0 10px 28px -14px rgb(25 20 54 / 0.3);
-  --shadow-card-hover:
-    0 2px 4px rgb(25 20 54 / 0.08), 0 16px 34px -14px rgb(25 20 54 / 0.36);
-  --shadow-pop: 0 8px 24px -10px rgb(108 92 231 / 0.55);
-  /* Hard offset edge for "volumetric" buttons (collapse on :active). */
-  --shadow-edge: 0 4px 0 0 rgb(25 20 54 / 0.16);
 
   /* ---------------------------------------------------------------- */
   /* Animations                                                        */
@@ -94,6 +117,49 @@
 /* Dark theme — explicit attribute set by the settings store            */
 /* (system preference is resolved to light/dark before first paint).    */
 /* -------------------------------------------------------------------- */
+/* Shadows live outside @theme: Tailwind inlines @theme shadow values into
+   its utilities, which would freeze the light values in the dark theme. */
+:root {
+  --shadow-card:
+    -8px -8px 18px rgb(255 255 255 / 1), 8px 8px 18px rgb(25 20 54 / 0.2);
+  --shadow-card-hover:
+    -10px -10px 22px rgb(255 255 255 / 1), 10px 10px 22px rgb(25 20 54 / 0.2);
+  --shadow-neu:
+    -4px -4px 10px rgb(255 255 255 / 1), 4px 4px 10px rgb(25 20 54 / 0.2);
+  --shadow-neu-lift:
+    -6px -6px 14px rgb(255 255 255 / 1), 7px 7px 16px rgb(25 20 54 / 0.22);
+  --shadow-neu-inset:
+    inset 3px 3px 7px rgb(25 20 54 / 0.18),
+    inset -3px -3px 7px rgb(255 255 255 / 0.95);
+  --shadow-neu-inset-sm:
+    inset 2px 2px 4px rgb(25 20 54 / 0.2),
+    inset -2px -2px 4px rgb(255 255 255 / 0.95);
+}
+
+@utility shadow-card {
+  box-shadow: var(--shadow-card);
+}
+
+@utility shadow-card-hover {
+  box-shadow: var(--shadow-card-hover);
+}
+
+@utility shadow-neu {
+  box-shadow: var(--shadow-neu);
+}
+
+@utility shadow-neu-lift {
+  box-shadow: var(--shadow-neu-lift);
+}
+
+@utility shadow-neu-inset {
+  box-shadow: var(--shadow-neu-inset);
+}
+
+@utility shadow-neu-inset-sm {
+  box-shadow: var(--shadow-neu-inset-sm);
+}
+
 [data-theme='dark'] {
   --color-primary: #a29bfe;
   --color-primary-hover: #8f86f7;
@@ -119,30 +185,42 @@
   --color-info-hover: #5aa8f8;
   --color-on-info: #06263f;
 
-  --color-bg: #0f0d1a;
-  --color-bg-2: #171331;
-  --color-bg-3: #211c40;
-  --color-surface: #1a1630;
-  --color-surface-hover: #241f45;
-  --color-border: #322b57;
+  --color-streak: #ff7a45;
+
+  --color-bg: #211d33;
+  --color-bg-2: #1a1729;
+  --color-bg-3: #151222;
+  --color-surface: #211d33;
+  --color-surface-hover: #282340;
+  --color-border: #342e50;
+  --color-border-strong: #7a6fb5;
   --color-text: #ede9fe;
   --color-text-2: #b8b0d8;
   --color-text-3: #948cb8;
   --color-foreground: #ede9fe;
-  --color-card: #1a1630;
+  --color-card: #211d33;
   --color-card-foreground: #ede9fe;
-  --color-popover: #1a1630;
+  --color-popover: #211d33;
   --color-popover-foreground: #ede9fe;
-  --color-muted: #241f45;
+  --color-muted: #1a1729;
   --color-muted-foreground: #948cb8;
-  --color-accent: #241f45;
+  --color-accent: #1a1729;
   --color-accent-foreground: #ede9fe;
 
-  --shadow-card: 0 1px 2px rgb(0 0 0 / 0.4), 0 10px 28px -14px rgb(0 0 0 / 0.6);
+  --shadow-card:
+    -8px -8px 18px rgb(255 255 255 / 0.04), 8px 8px 18px rgb(0 0 0 / 0.5);
   --shadow-card-hover:
-    0 2px 4px rgb(0 0 0 / 0.45), 0 16px 34px -14px rgb(0 0 0 / 0.7);
-  --shadow-pop: 0 8px 24px -10px rgb(162 155 254 / 0.5);
-  --shadow-edge: 0 4px 0 0 rgb(0 0 0 / 0.45);
+    -10px -10px 22px rgb(255 255 255 / 0.06), 10px 10px 22px rgb(0 0 0 / 0.6);
+  --shadow-neu:
+    -4px -4px 10px rgb(255 255 255 / 0.04), 4px 4px 10px rgb(0 0 0 / 0.5);
+  --shadow-neu-lift:
+    -6px -6px 14px rgb(255 255 255 / 0.06), 7px 7px 16px rgb(0 0 0 / 0.6);
+  --shadow-neu-inset:
+    inset 3px 3px 7px rgb(0 0 0 / 0.55),
+    inset -3px -3px 7px rgb(255 255 255 / 0.04);
+  --shadow-neu-inset-sm:
+    inset 2px 2px 4px rgb(0 0 0 / 0.6),
+    inset -2px -2px 4px rgb(255 255 255 / 0.04);
 }
 
 /* Global base styles */
@@ -160,7 +238,7 @@
   body {
     font-family: var(--font-sans), system-ui, sans-serif;
     color: var(--color-text, #191436);
-    background: var(--color-bg, #f6f4ff);
+    background: var(--color-bg, #e6e2f6);
     line-height: 1.6;
     margin: 0;
     -webkit-font-smoothing: antialiased;
@@ -209,13 +287,110 @@
   transition-duration: 0.01ms !important;
 }
 
+/* -------------------------------------------------------------------- */
+/* App background: aura blobs + grain. --aura-hue is set by              */
+/* <AppBackground /> (brand hue, or per category during a quiz).         */
+/* -------------------------------------------------------------------- */
+@property --aura-hue {
+  syntax: '<number>';
+  inherits: true;
+  initial-value: 285;
+}
+
+:root {
+  --aura-l: 0.8;
+  --aura-c: 0.12;
+  --aura-a: 0.38;
+  --grain-opacity: 0.06;
+  --grain-blend: multiply;
+}
+
+[data-theme='dark'] {
+  --aura-l: 0.5;
+  --aura-c: 0.14;
+  --aura-a: 0.3;
+  --grain-opacity: 0.08;
+  --grain-blend: soft-light;
+}
+
+.app-bg {
+  position: fixed;
+  inset: 0;
+  z-index: -10;
+  pointer-events: none;
+  transition: --aura-hue 0.8s ease;
+  background:
+    radial-gradient(
+      60rem 40rem at 8% -8%,
+      oklch(var(--aura-l) var(--aura-c) var(--aura-hue) / var(--aura-a)),
+      transparent 70%
+    ),
+    radial-gradient(
+      50rem 36rem at 100% 100%,
+      oklch(
+        var(--aura-l) var(--aura-c) calc(var(--aura-hue) + 50) / var(--aura-a)
+      ),
+      transparent 70%
+    ),
+    radial-gradient(
+      36rem 28rem at 95% 8%,
+      oklch(
+        var(--aura-l) var(--aura-c) calc(var(--aura-hue) - 40) /
+          calc(var(--aura-a) * 0.6)
+      ),
+      transparent 70%
+    );
+}
+
+/* Answer feedback: stronger, quicker aura than the hue-only category shift. */
+.app-bg[data-flash] {
+  --aura-a: 0.6;
+  transition-duration: 0.25s;
+}
+
+.app-bg::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  opacity: var(--grain-opacity);
+  mix-blend-mode: var(--grain-blend);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* Neumorphic range: inset track, raised thumb. */
+input[type='range'] {
+  appearance: none;
+  height: 0.75rem;
+  border-radius: var(--radius-pill);
+  background: var(--color-bg);
+  box-shadow: var(--shadow-neu-inset-sm);
+}
+input[type='range']::-webkit-slider-thumb {
+  appearance: none;
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 9999px;
+  background: var(--color-primary);
+  box-shadow: var(--shadow-neu);
+  cursor: pointer;
+}
+input[type='range']::-moz-range-thumb {
+  width: 1.5rem;
+  height: 1.5rem;
+  border: 0;
+  border-radius: 9999px;
+  background: var(--color-primary);
+  box-shadow: var(--shadow-neu);
+  cursor: pointer;
+}
+
 /* Scrollbar styling */
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
 }
 ::-webkit-scrollbar-track {
-  background: var(--color-bg-2, #efeaff);
+  background: var(--color-bg-2, #dcd7f0);
 }
 ::-webkit-scrollbar-thumb {
   background: var(--color-border, #e2dbf7);

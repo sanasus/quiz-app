@@ -4,6 +4,7 @@ import type { QuizMode } from '../../../shared/types/quiz'
 import { getMode } from '../../../features/modes'
 import { useMotionEnabled } from '../../../shared/lib/use-motion-enabled'
 import { AnimatedNumber } from '../../../shared/ui/animated-number'
+import { ProgressBar } from '../../../shared/ui/progress-bar'
 
 export interface QuizHeaderProps {
   progress: number
@@ -43,7 +44,7 @@ export function QuizHeader({
     <div className="mb-6">
       <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
         <div>
-          <h2 className="text-xl font-bold text-text">
+          <h2 className="text-heading text-text">
             {t('quiz.question')} {progress}/{total}
           </h2>
         </div>
@@ -84,17 +85,13 @@ export function QuizHeader({
 
       {/* Timer bar — fill shrinks with the remaining time. */}
       {hasTimer && timeLimit ? (
-        <div
-          className="mt-3 h-2 overflow-hidden rounded-pill bg-muted"
-          aria-hidden="true"
-        >
-          <div
-            className={`h-full rounded-pill transition-[width] duration-1000 ease-linear ${
-              lowTime ? 'bg-danger' : 'bg-primary'
-            }`}
-            style={{ width: `${fill}%` }}
-          />
-        </div>
+        <ProgressBar
+          className="mt-3"
+          value={fill}
+          max={100}
+          fillClassName={lowTime ? 'bg-danger' : 'bg-primary'}
+          animate="transition-[width] duration-1000 ease-linear"
+        />
       ) : null}
     </div>
   )

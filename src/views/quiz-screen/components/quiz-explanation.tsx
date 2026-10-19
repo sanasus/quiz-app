@@ -1,6 +1,7 @@
 import { memo, useEffect, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useMotionEnabled } from '../../../shared/lib/use-motion-enabled'
+import { Card } from '../../../shared/ui/card'
 
 export interface QuizExplanationProps {
   explanation: string
@@ -25,12 +26,9 @@ export const QuizExplanation = memo(function QuizExplanation({
   }, [motionEnabled])
 
   return (
-    <div
-      ref={ref}
-      className="mt-3 scroll-mb-24 rounded-lg border border-border bg-muted p-4"
-    >
+    <Card ref={ref} variant="inset" className="mt-3 scroll-mb-24">
       <h4 className="mb-2 font-semibold text-text">{t('quiz.explanation')}</h4>
-      <p className="text-sm text-text-2">{explanation}</p>
-    </div>
+      <p className="text-body text-text-2">{explanation}</p>
+    </Card>
   )
 })

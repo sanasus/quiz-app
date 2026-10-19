@@ -1,5 +1,6 @@
 import { memo } from 'react'
 import { motion } from 'motion/react'
+import { Check, X } from 'lucide-react'
 import { useMotionEnabled } from '../../../shared/lib/use-motion-enabled'
 
 export interface QuizOptionProps {
@@ -35,21 +36,25 @@ export const QuizOption = memo(function QuizOption({
 }: QuizOptionProps) {
   const motionEnabled = useMotionEnabled()
 
-  let optionClass = 'border-border bg-bg text-text'
+  let optionClass = 'border-transparent bg-bg text-text shadow-neu'
   let dataState: 'correct' | 'incorrect' | undefined
   let animate: 'idle' | 'shake' | 'pop' = 'idle'
   if (showResult) {
     if (isCorrect) {
-      optionClass = 'border-success bg-success/10 text-success-ink'
+      optionClass = 'border-success bg-bg text-success-ink shadow-neu-inset'
       dataState = 'correct'
       animate = 'pop'
     } else if (isSelected) {
-      optionClass = 'border-danger bg-danger/10 text-danger-ink'
+      optionClass = 'border-danger bg-bg text-danger-ink shadow-neu-inset'
       dataState = 'incorrect'
       animate = 'shake'
+    } else {
+      // Not chosen, not right: step back so the answer stays the focus.
+      // Muted via border + text colour (not opacity) to keep text legible.
+      optionClass = 'border-transparent bg-bg text-text-3'
     }
   } else if (isSelected) {
-    optionClass = 'border-primary bg-primary/10 text-primary-ink'
+    optionClass = 'border-primary bg-bg text-primary-ink shadow-neu-inset'
   }
 
   const animateProps = motionEnabled
@@ -66,7 +71,7 @@ export const QuizOption = memo(function QuizOption({
 
   // Hover feedback only while the option is still interactive — after the
   // answer it would otherwise override the result tint.
-  const hoverClass = disabled ? '' : 'hover:bg-muted'
+  const hoverClass = disabled ? '' : 'hover:shadow-neu-lift'
 
   return (
     <motion.button
@@ -75,24 +80,23 @@ export const QuizOption = memo(function QuizOption({
       onClick={() => onToggle(id)}
       aria-selected={isSelected}
       role="option"
-      className={`w-full rounded-lg border p-4 text-left text-sm transition-colors disabled:cursor-not-allowed disabled:opacity-75 ${hoverClass} ${optionClass}`}
+      className={`w-full rounded-lg border p-4 text-left text-body transition-colors disabled:cursor-not-allowed ${showResult ? '' : 'disabled:opacity-75'} ${hoverClass} ${optionClass}`}
       disabled={disabled}
       {...animateProps}
     >
       <div className="flex items-center gap-3">
-        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-border text-xs">
+        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-caption shadow-neu-inset-sm">
           {badgeLabel(index)}
         </span>
         <span className="min-w-0 break-words">{text}</span>
         {showResult && isCorrect ? (
-          <span className="ml-auto text-success-ink" aria-hidden="true">
-            ✓
-          </span>
+          <Check
+            className="ml-auto h-4 w-4 text-success-ink"
+            aria-hidden="true"
+          />
         ) : null}
         {showResult && isSelected && !isCorrect ? (
-          <span className="ml-auto text-danger-ink" aria-hidden="true">
-            ✗
-          </span>
+          <X className="ml-auto h-4 w-4 text-danger-ink" aria-hidden="true" />
         ) : null}
       </div>
     </motion.button>

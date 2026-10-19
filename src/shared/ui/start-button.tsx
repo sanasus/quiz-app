@@ -3,6 +3,7 @@
  */
 
 import { useTranslation } from 'react-i18next'
+import { Button } from './button'
 
 export interface StartButtonProps {
   loading?: boolean
@@ -13,26 +14,14 @@ const StartButton = ({ loading, onClick }: StartButtonProps) => {
   const { t } = useTranslation()
 
   return (
-    <button
-      type="button"
+    <Button
+      size="lg"
+      className="mt-2 w-full"
+      loading={loading}
       onClick={onClick}
-      disabled={loading}
-      className={`mt-2 w-full rounded-lg bg-primary px-6 py-3 text-lg font-bold text-on-primary shadow-md transition-[transform,box-shadow,background-color,opacity] cursor-pointer
-        ${
-          loading
-            ? 'opacity-50 cursor-not-allowed'
-            : 'hover:bg-primary-hover hover:shadow-lg hover:-translate-y-0.5 active:scale-[0.98] active:shadow-md'
-        }`}
     >
-      {loading ? (
-        <span className="flex items-center justify-center gap-2">
-          <span className="inline-block h-5 w-5 animate-spin rounded-full border-2 border-on-primary border-t-transparent" />
-          {t('setup.start')}
-        </span>
-      ) : (
-        t('setup.start')
-      )}
-    </button>
+      {t('setup.start')}
+    </Button>
   )
 }
 

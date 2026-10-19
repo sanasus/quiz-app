@@ -59,3 +59,6 @@ skills-lock.json
 # Local OpenCode pairing helper
 pair.bat
 .vercel
+
+# Claude Code: junction to .agents/skills
+.claude/

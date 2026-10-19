@@ -2,7 +2,7 @@
  * Retry policy (quizapi.ts): which failures TanStack Query may retry.
  *
  * The provider-switch policy keys off the same `kind`s
- * (docs/api-notes.md §28): network alone is cheap to retry —
+ * (docs/providers.md): network alone is cheap to retry —
  * anything else must fail fast so the dialog / auto-switch can offer a
  * provider change immediately instead of burning the retry budget.
  */

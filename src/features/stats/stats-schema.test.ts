@@ -81,6 +81,36 @@ describe('parsePersistedStats', () => {
     expect(migrated.playDays).toEqual([])
   })
 
+  it('migrates v1 data by deriving category labels from slugs', () => {
+    const v1 = {
+      ...validData,
+      byCategory: {
+        arts_and_literature: { correct: 3, total: 4 },
+        all: { correct: 1, total: 2 },
+      },
+      history: [{ ...validData.history[0], category: 'arts_and_literature' }],
+    }
+    const migrated = parsePersistedStats(v1, 1)
+
+    expect(migrated.byCategory.arts_and_literature).toEqual({
+      correct: 3,
+      total: 4,
+      label: 'Arts and literature',
+    })
+    expect(migrated.byCategory.all?.label).toBe('All')
+    expect(migrated.history[0]?.categoryName).toBe('Arts and literature')
+  })
+
+  it('keeps labels that are already stored when migrating v1', () => {
+    const v1 = {
+      ...validData,
+      byCategory: { science: { correct: 1, total: 1, label: 'Science!' } },
+    }
+    expect(parsePersistedStats(v1, 1).byCategory.science?.label).toBe(
+      'Science!',
+    )
+  })
+
   it('falls back to initial stats for corrupt data', () => {
     expect(parsePersistedStats({ garbage: true }, STATS_STORE_VERSION)).toEqual(
       createInitialStats(),

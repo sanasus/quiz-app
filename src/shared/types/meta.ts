@@ -2,6 +2,7 @@
  * Meta-layer types: statistics, achievements, XP/levels.
  */
 
+import type { LucideIcon } from 'lucide-react'
 import type { QuizMode } from './quiz'
 
 // ---------------------------------------------------------------------------
@@ -22,6 +23,10 @@ export interface SessionSummary {
   mode: QuizMode
   difficulty: 'easy' | 'medium' | 'hard'
   category: string
+  /** Human-readable category name; absent only before the v2 migration. */
+  categoryName?: string
+  /** Question source the session ran on; category slugs are provider-specific. Absent in older history. */
+  providerId?: string
 }
 
 // ---------------------------------------------------------------------------
@@ -31,6 +36,8 @@ export interface SessionSummary {
 export interface CategoryStat {
   correct: number
   total: number
+  /** Display name of the bucket (categories only); falls back to the key. */
+  label?: string
 }
 
 export interface StatsState {
@@ -56,7 +63,7 @@ export interface StatsState {
 
 export interface Achievement {
   id: string
-  icon: string
+  icon: LucideIcon
   titleKey: string
   descriptionKey: string
   /**
