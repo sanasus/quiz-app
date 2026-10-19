@@ -13,7 +13,6 @@ import {
   Settings,
   type LucideIcon,
 } from 'lucide-react'
-import { useProviderStore } from '../../shared/api/provider-store'
 import { AppBackground } from '../../shared/ui/app-background'
 import { Button } from '../../shared/ui/button'
 import { NavItem } from '../../shared/ui/nav-item'
@@ -28,33 +27,28 @@ const routes: { path: string; icon: LucideIcon; key: string }[] = [
 ]
 
 /**
- * Footer attribution per active provider. The trivia line is composed
- * of i18n fragments around the two required links (brand and license
- * names stay untranslated).
+ * Footer attribution. Both sources are always credited, whichever
+ * provider is active (CC BY-NC 4.0 legal review is pending, so we
+ * never rely on showing it conditionally). The line is composed of
+ * i18n fragments around the required links (brand and license names
+ * stay untranslated).
  */
 function ProviderFooter() {
   const { t } = useTranslation()
-  const providerId = useProviderStore((s) => s.providerId)
 
-  if (providerId === 'trivia') {
-    return (
-      <span>
-        {t('app.footer_trivia_prefix')}
-        <TextLink href="https://the-trivia-api.com">The Trivia API</TextLink>
-        {t('app.footer_trivia_mid')}
-        <TextLink href="https://creativecommons.org/licenses/by-nc/4.0/">
-          CC BY-NC 4.0
-        </TextLink>
-        {t('app.footer_trivia_suffix')}
-      </span>
-    )
-  }
-
-  if (providerId === 'quizapi') {
-    return <span>{t('app.footer_quizapi')}</span>
-  }
-
-  return <span>{t('app.footer_mock')}</span>
+  return (
+    <span>
+      {t('app.footer_prefix')}
+      QuizAPI
+      {t('app.footer_and')}
+      <TextLink href="https://the-trivia-api.com">The Trivia API</TextLink>
+      {t('app.footer_mid')}
+      <TextLink href="https://creativecommons.org/licenses/by-nc/4.0/">
+        CC BY-NC 4.0
+      </TextLink>
+      {t('app.footer_suffix')}
+    </span>
+  )
 }
 
 export function RootLayout() {
