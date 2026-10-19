@@ -4,19 +4,18 @@ export type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger'
 export type ButtonSize = 'sm' | 'md' | 'lg'
 
 const base =
-  'inline-flex items-center justify-center gap-2 rounded-lg font-semibold transition-[box-shadow,background-color,opacity] cursor-pointer disabled:cursor-not-allowed disabled:opacity-50'
+  'inline-flex items-center justify-center gap-2 rounded-lg font-semibold transition-[translate,box-shadow,background-color,opacity] cursor-pointer disabled:cursor-not-allowed disabled:opacity-50'
 
 const variants: Record<ButtonVariant, string> = {
-  // Material: the button floats; hover raises it, press brings it back down.
+  // Neumorphic: soft light/shade pair, lifts on hover, pressed-in on active.
   primary:
-    'bg-primary text-on-primary shadow-elev-2 hover:bg-primary-hover hover:shadow-elev-6 active:shadow-elev-1 disabled:shadow-none disabled:hover:bg-primary',
-  // Outlined buttons stay flat; hover/press show a state tint instead.
+    'bg-primary text-on-primary shadow-neu hover:bg-primary-hover hover:-translate-y-0.5 hover:shadow-neu-lift active:translate-y-0.5 active:shadow-neu-inset disabled:hover:translate-y-0 disabled:hover:shadow-neu disabled:hover:bg-primary',
   secondary:
-    'border-2 border-primary text-primary-ink hover:bg-primary/10 active:bg-primary/20',
+    'border-2 border-primary bg-bg text-primary-ink shadow-neu hover:-translate-y-0.5 hover:shadow-neu-lift active:translate-y-0.5 active:shadow-neu-inset disabled:hover:translate-y-0 disabled:hover:shadow-neu',
   ghost:
-    'border border-border-strong text-text-2 hover:bg-muted hover:text-text active:bg-bg-3',
+    'border border-border-strong bg-bg text-text-2 shadow-neu hover:-translate-y-0.5 hover:shadow-neu-lift hover:text-text active:translate-y-0.5 active:shadow-neu-inset',
   danger:
-    'bg-danger text-on-danger shadow-elev-2 hover:bg-danger-hover hover:shadow-elev-6 active:shadow-elev-1 disabled:shadow-none',
+    'bg-danger text-on-danger shadow-neu hover:bg-danger-hover hover:-translate-y-0.5 hover:shadow-neu-lift active:translate-y-0.5 active:shadow-neu-inset',
 }
 
 const sizes: Record<ButtonSize, string> = {
