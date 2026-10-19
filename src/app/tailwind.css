@@ -282,6 +282,76 @@
   transition-duration: 0.01ms !important;
 }
 
+/* -------------------------------------------------------------------- */
+/* App background: aura blobs + grain. --aura-hue is set by              */
+/* <AppBackground /> (brand hue, or per category during a quiz).         */
+/* -------------------------------------------------------------------- */
+@property --aura-hue {
+  syntax: '<number>';
+  inherits: true;
+  initial-value: 285;
+}
+
+:root {
+  --aura-l: 0.8;
+  --aura-c: 0.12;
+  --aura-a: 0.38;
+  --grain-opacity: 0.06;
+  --grain-blend: multiply;
+}
+
+[data-theme='dark'] {
+  --aura-l: 0.5;
+  --aura-c: 0.14;
+  --aura-a: 0.3;
+  --grain-opacity: 0.08;
+  --grain-blend: soft-light;
+}
+
+.app-bg {
+  position: fixed;
+  inset: 0;
+  z-index: -10;
+  pointer-events: none;
+  transition: --aura-hue 0.8s ease;
+  background:
+    radial-gradient(
+      60rem 40rem at 8% -8%,
+      oklch(var(--aura-l) var(--aura-c) var(--aura-hue) / var(--aura-a)),
+      transparent 70%
+    ),
+    radial-gradient(
+      50rem 36rem at 100% 100%,
+      oklch(
+        var(--aura-l) var(--aura-c) calc(var(--aura-hue) + 50) / var(--aura-a)
+      ),
+      transparent 70%
+    ),
+    radial-gradient(
+      36rem 28rem at 95% 8%,
+      oklch(
+        var(--aura-l) var(--aura-c) calc(var(--aura-hue) - 40) /
+          calc(var(--aura-a) * 0.6)
+      ),
+      transparent 70%
+    );
+}
+
+/* Answer feedback: stronger, quicker aura than the hue-only category shift. */
+.app-bg[data-flash] {
+  --aura-a: 0.6;
+  transition-duration: 0.25s;
+}
+
+.app-bg::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  opacity: var(--grain-opacity);
+  mix-blend-mode: var(--grain-blend);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
 /* Neumorphic range: inset track, raised thumb. */
 input[type='range'] {
   appearance: none;

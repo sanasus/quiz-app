@@ -14,6 +14,7 @@ import {
   type LucideIcon,
 } from 'lucide-react'
 import { useProviderStore } from '../../shared/api/provider-store'
+import { AppBackground } from '../../shared/ui/app-background'
 import { Button } from '../../shared/ui/button'
 import { NavItem } from '../../shared/ui/nav-item'
 import { TextLink } from '../../shared/ui/text-link'
@@ -68,7 +69,9 @@ export function RootLayout() {
   const currentCode = i18n.language === 'ru' ? 'RU' : 'EN'
 
   return (
-    <div className="flex min-h-screen flex-col bg-bg">
+    <div className="flex min-h-screen flex-col">
+      <AppBackground />
+
       {/* Skip link — first focusable element on the page. */}
       <a
         href="#main-content"
