@@ -48,7 +48,7 @@ function AccuracyChart({
   })
 
   return (
-    <div className="mb-6 rounded-xl bg-surface p-4 shadow-md">
+    <div className="mb-6 rounded-card bg-surface p-4 shadow-card">
       <h2 className="mb-3 text-lg font-semibold text-text">
         {t('stats.chart_title')}
       </h2>
@@ -113,7 +113,7 @@ export function StatsScreen() {
       </h1>
 
       {isEmpty ? (
-        <div className="rounded-xl bg-surface p-8 text-center shadow-md">
+        <div className="rounded-card bg-surface p-8 text-center shadow-card">
           <p className="mb-4 text-text-2">{t('stats.empty')}</p>
           <Link
             to="/setup"
@@ -126,7 +126,7 @@ export function StatsScreen() {
         <>
           {/* Totals */}
           <div className="mb-6 grid grid-cols-2 gap-4 sm:grid-cols-4">
-            <div className="rounded-xl bg-surface p-4 text-center shadow-sm">
+            <div className="rounded-tile bg-surface p-4 text-center shadow-sm">
               <div
                 data-testid="stats-sessions"
                 className="text-2xl font-bold text-text"
@@ -137,7 +137,7 @@ export function StatsScreen() {
                 {t('stats.total_sessions')}
               </div>
             </div>
-            <div className="rounded-xl bg-surface p-4 text-center shadow-sm">
+            <div className="rounded-tile bg-surface p-4 text-center shadow-sm">
               <div
                 data-testid="stats-accuracy"
                 className="text-2xl font-bold text-primary"
@@ -146,13 +146,13 @@ export function StatsScreen() {
               </div>
               <div className="text-xs text-text-2">{t('stats.accuracy')}</div>
             </div>
-            <div className="rounded-xl bg-surface p-4 text-center shadow-sm">
+            <div className="rounded-tile bg-surface p-4 text-center shadow-sm">
               <div className="text-2xl font-bold text-success">
                 {averageStreak(stats)}
               </div>
               <div className="text-xs text-text-2">{t('stats.avg_streak')}</div>
             </div>
-            <div className="rounded-xl bg-surface p-4 text-center shadow-sm">
+            <div className="rounded-tile bg-surface p-4 text-center shadow-sm">
               <div
                 data-testid="stats-best-score"
                 className="text-2xl font-bold text-warning-text"
@@ -164,7 +164,7 @@ export function StatsScreen() {
           </div>
 
           {/* Level / XP */}
-          <div className="mb-6 rounded-xl bg-surface p-4 shadow-md">
+          <div className="mb-6 rounded-card bg-surface p-4 shadow-card">
             <div className="mb-2 flex items-baseline justify-between">
               <span className="font-semibold text-text">
                 {t('home.level')} {progress.level}
@@ -193,7 +193,7 @@ export function StatsScreen() {
           <AccuracyChart history={stats.history} />
 
           {/* Accuracy by category */}
-          <div className="mb-6 rounded-xl bg-surface p-4 shadow-md">
+          <div className="mb-6 rounded-card bg-surface p-4 shadow-card">
             <h2 className="mb-3 text-lg font-semibold text-text">
               {t('stats.by_category')}
             </h2>
@@ -216,7 +216,7 @@ export function StatsScreen() {
           </div>
 
           {/* Accuracy by difficulty */}
-          <div className="mb-6 rounded-xl bg-surface p-4 shadow-md">
+          <div className="mb-6 rounded-card bg-surface p-4 shadow-card">
             <h2 className="mb-3 text-lg font-semibold text-text">
               {t('stats.by_difficulty')}
             </h2>
@@ -239,7 +239,7 @@ export function StatsScreen() {
           </div>
 
           {/* History — scrollable when the list gets long */}
-          <div className="mb-6 rounded-xl bg-surface p-4 shadow-md">
+          <div className="mb-6 rounded-card bg-surface p-4 shadow-card">
             <h2
               id="history-heading"
               className="mb-3 text-lg font-semibold text-text"
@@ -271,7 +271,7 @@ export function StatsScreen() {
 
           {/* Play days */}
           {stats.playDays.length > 0 && (
-            <div className="mb-6 rounded-xl bg-surface p-4 shadow-md">
+            <div className="mb-6 rounded-card bg-surface p-4 shadow-card">
               <h2 className="mb-3 text-lg font-semibold text-text">
                 {t('stats.play_days')}
               </h2>

@@ -96,7 +96,7 @@ export function SetupScreen() {
         {t('setup.title')}
       </h1>
 
-      <div className="flex flex-col gap-6 rounded-xl bg-surface p-6 shadow-md transition-shadow hover:shadow-lg">
+      <div className="flex flex-col gap-6 rounded-card bg-surface p-6 shadow-card transition-shadow hover:shadow-card-hover">
         {/* Category — custom dropdown */}
         <div className="group">
           <label

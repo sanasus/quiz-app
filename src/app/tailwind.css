@@ -37,6 +37,8 @@
   --color-surface: #ffffff;
   --color-surface-hover: #f2eeff;
   --color-border: #e2dbf7;
+  /* 3:1 on bg and surface — borders that define a control, not a divider. */
+  --color-border-strong: #8a80b5;
   --color-text: #191436;
   --color-text-2: #47406b;
   --color-text-3: #716a97;
@@ -127,6 +129,7 @@
   --color-surface: #1a1630;
   --color-surface-hover: #241f45;
   --color-border: #322b57;
+  --color-border-strong: #7a6fb5;
   --color-text: #ede9fe;
   --color-text-2: #b8b0d8;
   --color-text-3: #948cb8;

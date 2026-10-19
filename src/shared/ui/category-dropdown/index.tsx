@@ -101,7 +101,7 @@ const CategoryDropdown = ({
           ${
             open
               ? 'border-primary ring-2 ring-primary/20 bg-primary/5 text-primary-ink'
-              : 'border-border bg-bg text-text hover:border-primary/50 hover:bg-primary/5 active:scale-[0.99]'
+              : 'border-border-strong bg-bg text-text hover:border-primary/50 hover:bg-primary/5 active:scale-[0.99]'
           }`}
       >
         <span id="category-value" className="flex-1 truncate">
@@ -115,7 +115,7 @@ const CategoryDropdown = ({
 
       {/* Dropdown panel */}
       {open && (
-        <div className="absolute z-50 mt-1 w-full rounded-xl border border-border bg-surface shadow-xl animate-in">
+        <div className="absolute z-50 mt-1 w-full rounded-card border border-border bg-surface shadow-xl animate-in">
           {/* "All" option at top */}
           <button
             type="button"

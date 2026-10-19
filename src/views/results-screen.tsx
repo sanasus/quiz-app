@@ -84,7 +84,7 @@ export function ResultsScreen() {
       </h1>
 
       {/* Score card */}
-      <div className="mb-6 rounded-xl bg-surface p-6 text-center shadow-md">
+      <div className="mb-6 rounded-card bg-surface p-6 text-center shadow-card">
         <div
           data-testid="result-score"
           className="mb-2 text-5xl font-extrabold text-primary"
@@ -108,7 +108,7 @@ export function ResultsScreen() {
 
       {/* Stats grid */}
       <div className="mb-6 grid grid-cols-2 gap-4 sm:grid-cols-4">
-        <div className="rounded-xl bg-surface p-4 text-center shadow-sm">
+        <div className="rounded-tile bg-surface p-4 text-center shadow-sm">
           <div
             data-testid="result-correct"
             className="text-2xl font-bold text-success"
@@ -121,7 +121,7 @@ export function ResultsScreen() {
           </div>
           <div className="text-xs text-text-2">{t('results.correct')}</div>
         </div>
-        <div className="rounded-xl bg-surface p-4 text-center shadow-sm">
+        <div className="rounded-tile bg-surface p-4 text-center shadow-sm">
           <div
             data-testid="result-incorrect"
             className="text-2xl font-bold text-danger"
@@ -134,7 +134,7 @@ export function ResultsScreen() {
           </div>
           <div className="text-xs text-text-2">{t('results.incorrect')}</div>
         </div>
-        <div className="rounded-xl bg-surface p-4 text-center shadow-sm">
+        <div className="rounded-tile bg-surface p-4 text-center shadow-sm">
           <div
             data-testid="result-accuracy"
             className="text-2xl font-bold text-text"
@@ -148,7 +148,7 @@ export function ResultsScreen() {
           </div>
           <div className="text-xs text-text-2">{t('results.accuracy')}</div>
         </div>
-        <div className="rounded-xl bg-surface p-4 text-center shadow-sm">
+        <div className="rounded-tile bg-surface p-4 text-center shadow-sm">
           <div
             data-testid="result-time"
             className="text-2xl font-bold text-text"
@@ -161,7 +161,7 @@ export function ResultsScreen() {
 
       {/* Mistakes list */}
       {result.mistakes.length > 0 && (
-        <div className="mb-6 rounded-xl bg-surface p-4 shadow-md">
+        <div className="mb-6 rounded-card bg-surface p-4 shadow-card">
           <h2 className="mb-3 text-lg font-semibold text-text">
             {t('results.mistakes_title')}
           </h2>

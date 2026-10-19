@@ -73,7 +73,7 @@ export function AchievementToast({
                 : { opacity: 0 }
             }
             transition={{ type: 'spring', stiffness: 400, damping: 28 }}
-            className="pointer-events-auto flex w-full max-w-sm items-center gap-3 rounded-xl border-2 border-warning bg-surface p-4 shadow-lg"
+            className="pointer-events-auto flex w-full max-w-sm items-center gap-3 rounded-card border-2 border-warning bg-surface p-4 shadow-lg"
           >
             <span aria-hidden="true" className="text-3xl">
               {toast.icon}

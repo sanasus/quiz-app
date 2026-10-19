@@ -55,7 +55,7 @@ export function ApiErrorDialog({
         aria-modal="true"
         aria-labelledby="api-error-title"
         aria-describedby="api-error-message"
-        className="w-full max-w-sm rounded-xl bg-surface p-6 shadow-xl"
+        className="w-full max-w-sm rounded-card bg-surface p-6 shadow-xl"
       >
         <h2 id="api-error-title" className="mb-2 text-lg font-bold text-text">
           {t('api_error.title')}

@@ -128,7 +128,7 @@ export function RootLayout() {
               type="button"
               onClick={toggleLang}
               data-testid="lang-toggle"
-              className="rounded-md border border-border bg-bg px-3 py-1.5 text-xs font-semibold text-text transition-colors hover:bg-muted"
+              className="rounded-md border border-border-strong bg-bg px-3 py-1.5 text-xs font-semibold text-text transition-colors hover:bg-muted"
               aria-label={t('app.language_current', { code: currentCode })}
             >
               {currentCode}

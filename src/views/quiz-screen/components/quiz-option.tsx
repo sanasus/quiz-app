@@ -36,7 +36,7 @@ export const QuizOption = memo(function QuizOption({
 }: QuizOptionProps) {
   const motionEnabled = useMotionEnabled()
 
-  let optionClass = 'border-border bg-bg text-text'
+  let optionClass = 'border-border-strong bg-bg text-text'
   let dataState: 'correct' | 'incorrect' | undefined
   let animate: 'idle' | 'shake' | 'pop' = 'idle'
   if (showResult) {
@@ -48,6 +48,10 @@ export const QuizOption = memo(function QuizOption({
       optionClass = 'border-danger bg-danger/10 text-danger-ink'
       dataState = 'incorrect'
       animate = 'shake'
+    } else {
+      // Not chosen, not right: step back so the answer stays the focus.
+      // Muted via border + text colour (not opacity) to keep text legible.
+      optionClass = 'border-border bg-bg text-text-3'
     }
   } else if (isSelected) {
     optionClass = 'border-primary bg-primary/10 text-primary-ink'
@@ -76,12 +80,12 @@ export const QuizOption = memo(function QuizOption({
       onClick={() => onToggle(id)}
       aria-selected={isSelected}
       role="option"
-      className={`w-full rounded-lg border p-4 text-left text-sm transition-colors disabled:cursor-not-allowed disabled:opacity-75 ${hoverClass} ${optionClass}`}
+      className={`w-full rounded-lg border p-4 text-left text-sm transition-colors disabled:cursor-not-allowed ${showResult ? '' : 'disabled:opacity-75'} ${hoverClass} ${optionClass}`}
       disabled={disabled}
       {...animateProps}
     >
       <div className="flex items-center gap-3">
-        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-border text-xs">
+        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-border-strong text-xs">
           {badgeLabel(index)}
         </span>
         <span className="min-w-0 break-words">{text}</span>

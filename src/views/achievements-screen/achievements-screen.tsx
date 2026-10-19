@@ -29,7 +29,7 @@ export function AchievementsScreen() {
       </h1>
 
       {/* Level / XP */}
-      <div className="mb-6 rounded-xl bg-surface p-4 shadow-md">
+      <div className="mb-6 rounded-card bg-surface p-4 shadow-card">
         <div className="mb-2 flex items-baseline justify-between">
           <span className="text-lg font-bold text-text">
             {t('home.level')} {progress.level}
@@ -71,7 +71,7 @@ export function AchievementsScreen() {
               data-testid={`achievement-${a.id}`}
               data-unlocked={date ? 'true' : 'false'}
               aria-label={t(a.titleKey)}
-              className={`flex items-start gap-3 rounded-xl bg-surface p-4 shadow-sm ${
+              className={`flex items-start gap-3 rounded-tile bg-surface p-4 shadow-sm ${
                 date ? '' : 'opacity-50 grayscale'
               }`}
             >

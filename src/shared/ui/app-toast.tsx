@@ -39,7 +39,7 @@ export function AppToast({
       aria-live="polite"
       className="fixed inset-x-0 top-4 z-50 flex justify-center px-4"
     >
-      <div className="flex w-full max-w-sm items-center gap-3 rounded-xl border-2 border-primary bg-surface p-4 shadow-lg">
+      <div className="flex w-full max-w-sm items-center gap-3 rounded-card border-2 border-primary bg-surface p-4 shadow-lg">
         <div className="min-w-0 flex-1">
           {title ? <p className="mb-0.5 font-bold text-text">{title}</p> : null}
           <p className="text-sm text-text">{message}</p>

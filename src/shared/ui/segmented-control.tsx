@@ -85,7 +85,7 @@ export function SegmentedControl<T extends string>({
             className={`flex-1 min-w-20 rounded-tile border-2 px-3 py-2 text-sm font-semibold transition-colors cursor-pointer ${
               checked
                 ? 'border-primary bg-primary/10 text-primary-ink shadow-edge'
-                : 'border-border bg-surface text-text-2 hover:bg-surface-hover hover:text-text'
+                : 'border-border-strong bg-surface text-text-2 hover:bg-surface-hover hover:text-text'
             }`}
           >
             {option.icon ? (
@@ -136,7 +136,9 @@ export function Toggle({
       <span className="text-sm text-text-2">{label}</span>
       <span
         className={`relative block h-8 w-16 shrink-0 rounded-pill border-2 transition-colors ${
-          pressed ? 'border-primary bg-primary/20' : 'border-border bg-surface'
+          pressed
+            ? 'border-primary bg-primary/20'
+            : 'border-border-strong bg-surface'
         }`}
       >
         <span

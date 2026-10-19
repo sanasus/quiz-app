@@ -31,7 +31,7 @@ export function HomeScreen() {
 
       {/* Level / XP */}
       <div
-        className="w-full max-w-xs rounded-xl bg-surface p-4 shadow-md"
+        className="w-full max-w-xs rounded-card bg-surface p-4 shadow-card"
         data-testid="home-level"
       >
         <div className="mb-2 flex items-baseline justify-between">
@@ -62,7 +62,7 @@ export function HomeScreen() {
       {/* Last session result */}
       {last && (
         <div
-          className="w-full max-w-xs rounded-xl bg-surface p-4 text-center shadow-md"
+          className="w-full max-w-xs rounded-card bg-surface p-4 text-center shadow-card"
           data-testid="home-last-result"
         >
           <p className="mb-1 text-xs uppercase tracking-wide text-text-3">
