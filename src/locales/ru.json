@@ -19,6 +19,9 @@
   "home": {
     "welcome": "Добро пожаловать в QuizApp!",
     "start": "Начать тест",
+    "best_streak": "Лучшая серия",
+    "sessions": "Сессий",
+    "repeat_last": "Повторить",
     "last_results": "Последние результаты",
     "level": "Уровень",
     "xp_progress": "Прогресс опыта"
