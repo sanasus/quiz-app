@@ -27,7 +27,7 @@ export function HomeScreen() {
 
   return (
     <div className="flex min-h-[60vh] flex-col items-center justify-center gap-6 animate-fade-in">
-      <h1 className="px-2 text-center text-3xl font-bold text-primary sm:text-4xl">
+      <h1 className="px-2 text-center text-title text-primary sm:text-display">
         {t('home.welcome')}
       </h1>
 
@@ -37,7 +37,7 @@ export function HomeScreen() {
           <span className="font-bold text-text">
             {t('home.level')} {progress.level}
           </span>
-          <span className="text-sm text-text-2">
+          <span className="text-body text-text-2">
             {xp} XP · {progress.into}/{progress.need}
           </span>
         </div>
@@ -54,14 +54,14 @@ export function HomeScreen() {
           className="w-full max-w-xs text-center"
           data-testid="home-last-result"
         >
-          <p className="mb-1 text-xs uppercase tracking-wide text-text-3">
+          <p className="mb-1 text-caption uppercase tracking-wide text-text-3">
             {t('home.last_results')}
           </p>
-          <p className="text-2xl font-extrabold text-primary">{last.score}</p>
-          <p className="text-sm text-text-2">
+          <p className="text-stat text-primary">{last.score}</p>
+          <p className="text-body text-text-2">
             {last.correctCount}/{last.totalQuestions} · {last.accuracy}%
           </p>
-          <p className="mt-1 text-xs text-text-3">
+          <p className="mt-1 text-caption text-text-3">
             {formatSessionDate(last.finishedAt)}
           </p>
         </Card>

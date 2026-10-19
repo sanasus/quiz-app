@@ -147,7 +147,7 @@ export function ResultsScreen() {
             {result.mistakes.map((m, idx) => (
               <Card key={idx} variant="inset" padding="sm">
                 <p className="mb-1 font-medium text-text">{m.question.text}</p>
-                <div className="flex flex-col gap-1 text-sm">
+                <div className="flex flex-col gap-1 text-body">
                   <span className="text-danger-ink">
                     ❌{' '}
                     {m.selectedOptionIds

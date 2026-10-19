@@ -47,7 +47,7 @@ export function AppToast({
       >
         <div className="min-w-0 flex-1">
           {title ? <p className="mb-0.5 font-bold text-text">{title}</p> : null}
-          <p className="text-sm text-text">{message}</p>
+          <p className="text-body text-text">{message}</p>
         </div>
         <IconButton aria-label={t('common.close')} onClick={onDismiss}>
           <X className="h-4 w-4" aria-hidden="true" />

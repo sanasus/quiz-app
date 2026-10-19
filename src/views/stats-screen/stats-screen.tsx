@@ -71,7 +71,7 @@ function AccuracyChart({
           vectorEffect="non-scaling-stroke"
         />
       </svg>
-      <div className="mt-1 flex justify-between text-xs text-text-3">
+      <div className="mt-1 flex justify-between text-caption text-text-3">
         <span>{t('stats.chart_oldest')}</span>
         <span>{t('stats.chart_latest')}</span>
       </div>
@@ -159,7 +159,7 @@ export function StatsScreen() {
               <span className="font-semibold text-text">
                 {t('home.level')} {progress.level}
               </span>
-              <span className="text-sm text-text-2">
+              <span className="text-body text-text-2">
                 {xp} {t('stats.xp_unit')}
               </span>
             </div>
@@ -179,7 +179,7 @@ export function StatsScreen() {
               {Object.entries(stats.byCategory).map(([name, bucket]) => (
                 <li
                   key={name}
-                  className="flex items-center justify-between text-sm"
+                  className="flex items-center justify-between text-body"
                 >
                   <span className="text-text">{name}</span>
                   <span className="text-text-2">
@@ -200,7 +200,7 @@ export function StatsScreen() {
               {Object.entries(stats.byDifficulty).map(([name, bucket]) => (
                 <li
                   key={name}
-                  className="flex items-center justify-between text-sm"
+                  className="flex items-center justify-between text-body"
                 >
                   <span className="text-text">{t(`setup.${name}`, name)}</span>
                   <span className="text-text-2">
@@ -227,7 +227,7 @@ export function StatsScreen() {
               {stats.history.map((s) => (
                 <li
                   key={s.finishedAt}
-                  className="flex items-center justify-between text-sm"
+                  className="flex items-center justify-between text-body"
                 >
                   <span className="text-text-2">
                     {formatSessionDate(s.finishedAt)}

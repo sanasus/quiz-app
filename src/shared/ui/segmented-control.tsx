@@ -130,7 +130,7 @@ export function Toggle({
         pressed ? 'border-primary/40' : ''
       }`}
     >
-      <span className="text-sm text-text-2">{label}</span>
+      <span className="text-body text-text-2">{label}</span>
       <span
         className={`relative block h-8 w-16 shrink-0 rounded-pill border-2 transition-colors ${
           pressed

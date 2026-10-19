@@ -85,13 +85,13 @@ export function AchievementToast({
               {toast.icon}
             </span>
             <div className="min-w-0 flex-1">
-              <p className="text-xs uppercase tracking-wide text-text-2">
+              <p className="text-caption uppercase tracking-wide text-text-2">
                 {t('achievements.unlocked')}
               </p>
               <p className="truncate font-bold text-text">
                 {t(toast.titleKey)}
               </p>
-              <p className="truncate text-sm text-text-2">
+              <p className="truncate text-body text-text-2">
                 {t(toast.descriptionKey)}
               </p>
             </div>

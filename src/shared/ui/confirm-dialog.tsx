@@ -52,7 +52,7 @@ export function ConfirmDialog({
       >
         {title}
       </h2>
-      <p id="confirm-dialog-message" className="mb-6 text-sm text-text-2">
+      <p id="confirm-dialog-message" className="mb-6 text-body text-text-2">
         {message}
       </p>
       <div className="flex justify-end gap-3">

@@ -37,7 +37,7 @@ export function AchievementsScreen() {
           <span className="text-lg font-bold text-text">
             {t('home.level')} {progress.level}
           </span>
-          <span className="text-sm text-text-2">
+          <span className="text-body text-text-2">
             {xp} XP · {progress.into}/{progress.need}
           </span>
         </div>
@@ -46,7 +46,7 @@ export function AchievementsScreen() {
           max={progress.need}
           label={t('achievements.xp_progress')}
         />
-        <p className="mt-2 text-right text-xs text-text-3">
+        <p className="mt-2 text-right text-caption text-text-3">
           {t('achievements.unlocked_count', {
             unlocked: unlockedCount,
             total: ACHIEVEMENTS.length,
@@ -75,8 +75,8 @@ export function AchievementsScreen() {
               </span>
               <div className="min-w-0">
                 <p className="font-bold text-text">{t(a.titleKey)}</p>
-                <p className="text-sm text-text-2">{t(a.descriptionKey)}</p>
-                <p className="mt-1 text-xs text-text-3">
+                <p className="text-body text-text-2">{t(a.descriptionKey)}</p>
+                <p className="mt-1 text-caption text-text-3">
                   {date
                     ? t('achievements.unlocked_on', {
                         date: formatDate(date),
@@ -92,7 +92,7 @@ export function AchievementsScreen() {
       <div className="mt-6 text-center">
         <Link
           to="/stats"
-          className="text-sm font-semibold text-primary hover:underline"
+          className="text-body font-semibold text-primary hover:underline"
         >
           {t('app.nav.stats')} →
         </Link>

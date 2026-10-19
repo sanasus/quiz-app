@@ -80,12 +80,12 @@ export const QuizOption = memo(function QuizOption({
       onClick={() => onToggle(id)}
       aria-selected={isSelected}
       role="option"
-      className={`w-full rounded-lg border p-4 text-left text-sm transition-colors disabled:cursor-not-allowed ${showResult ? '' : 'disabled:opacity-75'} ${hoverClass} ${optionClass}`}
+      className={`w-full rounded-lg border p-4 text-left text-body transition-colors disabled:cursor-not-allowed ${showResult ? '' : 'disabled:opacity-75'} ${hoverClass} ${optionClass}`}
       disabled={disabled}
       {...animateProps}
     >
       <div className="flex items-center gap-3">
-        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs shadow-neu-inset-sm">
+        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-caption shadow-neu-inset-sm">
           {badgeLabel(index)}
         </span>
         <span className="min-w-0 break-words">{text}</span>

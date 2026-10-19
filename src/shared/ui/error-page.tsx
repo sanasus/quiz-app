@@ -26,7 +26,7 @@ export function ErrorPage({ error, reset }: ErrorComponentProps) {
       </h1>
       <p className="text-xl text-text-2">{t('common.error_title')}</p>
       {error instanceof Error && (
-        <p className="max-w-md break-words text-sm text-text-2/70">
+        <p className="max-w-md break-words text-body text-text-2/70">
           {error.message}
         </p>
       )}

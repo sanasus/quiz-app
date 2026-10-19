@@ -98,7 +98,7 @@ const CategoryDropdown = ({
         aria-expanded={open}
         aria-labelledby="category-label category-value"
         onClick={() => setOpen((prev) => !prev)}
-        className={`flex w-full items-center gap-2 rounded-tile border-2 bg-bg px-4 py-2.5 text-left text-sm font-bold transition-[box-shadow,color,border-color] cursor-pointer ${
+        className={`flex w-full items-center gap-2 rounded-tile border-2 bg-bg px-4 py-2.5 text-left text-body font-bold transition-[box-shadow,color,border-color] cursor-pointer ${
           open
             ? 'border-primary text-primary-ink shadow-neu-inset'
             : 'border-transparent text-text shadow-neu hover:shadow-neu-lift'
@@ -123,7 +123,7 @@ const CategoryDropdown = ({
               onSelect(null)
               setOpen(false)
             }}
-            className={`m-2 flex w-[calc(100%-1rem)] items-center gap-2 rounded-tile border-2 px-4 py-2 text-sm font-bold transition-[box-shadow,color,border-color] cursor-pointer ${
+            className={`m-2 flex w-[calc(100%-1rem)] items-center gap-2 rounded-tile border-2 px-4 py-2 text-body font-bold transition-[box-shadow,color,border-color] cursor-pointer ${
               selectedCategory === null || selectedCategory === 'all'
                 ? 'border-primary text-primary-ink shadow-neu-inset'
                 : 'border-transparent text-text-2 hover:text-text hover:shadow-neu'
@@ -146,7 +146,7 @@ const CategoryDropdown = ({
                   <button
                     type="button"
                     onClick={() => handleTopicToggle(topic.id)}
-                    className="flex w-full items-center gap-2 rounded-tile px-3 py-2 text-sm font-bold text-text-2 transition-[box-shadow,color] cursor-pointer hover:text-text hover:shadow-neu"
+                    className="flex w-full items-center gap-2 rounded-tile px-3 py-2 text-body font-bold text-text-2 transition-[box-shadow,color] cursor-pointer hover:text-text hover:shadow-neu"
                   >
                     <span className="flex-1 text-left">{topic.name}</span>
                     <ChevronDown
@@ -166,7 +166,7 @@ const CategoryDropdown = ({
                             key={cat.id}
                             type="button"
                             onClick={() => handleCategorySelect(cat.slug)}
-                            className={`flex items-center gap-2 rounded-tile border-2 px-3 py-2 text-sm font-medium transition-[box-shadow,color,border-color] cursor-pointer ${
+                            className={`flex items-center gap-2 rounded-tile border-2 px-3 py-2 text-body font-medium transition-[box-shadow,color,border-color] cursor-pointer ${
                               isSelected
                                 ? 'border-primary text-primary-ink shadow-neu-inset'
                                 : 'border-transparent text-text-2 shadow-neu hover:text-text hover:shadow-neu-lift'
@@ -174,7 +174,7 @@ const CategoryDropdown = ({
                           >
                             <span className="truncate">{cat.name}</span>
                             {cat.quizCount != null && (
-                              <span className="ml-auto text-xs text-text-3 shrink-0">
+                              <span className="ml-auto text-caption text-text-3 shrink-0">
                                 {cat.quizCount}
                               </span>
                             )}

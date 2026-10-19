@@ -83,7 +83,7 @@ export function RootLayout() {
           {/* Brand is a link, not a heading: each page owns the only h1. */}
           <Link
             to="/"
-            className="text-xl font-bold text-primary hover:text-primary-hover"
+            className="text-heading text-primary hover:text-primary-hover"
           >
             {t('app.title')}
           </Link>
@@ -111,7 +111,7 @@ export function RootLayout() {
               size="sm"
               onClick={toggleLang}
               data-testid="lang-toggle"
-              className="px-4 py-1.5 text-xs"
+              className="px-4 py-1.5 text-caption"
               aria-label={t('app.language_current', { code: currentCode })}
             >
               {currentCode}
@@ -143,7 +143,7 @@ export function RootLayout() {
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-border bg-surface px-4 py-3 text-center text-xs text-text-3">
+      <footer className="border-t border-border bg-surface px-4 py-3 text-center text-caption text-text-3">
         <ProviderFooter />
       </footer>
     </div>
