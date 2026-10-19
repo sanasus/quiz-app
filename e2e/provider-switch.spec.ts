@@ -23,7 +23,7 @@ import {
  */
 test.describe('Provider switching', () => {
   test(
-    'switches to The Trivia API from settings',
+    'switches to Trivia API from settings',
     { tag: ['@smoke'] },
     async ({ page }) => {
       await page.goto('/setup')
@@ -41,7 +41,7 @@ test.describe('Provider switching', () => {
       await expect(page).toHaveURL(/\/settings/)
 
       // No active session → no confirmation dialog, straight to /setup.
-      await selectProvider(page, 'The Trivia API')
+      await selectProvider(page, 'Trivia API')
       await expect(page.getByTestId('provider-switch-confirm')).toHaveCount(0)
 
       // The seeded category is gone — back to the default "All".
@@ -51,7 +51,7 @@ test.describe('Provider switching', () => {
       // category tree in one catalog response.
       await expect(page.getByTestId('difficulty-easy')).toBeVisible()
       await dropdown.click()
-      await page.getByRole('button', { name: /The Trivia API/ }).click()
+      await page.getByRole('button', { name: /Trivia API/ }).click()
       await expect(
         page.getByRole('button', { name: /General Knowledge/ }),
       ).toBeVisible()
@@ -119,7 +119,7 @@ test.describe('Provider switching', () => {
     // Change API toggles trivia → quizapi; /setup loads cleanly there.
     await routeQuizApi(page)
 
-    await selectProvider(page, 'The Trivia API')
+    await selectProvider(page, 'Trivia API')
     await selectMode(page, 'survival')
     await startFromCurrentSetup(page)
 
@@ -159,7 +159,7 @@ test.describe('Provider switching', () => {
     await expect(toast).toContainText('Question source changed', {
       timeout: 15_000,
     })
-    await expect(toast).toContainText('Now using The Trivia API')
+    await expect(toast).toContainText('Now using Trivia API')
 
     // Categories and difficulties now come from the trivia fixtures.
     await expect(page.getByTestId('category-dropdown')).toBeVisible()
@@ -176,7 +176,7 @@ test.describe('Provider switching', () => {
     await expect(
       page
         .getByTestId('provider-selector')
-        .getByRole('radio', { name: 'The Trivia API' }),
+        .getByRole('radio', { name: 'Trivia API' }),
     ).toHaveAttribute('aria-checked', 'true')
   })
 
@@ -186,7 +186,7 @@ test.describe('Provider switching', () => {
     // Never let a stray QuizAPI request reach the real network.
     await routeQuizApi(page)
 
-    await selectProvider(page, 'The Trivia API')
+    await selectProvider(page, 'Trivia API')
 
     // Network failures never switch: an inline alert with Retry
     // instead (retries add ~3s before the error settles).
