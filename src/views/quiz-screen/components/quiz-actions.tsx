@@ -1,6 +1,8 @@
 import { memo } from 'react'
 import { useTranslation } from 'react-i18next'
+import { Flame } from 'lucide-react'
 import { Button } from '../../../shared/ui/button'
+import { Card } from '../../../shared/ui/card'
 import { AnimatedNumber } from '../../../shared/ui/animated-number'
 
 export interface QuizActionsProps {
@@ -26,16 +28,22 @@ export const QuizActions = memo(function QuizActions({
   const { t } = useTranslation()
 
   return (
-    <div className="sticky bottom-0 mt-6 flex flex-wrap items-center justify-between gap-x-4 gap-y-2 border-t border-border bg-bg pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))]">
-      <div className="flex items-center gap-3">
-        <span className="text-body text-text-3">
-          {t('quiz.streak')}:{' '}
+    <Card
+      variant="tile"
+      padding="sm"
+      className="sticky bottom-[calc(0.75rem+env(safe-area-inset-bottom))] mt-6 flex flex-wrap items-center justify-between gap-x-4 gap-y-2"
+    >
+      <div className="flex items-baseline gap-2 px-1">
+        <span className="text-stat text-success">
           <AnimatedNumber
             value={streak}
             duration={400}
             className="tabular-nums"
-          />{' '}
-          🔥
+          />
+        </span>
+        <span className="flex items-center gap-1 text-caption text-text-2">
+          {t('quiz.streak')}
+          <Flame className="size-4 fill-current text-streak" aria-hidden />
         </span>
       </div>
       <div className="flex gap-3">
@@ -55,6 +63,6 @@ export const QuizActions = memo(function QuizActions({
           </Button>
         ) : null}
       </div>
-    </div>
+    </Card>
   )
 })
