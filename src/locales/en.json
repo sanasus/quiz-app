@@ -19,6 +19,9 @@
   "home": {
     "welcome": "Welcome to QuizApp!",
     "start": "Start Quiz",
+    "best_streak": "Best streak",
+    "sessions": "Sessions",
+    "repeat_last": "Repeat",
     "last_results": "Last Results",
     "level": "Level",
     "xp_progress": "XP progress"

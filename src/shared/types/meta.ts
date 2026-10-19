@@ -22,6 +22,8 @@ export interface SessionSummary {
   mode: QuizMode
   difficulty: 'easy' | 'medium' | 'hard'
   category: string
+  /** Question source the session ran on; category slugs are provider-specific. Absent in older history. */
+  providerId?: string
 }
 
 // ---------------------------------------------------------------------------

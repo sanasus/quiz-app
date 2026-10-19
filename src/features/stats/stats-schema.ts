@@ -28,6 +28,7 @@ const sessionSummarySchema = z.object({
   mode: z.enum(['classic', 'timed', 'blitz', 'survival']),
   difficulty: z.enum(['easy', 'medium', 'hard']),
   category: z.string(),
+  providerId: z.string().optional(),
 })
 
 export const statsDataSchema = z.object({
