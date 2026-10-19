@@ -67,30 +67,6 @@
   --radius-pill: 9999px;
 
   /* ---------------------------------------------------------------- */
-  /* Shadows                                                           */
-  /* ---------------------------------------------------------------- */
-  --shadow-card:
-    -8px -8px 18px rgb(255 255 255 / 0.85), 8px 8px 18px rgb(25 20 54 / 0.16);
-  --shadow-card-hover:
-    -10px -10px 22px rgb(255 255 255 / 0.95), 10px 10px 22px rgb(25 20 54 / 0.2);
-  --shadow-pop: 0 8px 24px -10px rgb(108 92 231 / 0.55);
-  /* Hard offset edge for "volumetric" buttons (collapse on :active). */
-  --shadow-edge: 0 4px 0 1px rgb(25 20 54 / 0.16);
-  /* Hover: button rises 2px, so the edge grows 2px — its bottom stays put. 1px spread: top-down light, shadow below and at the sides. */
-  --shadow-edge-lift: 0 6px 0 1px rgb(25 20 54 / 0.16);
-  /* Neumorphic: top light (white) + bottom shade, soft; inset when pressed. */
-  --shadow-neu:
-    -4px -4px 10px rgb(255 255 255 / 0.85), 4px 4px 10px rgb(25 20 54 / 0.16);
-  --shadow-neu-lift:
-    -6px -6px 14px rgb(255 255 255 / 0.95), 7px 7px 16px rgb(25 20 54 / 0.22);
-  --shadow-neu-inset:
-    inset 3px 3px 7px rgb(25 20 54 / 0.18),
-    inset -3px -3px 7px rgb(255 255 255 / 0.8);
-  --shadow-neu-inset-sm:
-    inset 2px 2px 4px rgb(25 20 54 / 0.2),
-    inset -2px -2px 4px rgb(255 255 255 / 0.8);
-
-  /* ---------------------------------------------------------------- */
   /* Animations                                                        */
   /* ---------------------------------------------------------------- */
   --animate-fade-in: fade-in 0.4s ease-out both;
@@ -111,6 +87,49 @@
 /* Dark theme — explicit attribute set by the settings store            */
 /* (system preference is resolved to light/dark before first paint).    */
 /* -------------------------------------------------------------------- */
+/* Shadows live outside @theme: Tailwind inlines @theme shadow values into
+   its utilities, which would freeze the light values in the dark theme. */
+:root {
+  --shadow-card:
+    -8px -8px 18px rgb(255 255 255 / 0.85), 8px 8px 18px rgb(25 20 54 / 0.16);
+  --shadow-card-hover:
+    -10px -10px 22px rgb(255 255 255 / 0.95), 10px 10px 22px rgb(25 20 54 / 0.2);
+  --shadow-neu:
+    -4px -4px 10px rgb(255 255 255 / 0.85), 4px 4px 10px rgb(25 20 54 / 0.16);
+  --shadow-neu-lift:
+    -6px -6px 14px rgb(255 255 255 / 0.95), 7px 7px 16px rgb(25 20 54 / 0.22);
+  --shadow-neu-inset:
+    inset 3px 3px 7px rgb(25 20 54 / 0.18),
+    inset -3px -3px 7px rgb(255 255 255 / 0.8);
+  --shadow-neu-inset-sm:
+    inset 2px 2px 4px rgb(25 20 54 / 0.2),
+    inset -2px -2px 4px rgb(255 255 255 / 0.8);
+}
+
+@utility shadow-card {
+  box-shadow: var(--shadow-card);
+}
+
+@utility shadow-card-hover {
+  box-shadow: var(--shadow-card-hover);
+}
+
+@utility shadow-neu {
+  box-shadow: var(--shadow-neu);
+}
+
+@utility shadow-neu-lift {
+  box-shadow: var(--shadow-neu-lift);
+}
+
+@utility shadow-neu-inset {
+  box-shadow: var(--shadow-neu-inset);
+}
+
+@utility shadow-neu-inset-sm {
+  box-shadow: var(--shadow-neu-inset-sm);
+}
+
 [data-theme='dark'] {
   --color-primary: #a29bfe;
   --color-primary-hover: #8f86f7;
@@ -160,9 +179,6 @@
     -8px -8px 18px rgb(255 255 255 / 0.04), 8px 8px 18px rgb(0 0 0 / 0.5);
   --shadow-card-hover:
     -10px -10px 22px rgb(255 255 255 / 0.06), 10px 10px 22px rgb(0 0 0 / 0.6);
-  --shadow-pop: 0 8px 24px -10px rgb(162 155 254 / 0.5);
-  --shadow-edge: 0 4px 0 1px rgb(0 0 0 / 0.45);
-  --shadow-edge-lift: 0 6px 0 1px rgb(0 0 0 / 0.45);
   --shadow-neu:
     -4px -4px 10px rgb(255 255 255 / 0.04), 4px 4px 10px rgb(0 0 0 / 0.5);
   --shadow-neu-lift:

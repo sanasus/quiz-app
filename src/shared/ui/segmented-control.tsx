@@ -5,6 +5,7 @@
  */
 
 import type { KeyboardEvent } from 'react'
+import { segmentClass } from './segment-styles'
 
 export interface SegmentedOption<T extends string> {
   value: T
@@ -82,11 +83,7 @@ export function SegmentedControl<T extends string>({
             tabIndex={checked ? 0 : -1}
             data-value={option.value}
             onClick={() => onChange(option.value)}
-            className={`flex-1 min-w-20 rounded-tile border-2 px-3 py-2 text-sm font-semibold transition-colors cursor-pointer ${
-              checked
-                ? 'border-primary bg-bg text-primary-ink shadow-neu-inset'
-                : 'border-transparent bg-bg text-text-2 shadow-neu hover:shadow-neu-lift hover:text-text'
-            }`}
+            className={`flex-1 min-w-20 ${segmentClass(checked)}`}
           >
             {option.icon ? (
               <span aria-hidden="true" className="mr-1">
