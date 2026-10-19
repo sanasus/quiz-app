@@ -78,7 +78,7 @@ describe('useProviderFallback', () => {
     expect(changeProviderMock).toHaveBeenCalledTimes(1)
     expect(changeProviderMock).toHaveBeenCalledWith('trivia')
     expect(result.current.toast?.title).toBe('Question source changed')
-    expect(result.current.toast?.message).toContain('The Trivia API')
+    expect(result.current.toast?.message).toContain('Trivia API')
     expect(result.current.inlineError).toBeNull()
   })
 
