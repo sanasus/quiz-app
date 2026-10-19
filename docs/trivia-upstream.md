@@ -78,6 +78,6 @@ Trivia-алиасы (отображаемые `/v2/categories`) нормализ
 
 ## Атрибуция
 
-Атрибуция **CC BY-NC 4.0** обязательна. Футер показывает её только при
-активном trivia — ключи `app.footer_trivia_*` в `src/locales/en.json` и
-`src/locales/ru.json`.
+Атрибуция **CC BY-NC 4.0** обязательна. Футер показывает её всегда,
+вместе с подписью QuizAPI, независимо от активного провайдера — ключи
+`app.footer_*` в `src/locales/en.json` и `src/locales/ru.json`.

@@ -1,7 +1,6 @@
 /**
- * RootLayout footer (T9): the attribution follows the active provider
- * — the trivia line carries the CC BY-NC 4.0 links its license
- * requires; other providers get a plain line.
+ * RootLayout footer (T9): both credits (QuizAPI, The Trivia API with
+ * its CC BY-NC 4.0 links) are shown whichever provider is active.
  *
  * The router is mocked (Link/Outlet/useRouterState) — the layout
  * needs no real routing context for the footer.
@@ -44,7 +43,7 @@ describe('RootLayout footer', () => {
     const footer = renderLayout()
 
     expect(footer).toHaveTextContent(
-      'QuizApp · Powered by The Trivia API (CC BY-NC 4.0)',
+      'QuizApp · Powered by QuizAPI and The Trivia API (CC BY-NC 4.0)',
     )
 
     const triviaLink = screen.getByRole('link', { name: 'The Trivia API' })
@@ -60,18 +59,22 @@ describe('RootLayout footer', () => {
     expect(licenseLink).toHaveAttribute('target', '_blank')
   })
 
-  it('shows a plain QuizAPI line without links', () => {
+  it('shows both credits and links when quizapi is active', () => {
     const footer = renderLayout()
 
-    expect(footer).toHaveTextContent('QuizApp · Powered by QuizAPI')
-    expect(within(footer).queryByRole('link')).not.toBeInTheDocument()
+    expect(footer).toHaveTextContent(
+      'QuizApp · Powered by QuizAPI and The Trivia API (CC BY-NC 4.0)',
+    )
+    expect(within(footer).getAllByRole('link')).toHaveLength(2)
   })
 
-  it('marks the mock line as a development one', () => {
+  it('keeps both credits when mock is active', () => {
     useProviderStore.setState({ providerId: 'mock' })
     const footer = renderLayout()
 
-    expect(footer).toHaveTextContent('QuizApp · Mock data (development)')
-    expect(within(footer).queryByRole('link')).not.toBeInTheDocument()
+    expect(footer).toHaveTextContent(
+      'QuizApp · Powered by QuizAPI and The Trivia API (CC BY-NC 4.0)',
+    )
+    expect(within(footer).getAllByRole('link')).toHaveLength(2)
   })
 })
