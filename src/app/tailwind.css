@@ -118,19 +118,19 @@
    its utilities, which would freeze the light values in the dark theme. */
 :root {
   --shadow-card:
-    -8px -8px 18px rgb(255 255 255 / 0.85), 8px 8px 18px rgb(25 20 54 / 0.16);
+    -8px -8px 18px rgb(255 255 255 / 1), 8px 8px 18px rgb(25 20 54 / 0.2);
   --shadow-card-hover:
-    -10px -10px 22px rgb(255 255 255 / 0.95), 10px 10px 22px rgb(25 20 54 / 0.2);
+    -10px -10px 22px rgb(255 255 255 / 1), 10px 10px 22px rgb(25 20 54 / 0.2);
   --shadow-neu:
-    -4px -4px 10px rgb(255 255 255 / 0.85), 4px 4px 10px rgb(25 20 54 / 0.16);
+    -4px -4px 10px rgb(255 255 255 / 1), 4px 4px 10px rgb(25 20 54 / 0.2);
   --shadow-neu-lift:
-    -6px -6px 14px rgb(255 255 255 / 0.95), 7px 7px 16px rgb(25 20 54 / 0.22);
+    -6px -6px 14px rgb(255 255 255 / 1), 7px 7px 16px rgb(25 20 54 / 0.22);
   --shadow-neu-inset:
     inset 3px 3px 7px rgb(25 20 54 / 0.18),
-    inset -3px -3px 7px rgb(255 255 255 / 0.8);
+    inset -3px -3px 7px rgb(255 255 255 / 0.95);
   --shadow-neu-inset-sm:
     inset 2px 2px 4px rgb(25 20 54 / 0.2),
-    inset -2px -2px 4px rgb(255 255 255 / 0.8);
+    inset -2px -2px 4px rgb(255 255 255 / 0.95);
 }
 
 @utility shadow-card {
