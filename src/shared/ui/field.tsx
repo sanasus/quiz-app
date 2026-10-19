@@ -24,7 +24,7 @@ export function Field({
       <label
         id={labelId}
         htmlFor={htmlFor}
-        className="mb-2 block cursor-default text-sm font-medium text-text-2"
+        className="mb-2 block cursor-default text-label text-text-2"
       >
         {label}
       </label>

@@ -163,7 +163,7 @@ export function SetupScreen() {
           className="mt-6 flex flex-col gap-3 rounded-lg border border-danger bg-danger/10 p-4"
         >
           <p className="text-danger-ink">{t('setup.load_error')}</p>
-          <p className="break-words text-xs text-text-2">{inlineError}</p>
+          <p className="break-words text-caption text-text-2">{inlineError}</p>
           <Button size="sm" className="self-start" onClick={retry}>
             {t('common.retry')}
           </Button>

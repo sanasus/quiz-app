@@ -21,10 +21,10 @@ export function StatTile({
 }: StatTileProps) {
   return (
     <Card variant="tile" className="text-center">
-      <div data-testid={valueTestId} className={cx('text-2xl font-bold', tone)}>
+      <div data-testid={valueTestId} className={cx('text-stat', tone)}>
         {children}
       </div>
-      <div className="text-xs text-text-2">{label}</div>
+      <div className="text-caption text-text-2">{label}</div>
     </Card>
   )
 }

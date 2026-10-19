@@ -7,7 +7,7 @@ export function Chip({ className, ...rest }: ComponentProps<'span'>) {
   return (
     <span
       className={cx(
-        'rounded-full bg-bg px-3 py-1 text-xs text-text-2 shadow-neu-inset-sm',
+        'rounded-full bg-bg px-3 py-1 text-caption text-text-2 shadow-neu-inset-sm',
         className,
       )}
       {...rest}

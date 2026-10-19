@@ -14,7 +14,7 @@ export const QuizQuestion = memo(function QuizQuestion({
     <Card padding="lg" className="mb-6">
       <h3 className="mb-4 text-lg font-semibold text-text">{text}</h3>
       {description ? (
-        <p className="mb-4 text-sm text-text-2">{description}</p>
+        <p className="mb-4 text-body text-text-2">{description}</p>
       ) : null}
     </Card>
   )
