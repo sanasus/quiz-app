@@ -85,13 +85,10 @@ export function SegmentedControl<T extends string>({
             tabIndex={checked ? 0 : -1}
             data-value={option.value}
             onClick={() => onChange(option.value)}
-            className={`flex-1 min-w-20 ${segmentClass(checked)}`}
+            className={`flex min-w-20 flex-1 items-center justify-center gap-1.5 ${segmentClass(checked)}`}
           >
             {Icon ? (
-              <Icon
-                aria-hidden="true"
-                className="mr-1.5 inline-block h-4 w-4 align-text-bottom"
-              />
+              <Icon aria-hidden="true" className="h-4 w-4 shrink-0" />
             ) : null}
             {option.label}
           </button>
