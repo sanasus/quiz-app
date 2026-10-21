@@ -1,0 +1,7 @@
+{
+  "_comment": "Gzipped sizes in KiB, checked by scripts/check-bundle-size.mjs after `npm run build`. Current: entry ~122, largest other chunk ~39, CSS ~8. Raise a limit deliberately, in the PR that needs it.",
+  "entry": 135,
+  "chunk": 45,
+  "totalJs": 300,
+  "css": 12
+}

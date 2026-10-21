@@ -47,6 +47,11 @@ jobs:
       - name: Build
         run: npm run build
 
+      # Gzipped entry / chunk / total budgets (bundle-budget.json) and a
+      # tree-shaking guard for lucide-react and motion imports.
+      - name: Bundle size budget
+        run: npm run size
+
   server:
     name: Server (NestJS proxy)
     runs-on: ubuntu-latest
