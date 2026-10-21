@@ -18,6 +18,7 @@ npm run test         # vitest (jsdom, globals: true)
 npm run test:server  # vitest for server/ (node env, own project)
 npm run e2e          # playwright test (runs against dev server with mock data)
 npm run preview      # vite preview
+npm run pwa:assets    # regenerate PWA icons from public/logo.svg
 ```
 Run `typecheck` before committing — `noUnusedLocals` and `noUnusedParameters` are enforced.
 

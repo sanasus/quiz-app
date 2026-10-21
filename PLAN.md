@@ -21,19 +21,11 @@
 3. ~~**Полный разбор ответов на `/results`.**~~ Сделано:
    `src/features/review/answers-review.tsx`, `SessionResult.attempts`.
 
-4. **PWA: установка на телефон и офлайн-оболочка.** Сейчас в `public/`
-   только `favicon.svg`, манифеста и service worker нет.
-   - `vite-plugin-pwa` (Workbox): manifest, иконки 192/512 + maskable,
-     `apple-touch-icon`; precache оболочки приложения.
-   - `/api/*` не кэшировать (NetworkOnly) — свежесть вопросов и
-     ошибки провайдеров должны идти как сейчас; без сети live-провайдер
-     даёт `network`, как и сейчас.
-   - Обновление — `registerType: 'prompt'`: тост «доступна новая
-     версия → обновить», а не тихая подмена посреди квиза.
-   - `theme-color` уже переключается скриптом в `index.html` — манифест
-     должен с ним совпадать.
-   - Связано с п. 6: тела вопросов в IndexedDB дают офлайн-режим
-     работы над ошибками.
+4. ~~**PWA: установка на телефон и офлайн-оболочка.**~~ Сделано:
+   `vite-plugin-pwa` (prompt-обновление, `/api` — NetworkOnly), иконки
+   генерируются `npm run pwa:assets` из `public/logo.svg`. Тела вопросов
+   для офлайн-режима — в п. 6.
+
 5. **Мета-теги и заголовки страниц.** В `index.html` только
    `<title>QuizApp</title>`.
    - `description`, Open Graph (`og:title`, `og:description`,

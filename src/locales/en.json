@@ -189,5 +189,10 @@
     "message": "Your progress in this quiz will be lost.",
     "confirm": "Leave",
     "stay": "Stay"
+  },
+  "pwa": {
+    "update_available": "A new version is available",
+    "update": "Update",
+    "later": "Later"
   }
 }
