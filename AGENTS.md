@@ -52,6 +52,7 @@ Run `typecheck` before committing — `noUnusedLocals` and `noUnusedParameters` 
 - Run single file: `npm run test src/shared/api/adapter.test.ts`
 - Run single test: `npm run test -- -t "test name"`
 - E2E: `npm run e2e` — Playwright against `localhost:5173` (dev server auto-started with mock data)
+- `e2e/a11y.spec.ts` runs axe on every screen in light and dark; serious/critical violations fail the test.
 - E2E tests carry tags: `@smoke`, `@slow`, `@mobile`, `@i18n` — `npm run e2e:smoke` runs the
   PR subset, `npm run e2e:ui` opens the interactive UI, `npm run e2e:report` shows the HTML
   report; filter manually with `npm run e2e -- --grep '@smoke'` (quote `@` in PowerShell)
