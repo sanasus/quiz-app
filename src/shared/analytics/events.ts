@@ -2,7 +2,8 @@
 
 import type { ErrorKind } from '../api/errors'
 
-export type SwitchReason = 'settings' | 'error_dialog' | 'auto_setup'
+export type SwitchReason =
+  'settings' | 'error_dialog' | 'auto_setup' | 'degraded_retry'
 
 export interface RunProps {
   mode: string

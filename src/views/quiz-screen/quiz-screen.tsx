@@ -10,13 +10,18 @@ import { motion } from 'motion/react'
 import { useTranslation } from 'react-i18next'
 import { useQuizSessionStore } from '../../shared/lib/session-store'
 import { useMotionEnabled } from '../../shared/lib/use-motion-enabled'
-import { QuizApiError } from '../../shared/api/errors'
+import { QuizApiError, type ApiProviderId } from '../../shared/api/errors'
 import { useProviderStore } from '../../shared/api/provider-store'
 import { PROVIDERS } from '../../shared/api/providers'
 import { ApiErrorDialog } from '../../shared/ui/api-error-dialog'
 import { track } from '../../shared/analytics/analytics'
 import { AppToast } from '../../shared/ui/app-toast'
 import { ConfirmDialog } from '../../shared/ui/confirm-dialog'
+import { SourcesUnavailable } from '../../shared/ui/sources-unavailable'
+import {
+  isDegraded,
+  useProviderHealth,
+} from '../../features/provider/provider-health'
 import { reportQuestion } from '../../features/history/history-db'
 import { useChangeProvider } from '../../features/provider/use-change-provider'
 import { useQuizConfig } from './hooks/use-quiz-config'
@@ -189,6 +194,17 @@ export function QuizScreen() {
   // Early returns
   // ---------------------------------------------------------------------------
 
+  // Both sources failed: switching cannot help, so the dialog drops
+  // «Change API» and a failed initial load shows the unavailable page.
+  const failures = useProviderHealth((s) => s.failures)
+  // eslint-disable-next-line react-hooks/purity -- a failure expires with time
+  const degraded = isDegraded(failures, Date.now())
+
+  const retryProvider = (id: ApiProviderId) => {
+    if (id === providerId) handleRetry()
+    else changeProvider(id, { reason: 'degraded_retry' })
+  }
+
   const errorDialog = (
     <>
       <ApiErrorDialog
@@ -197,6 +213,7 @@ export function QuizScreen() {
         errorMessage={errorMessage}
         retrying={initialError ? result.isFetching : batchFetching}
         onRetry={handleRetry}
+        canChange={!degraded}
         onChangeApi={() =>
           changeProvider(undefined, {
             reason: 'error_dialog',
@@ -227,6 +244,16 @@ export function QuizScreen() {
   // Error before loading: the dialog sits over the loading state until
   // the user retries or switches the provider.
   if (result.loadingState === 'loading' || !result.currentQuestion) {
+    if (degraded && initialError) {
+      return (
+        <div className="mx-auto max-w-lg px-4 py-8">
+          <SourcesUnavailable
+            busy={result.isFetching}
+            onRetry={retryProvider}
+          />
+        </div>
+      )
+    }
     return (
       <>
         <QuizLoading />

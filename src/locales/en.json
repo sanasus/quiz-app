@@ -213,5 +213,11 @@
     "update_available": "A new version is available",
     "update": "Update",
     "later": "Later"
+  },
+  "sources_unavailable": {
+    "title": "Question sources unavailable",
+    "message": "Neither QuizAPI nor Trivia API is responding right now. Switching between them will not help — try again in a minute.",
+    "retry": "Try {{provider}} again",
+    "retrying": "Trying…"
   }
 }

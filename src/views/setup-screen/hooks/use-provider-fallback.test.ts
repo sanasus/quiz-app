@@ -19,6 +19,7 @@ import i18n from '../../../app/i18n'
 import { QuizApiError } from '../../../shared/api/errors'
 import type { ErrorKind } from '../../../shared/api/errors'
 import { useProviderStore } from '../../../shared/api/provider-store'
+import { useProviderHealth } from '../../../features/provider/provider-health'
 import { useProviderFallback } from './use-provider-fallback'
 import type { ProviderFallbackInput } from './use-provider-fallback'
 
@@ -60,6 +61,7 @@ describe('useProviderFallback', () => {
   beforeEach(() => {
     changeProviderMock.mockClear()
     useProviderStore.setState({ providerId: 'quizapi' })
+    useProviderHealth.getState().reset()
   })
 
   it('does nothing without errors', () => {
@@ -158,5 +160,44 @@ describe('useProviderFallback', () => {
     act(() => result.current.retry())
 
     expect(refetchCatalog).toHaveBeenCalledTimes(1)
+  })
+
+  describe('when the other source has already failed', () => {
+    it('does not auto-switch to it and reports the degraded state', () => {
+      useProviderHealth.getState().markFailed('trivia', 'http')
+      useProviderHealth.getState().markFailed('quizapi', 'auth')
+
+      const { result } = renderFallback(withError(apiError('auth')))
+
+      expect(changeProviderMock).not.toHaveBeenCalled()
+      expect(result.current.toast).toBeNull()
+      expect(result.current.degraded).toBe(true)
+    })
+
+    it('is not degraded while only one source has failed', () => {
+      useProviderHealth.getState().markFailed('quizapi', 'auth')
+
+      const { result } = renderFallback(withError(apiError('auth')))
+
+      expect(result.current.degraded).toBe(false)
+    })
+
+    it('retries the current source in place and switches for the other', () => {
+      useProviderHealth.getState().markFailed('trivia', 'http')
+      useProviderHealth.getState().markFailed('quizapi', 'auth')
+      const refetchCatalog = vi.fn()
+      const { result } = renderFallback(
+        withError(apiError('auth'), refetchCatalog),
+      )
+
+      act(() => result.current.retryProvider('quizapi'))
+      expect(refetchCatalog).toHaveBeenCalledTimes(1)
+      expect(changeProviderMock).not.toHaveBeenCalled()
+
+      act(() => result.current.retryProvider('trivia'))
+      expect(changeProviderMock).toHaveBeenCalledWith('trivia', {
+        reason: 'degraded_retry',
+      })
+    })
   })
 })

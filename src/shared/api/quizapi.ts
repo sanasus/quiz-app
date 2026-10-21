@@ -15,6 +15,7 @@ import { QuizApiError } from './errors'
 import { useProviderStore } from './provider-store'
 import { SURVIVAL_BATCH_SIZE } from './fetch-limits'
 import { loadBatch, loadQuiz } from '../../features/history/quiz-loader'
+import { useReportProviderHealth } from '../../features/provider/provider-health'
 import { getProvider } from './providers'
 
 /** Shared base of every quiz query key. */
@@ -51,6 +52,7 @@ export function useQuizQuestions(config: QuizConfig | null) {
     refetchOnWindowFocus: false,
   })
 
+  useReportProviderHealth(providerId, query)
   return query
 }
 
@@ -71,7 +73,7 @@ export function useQuestionBatch(
 ) {
   const providerId = useProviderStore((s) => s.providerId)
 
-  return useQuery({
+  const query = useQuery({
     queryKey: [
       ...QUIZ_QUERY_BASE,
       providerId,
@@ -92,6 +94,9 @@ export function useQuestionBatch(
     gcTime: 0,
     refetchOnWindowFocus: false,
   })
+
+  useReportProviderHealth(providerId, query)
+  return query
 }
 
 // ---------------------------------------------------------------------------
@@ -106,10 +111,13 @@ export function useQuestionBatch(
 export function useCatalog() {
   const providerId = useProviderStore((s) => s.providerId)
 
-  return useQuery({
+  const query = useQuery({
     queryKey: [...QUIZ_QUERY_BASE, providerId, 'catalog'],
     queryFn: () => getProvider(providerId).fetchCatalog(),
     staleTime: 24 * 60 * 60 * 1000, // 24 hours — changes rarely
     gcTime: 7 * 24 * 60 * 60 * 1000, // 7 days
   })
+
+  useReportProviderHealth(providerId, query)
+  return query
 }

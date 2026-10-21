@@ -16,10 +16,15 @@
 
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { QuizApiError } from '../../../shared/api/errors'
+import { QuizApiError, type ApiProviderId } from '../../../shared/api/errors'
 import { useProviderStore } from '../../../shared/api/provider-store'
 import { alternateProviderId } from '../../../shared/api/providers'
 import { useChangeProvider } from '../../../features/provider/use-change-provider'
+import {
+  isDegraded,
+  otherProviderFailed,
+  useProviderHealth,
+} from '../../../features/provider/provider-health'
 
 export interface ProviderFallbackInput {
   catalogError: Error | null
@@ -38,6 +43,13 @@ export interface ProviderFallbackResult {
   dismissToast: () => void
   /** Retry the setup query (inline error's action). */
   retry: () => void
+  /**
+   * Both live sources have failed: there is no auto-switch and no inline
+   * error, the screen shows the «sources unavailable» state instead.
+   */
+  degraded: boolean
+  /** Retry a specific source from the «unavailable» state. */
+  retryProvider: (providerId: ApiProviderId) => void
 }
 
 /**
@@ -66,9 +78,22 @@ export function useProviderFallback(
 
   const { catalogError } = input
   const broken = isBrokenProviderError(catalogError)
+  const failures = useProviderHealth((s) => s.failures)
+  // eslint-disable-next-line react-hooks/purity -- a failure expires with time
+  const degraded = isDegraded(failures, Date.now())
 
   useEffect(() => {
     if (!broken || switchedFrom || catalogError === null) return
+    // The other source already failed: switching to it would only trade
+    // one broken provider for another. The unavailable state takes over.
+    if (
+      otherProviderFailed(
+        useProviderHealth.getState().failures,
+        useProviderStore.getState().providerId,
+      )
+    ) {
+      return
+    }
     // Side effect by design: reacting to a query state change by
     // switching the provider (store + navigate) and recording it —
     // not derivable during render.
@@ -111,5 +136,13 @@ export function useProviderFallback(
     toast,
     dismissToast: () => setToast(null),
     retry: () => input.refetchCatalog(),
+    degraded,
+    retryProvider: (providerId) => {
+      if (providerId === useProviderStore.getState().providerId) {
+        input.refetchCatalog()
+      } else {
+        changeProvider(providerId, { reason: 'degraded_retry' })
+      }
+    },
   }
 }

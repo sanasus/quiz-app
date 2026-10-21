@@ -257,6 +257,8 @@ export interface TriviaRouteOptions {
    * is smaller than a batch).
    */
   failQuestionsAfter?: number
+  /** Fail every endpoint (a fully broken provider). */
+  failAll?: boolean
 }
 
 async function handleTrivia(
@@ -265,6 +267,11 @@ async function handleTrivia(
   options: TriviaRouteOptions,
   questionRequest: () => number,
 ) {
+  if (options.failAll) {
+    await route.fulfill(upstreamDown('trivia', 'The Trivia API'))
+    return
+  }
+
   if (endpointOf(url) === 'questions') {
     if (
       options.failQuestionsAfter !== undefined &&

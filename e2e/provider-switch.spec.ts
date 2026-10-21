@@ -206,4 +206,65 @@ test.describe('Provider switching', () => {
     await expect(alert).toBeVisible()
     await expect(page.getByRole('status')).toHaveCount(0)
   })
+
+  test('shows one unavailable state when both sources are down', async ({
+    page,
+  }) => {
+    await page.goto('/settings')
+    await routeQuizApi(page, { failAll: true })
+    await routeTrivia(page, { failAll: true })
+
+    await selectProvider(page, 'QuizAPI')
+
+    // QuizAPI fails → one auto-switch to Trivia (with its toast) → Trivia
+    // fails too → the unavailable state, not another switch.
+    const unavailable = page.getByTestId('sources-unavailable')
+    await expect(unavailable).toBeVisible({ timeout: 20_000 })
+    await expect(unavailable).toContainText('Question sources unavailable')
+    await expect(page.getByTestId('category-dropdown')).toHaveCount(0)
+
+    // Trying a source again does not bounce between them: the page stays,
+    // and no «source changed» toast appears for the manual retry.
+    // (The buttons are disabled while a retry is in flight.)
+    await expect(unavailable.getByTestId('retry-quizapi')).toBeEnabled()
+    await unavailable.getByTestId('retry-quizapi').click()
+    await expect(unavailable).toBeVisible()
+    await expect(unavailable.getByTestId('retry-trivia')).toBeEnabled()
+    await unavailable.getByTestId('retry-trivia').click()
+    await expect(unavailable).toBeVisible()
+
+    // Once a source is healthy again, retrying it brings the form back.
+    // Let the failing retry settle first so it cannot race the recovery.
+    await expect(unavailable.getByTestId('retry-trivia')).toBeEnabled()
+    await routeTrivia(page)
+    await unavailable.getByTestId('retry-trivia').click()
+    await expect(page.getByTestId('category-dropdown')).toBeVisible({
+      timeout: 15_000,
+    })
+    await expect(unavailable).toHaveCount(0)
+  })
+
+  test('a failed quiz start ends in the unavailable page once both sources are down', async ({
+    page,
+  }) => {
+    await page.goto('/settings')
+    await routeQuizApi(page, { failQuestions: true })
+    await routeTrivia(page, { failAll: true })
+
+    // Trivia's catalog is down, QuizAPI's is fine: start on QuizAPI.
+    await selectProvider(page, 'QuizAPI')
+    await startFromCurrentSetup(page)
+
+    // Questions fail on QuizAPI: the dialog still offers Change API while
+    // Trivia has not been tried.
+    const dialog = page.getByRole('alertdialog')
+    await expect(dialog).toBeVisible({ timeout: 15_000 })
+    await expect(dialog.getByTestId('api-error-change')).toBeVisible()
+
+    // Switching to Trivia fails there too → both are down.
+    await dialog.getByTestId('api-error-change').click()
+    await expect(page.getByTestId('sources-unavailable')).toBeVisible({
+      timeout: 20_000,
+    })
+  })
 })
