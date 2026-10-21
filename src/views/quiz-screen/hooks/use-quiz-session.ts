@@ -70,6 +70,7 @@ export function useQuizSession(
     store.startSessionTimer()
     // `data` and `providerId` ride along with `questions` (one query result
     // per provider); re-running on them would only repeat the early return.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [questions, effectiveConfig])
 
   const currentQuestion: Question | null = useQuizSessionStore(

@@ -16,6 +16,7 @@ import type {
 } from '../types/quiz'
 import { getMode } from '../../features/modes'
 import { BLITZ_TIME_LIMIT } from '../../features/modes/blitz'
+import { checkAnswer } from './answers'
 import { assertMigrationsMatchVersion } from './persist-guards'
 import { createThrottledStorage } from './throttled-storage'
 import { persistedSessionSchema, type PersistedSession } from './session-schema'
@@ -107,6 +108,7 @@ function createInitialState(config: QuizConfig): QuizSession {
     questionsTotal: undefined,
     poolStart: 0,
     poolConsumed: 0,
+    advancePending: false,
   }
 }
 
@@ -251,9 +253,7 @@ function sessionReducer(
       if (selected.length === 0) return state
 
       // Correct = exact match of option sets
-      const isCorrect =
-        question.correctOptionIds.length === selected.length &&
-        question.correctOptionIds.every((id) => selected.includes(id))
+      const isCorrect = checkAnswer(question.correctOptionIds, selected)
 
       const base: QuizSession = {
         ...state,
@@ -283,6 +283,11 @@ function sessionReducer(
     }
 
     case 'NEXT_QUESTION': {
+      // Only an answered question can be left. A second trigger in the same
+      // tick (auto-advance timer, click, Enter) must not skip the question
+      // that the first one just moved to.
+      if (state.status !== 'answered') return state
+
       const mode = getMode(state.mode)
       const delta = mode.onQuestionAdvance(state)
       const nextIndex = state.currentIndex + 1
@@ -296,8 +301,11 @@ function sessionReducer(
 
       if (nextIndex >= state.questions.length) {
         // Survival batch loading: the next question may still be on its
-        // way — wait instead of finishing the session.
-        if (canLoadMoreQuestions(state)) return state
+        // way — wait instead of finishing the session, and remember that
+        // the player already asked to move on.
+        if (canLoadMoreQuestions(state)) {
+          return { ...state, advancePending: true }
+        }
         return { ...state, status: 'finished' }
       }
 
@@ -327,7 +335,22 @@ function sessionReducer(
       // filtered down to nothing (all seen / reported) is not the end;
       // without a verdict, nothing new means no further batches.
       const exhausted = action.payload.exhausted ?? added === 0
-      if (exhausted) return { ...withTotal, questionsExhausted: true }
+      if (exhausted) {
+        return {
+          ...withTotal,
+          questionsExhausted: true,
+          advancePending: false,
+        }
+      }
+      // The player was already waiting at the end of the pool: take the
+      // step they asked for now that there is somewhere to go.
+      if (state.advancePending && added > 0) {
+        return {
+          ...withTotal,
+          ...getMode(state.mode).onQuestionAdvance(withTotal),
+          advancePending: false,
+        }
+      }
       return withTotal
     }
 
@@ -485,9 +508,7 @@ export const useQuizSessionStore = create<QuizSessionStore>()(
           const attempts: SessionResult['attempts'] = []
           for (const q of attempted) {
             const selected = s.answers[q.id] ?? []
-            const isCorrect =
-              q.correctOptionIds.length === selected.length &&
-              q.correctOptionIds.every((id) => selected.includes(id))
+            const isCorrect = checkAnswer(q.correctOptionIds, selected)
             attempts.push({
               question: q,
               selectedOptionIds: selected,

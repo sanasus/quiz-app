@@ -21,8 +21,8 @@ import { useProviderStore } from '../../../shared/api/provider-store'
 import { alternateProviderId } from '../../../shared/api/providers'
 import { useChangeProvider } from '../../../features/provider/use-change-provider'
 import {
-  isDegraded,
   otherProviderFailed,
+  useIsDegraded,
   useProviderHealth,
 } from '../../../features/provider/provider-health'
 
@@ -78,9 +78,7 @@ export function useProviderFallback(
 
   const { catalogError } = input
   const broken = isBrokenProviderError(catalogError)
-  const failures = useProviderHealth((s) => s.failures)
-  // eslint-disable-next-line react-hooks/purity -- a failure expires with time
-  const degraded = isDegraded(failures, Date.now())
+  const degraded = useIsDegraded()
 
   useEffect(() => {
     if (!broken || switchedFrom || catalogError === null) return

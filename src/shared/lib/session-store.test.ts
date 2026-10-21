@@ -420,3 +420,88 @@ describe('pool cursor and filtered batches', () => {
     expect(useQuizSessionStore.getState().poolConsumed).toBe(0)
   })
 })
+
+// ---------------------------------------------------------------------------
+// Double advance and an advance queued behind a batch
+// ---------------------------------------------------------------------------
+
+describe('NEXT_QUESTION guards', () => {
+  beforeEach(() => {
+    useQuizSessionStore.getState().reset()
+    useQuizSessionStore.getState().loadQuestions(pool.slice(), survivalConfig)
+  })
+
+  it('a second advance in a row does not skip an unanswered question', () => {
+    useQuizSessionStore.setState({ currentIndex: 0, status: 'answered' })
+
+    useQuizSessionStore.getState().nextQuestion()
+    useQuizSessionStore.getState().nextQuestion()
+
+    const s = useQuizSessionStore.getState()
+    expect(s.currentIndex).toBe(1)
+    expect(s.status).toBe('playing')
+  })
+
+  it('does nothing outside the answered state', () => {
+    useQuizSessionStore.setState({ currentIndex: 3, status: 'playing' })
+
+    useQuizSessionStore.getState().nextQuestion()
+
+    expect(useQuizSessionStore.getState().currentIndex).toBe(3)
+  })
+
+  it('applies an advance requested while the batch was loading', () => {
+    useQuizSessionStore.setState({
+      currentIndex: pool.length - 1,
+      status: 'answered',
+    })
+    useQuizSessionStore.getState().nextQuestion()
+    expect(useQuizSessionStore.getState().advancePending).toBe(true)
+
+    useQuizSessionStore.getState().appendQuestions([makeQuestion('q11')])
+
+    const s = useQuizSessionStore.getState()
+    expect(s.currentIndex).toBe(pool.length)
+    expect(s.status).toBe('playing')
+    expect(s.advancePending).toBe(false)
+  })
+
+  it('without a request the batch just lands and the player stays put', () => {
+    useQuizSessionStore.setState({
+      currentIndex: pool.length - 1,
+      status: 'answered',
+    })
+
+    useQuizSessionStore.getState().appendQuestions([makeQuestion('q11')])
+
+    const s = useQuizSessionStore.getState()
+    expect(s.currentIndex).toBe(pool.length - 1)
+    expect(s.status).toBe('answered')
+  })
+
+  it('an exhausted pool drops the queued advance', () => {
+    useQuizSessionStore.setState({
+      currentIndex: pool.length - 1,
+      status: 'answered',
+    })
+    useQuizSessionStore.getState().nextQuestion()
+
+    useQuizSessionStore.getState().appendQuestions([], undefined, {
+      exhausted: true,
+    })
+
+    expect(useQuizSessionStore.getState().advancePending).toBe(false)
+  })
+
+  it('reset clears a queued advance', () => {
+    useQuizSessionStore.setState({
+      currentIndex: pool.length - 1,
+      status: 'answered',
+    })
+    useQuizSessionStore.getState().nextQuestion()
+
+    useQuizSessionStore.getState().reset()
+
+    expect(useQuizSessionStore.getState().advancePending).toBe(false)
+  })
+})

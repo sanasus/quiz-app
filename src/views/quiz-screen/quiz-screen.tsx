@@ -8,6 +8,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { motion } from 'motion/react'
 import { useTranslation } from 'react-i18next'
+import { checkAnswer } from '../../shared/lib/answers'
 import { useQuizSessionStore } from '../../shared/lib/session-store'
 import { useMotionEnabled } from '../../shared/lib/use-motion-enabled'
 import { QuizApiError, type ApiProviderId } from '../../shared/api/errors'
@@ -18,10 +19,7 @@ import { track } from '../../shared/analytics/analytics'
 import { AppToast } from '../../shared/ui/app-toast'
 import { ConfirmDialog } from '../../shared/ui/confirm-dialog'
 import { SourcesUnavailable } from '../../shared/ui/sources-unavailable'
-import {
-  isDegraded,
-  useProviderHealth,
-} from '../../features/provider/provider-health'
+import { useIsDegraded } from '../../features/provider/provider-health'
 import { reportQuestion } from '../../features/history/history-db'
 import { useChangeProvider } from '../../features/provider/use-change-provider'
 import { useQuizConfig } from './hooks/use-quiz-config'
@@ -234,9 +232,7 @@ export function QuizScreen() {
 
   // Both sources failed: switching cannot help, so the dialog drops
   // «Change API» and a failed initial load shows the unavailable page.
-  const failures = useProviderHealth((s) => s.failures)
-  // eslint-disable-next-line react-hooks/purity -- a failure expires with time
-  const degraded = isDegraded(failures, Date.now())
+  const degraded = useIsDegraded()
 
   const retryProvider = (id: ApiProviderId) => {
     if (id === providerId) handleRetry()
@@ -320,9 +316,7 @@ export function QuizScreen() {
   // Whether the just-submitted answer was right (for the live region).
   const submitted = answers[question.id] ?? []
   const isAnswerCorrect =
-    submitted.length > 0 &&
-    question.correctOptionIds.length === submitted.length &&
-    question.correctOptionIds.every((id) => submitted.includes(id))
+    submitted.length > 0 && checkAnswer(question.correctOptionIds, submitted)
 
   // ---------------------------------------------------------------------------
   // Render

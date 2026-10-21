@@ -4,6 +4,7 @@
  */
 
 import { useProviderStore } from '../api/provider-store'
+import { checkAnswer } from '../lib/answers'
 import { useQuizSessionStore } from '../lib/session-store'
 import { track } from './analytics'
 import type { RunProps } from './events'
@@ -40,12 +41,7 @@ export function trackRunAbandoned(): void {
   let correct = 0
   for (const question of state.questions.slice(0, answered)) {
     const selected = state.answers[question.id] ?? []
-    if (
-      selected.length === question.correctOptionIds.length &&
-      question.correctOptionIds.every((id) => selected.includes(id))
-    ) {
-      correct++
-    }
+    if (checkAnswer(question.correctOptionIds, selected)) correct++
   }
   trackRunFinished({ correct, total: answered, score: state.score }, true)
 }

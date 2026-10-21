@@ -62,6 +62,11 @@ export interface QuizSession {
    */
   poolStart: number
   poolConsumed: number
+  /**
+   * The player asked for the next question while the next survival batch
+   * was still loading: the advance is applied the moment the batch lands.
+   */
+  advancePending?: boolean
 }
 
 // ---------------------------------------------------------------------------

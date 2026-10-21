@@ -3,7 +3,7 @@ import { useProviderStore } from '../../../shared/api/provider-store'
 import { useQuizSessionStore } from '../../../shared/lib/session-store'
 import type { Question } from '../../../shared/types/quiz'
 import { recordAnswer } from '../../../features/history/history-db'
-import { checkAnswer } from '../utils/answer-utils'
+import { checkAnswer } from '../../../shared/lib/answers'
 
 /**
  * Writes each answered question to the history as soon as the result is

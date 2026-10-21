@@ -7,7 +7,8 @@ import {
 import { trackRunFinished } from '../../../shared/analytics/run-events'
 import { useProviderStore } from '../../../shared/api/provider-store'
 import { recordAnswer } from '../../../features/history/history-db'
-import { checkAnswer, countCorrect } from '../utils/answer-utils'
+import { checkAnswer } from '../../../shared/lib/answers'
+import { countCorrect } from '../utils/answer-utils'
 
 export function useQuizSessionEnd(
   currentQuestion: { id: string; correctOptionIds: readonly string[] } | null,
@@ -54,18 +55,18 @@ export function useQuizSessionEnd(
       elapsed,
       prevCorrect + (currentCorrect ? 1 : 0),
     )
-    // Covers what the per-answer recorder cannot see: a time-up on the
-    // very last question finishes the run without an «answered» pause.
-    const providerId = useProviderStore.getState().providerId
-    for (const attempt of useQuizSessionStore.getState().finishedSession
-      ?.attempts ?? []) {
+    const finished = useQuizSessionStore.getState().finishedSession
+    // The per-answer recorder has written every answered question already.
+    // The one case it cannot see: a time-up on the very last question ends
+    // the run without an «answered» pause, leaving an unanswered attempt.
+    const last = finished?.attempts.at(-1)
+    if (last && last.selectedOptionIds.length === 0) {
       void recordAnswer(
-        providerId,
-        attempt.question.id,
-        attempt.correct ? 'correct' : 'wrong',
+        useProviderStore.getState().providerId,
+        last.question.id,
+        'wrong',
       )
     }
-    const finished = useQuizSessionStore.getState().finishedSession
     if (finished) {
       trackRunFinished({
         correct: finished.correctCount,

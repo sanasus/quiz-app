@@ -23,11 +23,16 @@ export interface NextCountdownProps {
  * Owns the timer: moves on by itself when the ring runs out. The ring is
  * one CSS animation (no per-tick state), the digit follows the wall clock.
  */
-export const NextCountdown = memo(function NextCountdown({
-  delayMs,
-  blocked = false,
-  onNext,
-}: NextCountdownProps) {
+export const NextCountdown = memo(function NextCountdown(
+  props: NextCountdownProps,
+) {
+  // Keyed by `blocked`: coming back from «loading next» remounts the pill,
+  // so the digit starts from the full delay instead of the number left over
+  // from before the wait (no state reset inside an effect needed).
+  return <Countdown key={props.blocked ? 'blocked' : 'running'} {...props} />
+})
+
+function Countdown({ delayMs, blocked = false, onNext }: NextCountdownProps) {
   const { t } = useTranslation()
   const [secondsLeft, setSecondsLeft] = useState(Math.ceil(delayMs / 1000))
 
@@ -90,4 +95,4 @@ export const NextCountdown = memo(function NextCountdown({
       </Button>
     </div>
   )
-})
+}

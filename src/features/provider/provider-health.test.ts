@@ -1,11 +1,12 @@
-import { renderHook } from '@testing-library/react'
-import { beforeEach, describe, expect, it } from 'vitest'
+import { act, renderHook } from '@testing-library/react'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { QuizApiError, type ErrorKind } from '../../shared/api/errors'
 import {
   FAILURE_TTL_MS,
   failedProviders,
   isDegraded,
   otherProviderFailed,
+  useIsDegraded,
   useProviderHealth,
   useReportProviderHealth,
 } from './provider-health'
@@ -92,5 +93,38 @@ describe('useReportProviderHealth', () => {
     )
 
     expect(failuresNow()).toEqual({})
+  })
+})
+
+describe('useIsDegraded', () => {
+  beforeEach(() => vi.useFakeTimers())
+  afterEach(() => vi.useRealTimers())
+
+  it('turns on with the second failure and off when the failures expire', () => {
+    const { result } = renderHook(() => useIsDegraded())
+    expect(result.current).toBe(false)
+
+    act(() => {
+      useProviderHealth.getState().markFailed('quizapi', 'auth')
+      useProviderHealth.getState().markFailed('trivia', 'http')
+    })
+    expect(result.current).toBe(true)
+
+    act(() => {
+      vi.advanceTimersByTime(FAILURE_TTL_MS + 1)
+    })
+    expect(result.current).toBe(false)
+  })
+
+  it('a recovered source clears it at once', () => {
+    const { result } = renderHook(() => useIsDegraded())
+    act(() => {
+      useProviderHealth.getState().markFailed('quizapi', 'auth')
+      useProviderHealth.getState().markFailed('trivia', 'http')
+    })
+
+    act(() => useProviderHealth.getState().markHealthy('trivia'))
+
+    expect(result.current).toBe(false)
   })
 })

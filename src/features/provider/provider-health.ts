@@ -11,7 +11,7 @@
  * and never marks a provider as down.
  */
 
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { create } from 'zustand'
 import {
   QuizApiError,
@@ -79,6 +79,29 @@ export function otherProviderFailed(
   return LIVE_PROVIDERS.some(
     (id) => id !== current && isCurrent(failures[id], now),
   )
+}
+
+/**
+ * Reactive «both sources are down». The clock is state, not a render-time
+ * `Date.now()`: it is read once on mount and moved forward by a timer set
+ * for the next expiry, so a stale failure stops counting without a new
+ * event. (A failure recorded later than `now` is still current, so new
+ * failures need no refresh.)
+ */
+export function useIsDegraded(): boolean {
+  const failures = useProviderHealth((s) => s.failures)
+  const [now, setNow] = useState(() => Date.now())
+
+  useEffect(() => {
+    const untilExpiry = failedProviders(failures, now).map(
+      (id) => (failures[id]?.at ?? now) + FAILURE_TTL_MS - now,
+    )
+    if (untilExpiry.length === 0) return
+    const timer = setTimeout(() => setNow(Date.now()), Math.min(...untilExpiry))
+    return () => clearTimeout(timer)
+  }, [failures, now])
+
+  return isDegraded(failures, now)
 }
 
 /**
