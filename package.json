@@ -18,7 +18,7 @@
     "typecheck:server": "npm run typecheck --workspace @quiz-app/server",
     "test:server": "npm run test --workspace @quiz-app/server",
     "lint": "oxlint",
-    "format": "prettier --write \"src/**/*.{ts,tsx,css,json}\" \"e2e/**/*.ts\" \"server/src/**/*.ts\" \"server/*.json\"",
+    "format": "prettier --write \"src/**/*.{ts,tsx,css,json}\" \"e2e/**/*.ts\" \"server/src/**/*.ts\" \"server/*.json\" \"*.config.ts\" \"server/*.config.mts\"",
     "preview": "vite preview",
     "pwa:assets": "pwa-assets-generator",
     "og:image": "node scripts/generate-og-image.mjs",
