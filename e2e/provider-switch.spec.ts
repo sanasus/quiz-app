@@ -59,7 +59,7 @@ test.describe('Provider switching', () => {
       // Footer attribution (T9): both links point at their sources.
       const footer = page.getByRole('contentinfo')
       await expect(footer).toContainText(
-        'Powered by QuizAPI and The Trivia API (CC BY-NC 4.0)',
+        'Powered by QuizAPI and The Trivia API (CC BY-NC 4.0), questions adapted',
       )
       await expect(
         footer.getByRole('link', { name: 'CC BY-NC 4.0' }),
@@ -109,7 +109,7 @@ test.describe('Provider switching', () => {
     await page.getByTestId('api-error-change').click()
     await expect(page).toHaveURL(/\/setup/)
     await expect(page.getByRole('contentinfo')).toContainText(
-      'Powered by QuizAPI and The Trivia API (CC BY-NC 4.0)',
+      'Powered by QuizAPI and The Trivia API (CC BY-NC 4.0), questions adapted',
     )
   })
 
@@ -142,7 +142,7 @@ test.describe('Provider switching', () => {
     await page.getByTestId('api-error-change').click()
     await expect(page).toHaveURL(/\/setup/)
     await expect(page.getByRole('contentinfo')).toContainText(
-      'Powered by QuizAPI and The Trivia API (CC BY-NC 4.0)',
+      'Powered by QuizAPI and The Trivia API (CC BY-NC 4.0), questions adapted',
     )
   })
 
@@ -198,7 +198,7 @@ test.describe('Provider switching', () => {
     await expect(page.getByRole('status')).toHaveCount(0)
     // Provider unchanged; the footer credits both sources regardless.
     await expect(page.getByRole('contentinfo')).toContainText(
-      'Powered by QuizAPI and The Trivia API (CC BY-NC 4.0)',
+      'Powered by QuizAPI and The Trivia API (CC BY-NC 4.0), questions adapted',
     )
 
     // Retry keeps failing → the alert stays, still no toast.

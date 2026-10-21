@@ -28,8 +28,8 @@ const routes: { path: string; icon: LucideIcon; key: string }[] = [
 
 /**
  * Footer attribution. Both sources are always credited, whichever
- * provider is active (CC BY-NC 4.0 legal review is pending, so we
- * never rely on showing it conditionally). The line is composed of
+ * provider is active, and the suffix notes that questions are adapted
+ * by our proxy (CC BY requires marking changes). The line is composed of
  * i18n fragments around the required links (brand and license names
  * stay untranslated).
  */

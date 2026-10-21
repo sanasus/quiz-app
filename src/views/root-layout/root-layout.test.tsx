@@ -43,7 +43,7 @@ describe('RootLayout footer', () => {
     const footer = renderLayout()
 
     expect(footer).toHaveTextContent(
-      'QuizApp · Powered by QuizAPI and The Trivia API (CC BY-NC 4.0)',
+      'QuizApp · Powered by QuizAPI and The Trivia API (CC BY-NC 4.0), questions adapted',
     )
 
     const triviaLink = screen.getByRole('link', { name: 'The Trivia API' })
@@ -63,7 +63,7 @@ describe('RootLayout footer', () => {
     const footer = renderLayout()
 
     expect(footer).toHaveTextContent(
-      'QuizApp · Powered by QuizAPI and The Trivia API (CC BY-NC 4.0)',
+      'QuizApp · Powered by QuizAPI and The Trivia API (CC BY-NC 4.0), questions adapted',
     )
     expect(within(footer).getAllByRole('link')).toHaveLength(2)
   })
@@ -73,7 +73,7 @@ describe('RootLayout footer', () => {
     const footer = renderLayout()
 
     expect(footer).toHaveTextContent(
-      'QuizApp · Powered by QuizAPI and The Trivia API (CC BY-NC 4.0)',
+      'QuizApp · Powered by QuizAPI and The Trivia API (CC BY-NC 4.0), questions adapted',
     )
     expect(within(footer).getAllByRole('link')).toHaveLength(2)
   })
