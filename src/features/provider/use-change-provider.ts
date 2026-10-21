@@ -7,6 +7,9 @@
 
 import { useNavigate } from '@tanstack/react-router'
 import { queryClient } from '../../app/query-client'
+import { track } from '../../shared/analytics/analytics'
+import type { SwitchReason } from '../../shared/analytics/events'
+import type { ErrorKind } from '../../shared/api/errors'
 import { useProviderStore } from '../../shared/api/provider-store'
 import { alternateProviderId } from '../../shared/api/providers'
 import type { ProviderId } from '../../shared/api/providers'
@@ -22,14 +25,29 @@ import {
  * navigates to /setup (a session can't continue against a different
  * provider's question pool).
  */
-export function useChangeProvider(): (next?: ProviderId) => void {
+export interface SwitchContext {
+  /** Why the provider is being switched (analytics only). */
+  reason: SwitchReason
+  /** The error behind a forced switch. */
+  kind?: ErrorKind
+}
+
+export function useChangeProvider(): (
+  next?: ProviderId,
+  context?: SwitchContext,
+) => void {
   const navigate = useNavigate()
 
-  return (next) => {
+  return (next, context = { reason: 'settings' }) => {
     const current = useProviderStore.getState().providerId
-    useProviderStore
-      .getState()
-      .setProviderId(next ?? alternateProviderId(current))
+    const target = next ?? alternateProviderId(current)
+    useProviderStore.getState().setProviderId(target)
+    track('provider_switched', {
+      from: current,
+      to: target,
+      reason: context.reason,
+      kind: context.kind,
+    })
 
     // Both live providers' keys share the ['quiz'] base — one call
     // clears the caches of every provider.

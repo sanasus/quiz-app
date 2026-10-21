@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common'
 import { APP_FILTER, APP_GUARD } from '@nestjs/core'
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler'
+import { AnalyticsService } from './analytics/analytics.service'
 import { HealthModule } from './health/health.module'
 import { QuizModule } from './quiz/quiz.module'
 import { UpstreamErrorFilter } from './quiz/http-error.filter'
@@ -13,6 +14,7 @@ import { throttleOptions } from './throttle.config'
     QuizModule,
   ],
   providers: [
+    AnalyticsService,
     // Bound globally so every endpoint that can throw UpstreamError is
     // converted to the typed envelope. It only catches UpstreamError —
     // anything else still reaches Nest's default 500 handling.

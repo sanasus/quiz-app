@@ -68,6 +68,11 @@ export default defineConfig({
       '@': fileURLToPath(new URL('./src', import.meta.url)),
     },
   },
+  build: {
+    // Source maps for PostHog stack traces: emitted but not referenced from
+    // the bundles, so browsers never download them.
+    sourcemap: 'hidden',
+  },
   server: {
     // Live providers go through the NestJS proxy (server/): same-origin
     // in dev, no CORS config on the frontend.

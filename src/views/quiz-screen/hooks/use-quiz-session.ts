@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useQuizSessionStore } from '../../../shared/lib/session-store'
 import { useQuizQuestions } from '../../../shared/api/quizapi'
+import { trackRunStarted } from '../../../shared/analytics/run-events'
 import { useProviderStore } from '../../../shared/api/provider-store'
 import { getProvider } from '../../../shared/api/providers'
 import {
@@ -62,6 +63,7 @@ export function useQuizSession(
         )
     }
     setRepeats(data?.repeats ?? false)
+    trackRunStarted(data?.repeats ?? false)
 
     store.startPlaying()
     store.startSessionTimer()

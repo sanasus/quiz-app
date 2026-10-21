@@ -1,4 +1,5 @@
 import { useBlocker } from '@tanstack/react-router'
+import { trackRunAbandoned } from '../../../shared/analytics/run-events'
 import { useQuizSessionStore } from '../../../shared/lib/session-store'
 
 /** Statuses where leaving the screen throws away answered questions. */
@@ -34,6 +35,7 @@ export function useLeaveGuard(): LeaveGuard {
   return {
     open: blocker.status === 'blocked',
     leave: () => {
+      trackRunAbandoned()
       useQuizSessionStore.getState().reset()
       blocker.proceed?.()
     },

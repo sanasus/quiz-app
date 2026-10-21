@@ -23,8 +23,8 @@ npm run pwa:assets    # regenerate PWA icons from public/logo.svg
 Run `typecheck` before committing — `noUnusedLocals` and `noUnusedParameters` are enforced.
 
 ## Env
-- Client: `VITE_USE_MOCK_DATA=true` — switch to mock data and force `providerId='mock'` on every page load (see `src/shared/api/mock-*.ts`); the settings switcher lists mock only while it is the active source — no manual way back. There is no other client env: **no API key reaches the browser**.
-- Server (`server/`): `QUIZAPI_KEY` (required only for the `quizapi` provider; missing key → typed `auth` error, the server still boots), `QUIZAPI_BASE_URL`, `TRIVIA_BASE_URL`, `UPSTREAM_TIMEOUT_MS` (default 10 000), `CORS_ORIGIN`, `PORT` (default 3000), `THROTTLE_TTL_MS`/`THROTTLE_LIMIT` (60 000 / 30 per IP, `/health` exempt), `TRUST_PROXY` (hops; required behind a balancer).
+- Client: `VITE_USE_MOCK_DATA=true` — switch to mock data and force `providerId='mock'` on every page load (see `src/shared/api/mock-*.ts`); the settings switcher lists mock only while it is the active source — no manual way back. `VITE_POSTHOG_KEY` (+ optional `VITE_POSTHOG_HOST`, default `/ingest`) — PostHog project key; **the one deliberate exception to "no API key reaches the browser"**: it is public by design (write-only) and analytics is production-only, off in dev, mock mode, e2e and CI (`src/shared/analytics/`). There is no other client env: **no secret reaches the browser**.
+- Server (`server/`): `QUIZAPI_KEY` (required only for the `quizapi` provider; missing key → typed `auth` error, the server still boots), `QUIZAPI_BASE_URL`, `TRIVIA_BASE_URL`, `UPSTREAM_TIMEOUT_MS` (default 10 000), `CORS_ORIGIN`, `PORT` (default 3000), `THROTTLE_TTL_MS`/`THROTTLE_LIMIT` (60 000 / 30 per IP, `/health` exempt), `TRUST_PROXY` (hops; required behind a balancer), `POSTHOG_KEY`/`POSTHOG_HOST` (error reporting of upstream failures; production only, off without a key).
 
 ## Architecture
 - **Entry**: `src/main.tsx` → `<Providers>` → `<RouterProvider>`

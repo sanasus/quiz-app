@@ -23,6 +23,7 @@ import { AppToast } from '../shared/ui/app-toast'
 import { useProgressStore } from '../features/progress/progress-store'
 import { levelFromXp } from '../features/progress/xp'
 import { useStatsStore } from '../features/stats/stats-store'
+import { track } from '../shared/analytics/analytics'
 import { useShareCard } from '../features/share/use-share-card'
 import type { ShareOutcome } from '../features/share/share-result'
 
@@ -95,9 +96,12 @@ export function ResultsScreen() {
   const handleShare = async () => {
     try {
       const outcome = await shareCard.share()
-      if (outcome === null || outcome === 'cancelled') return
+      if (outcome === null) return
+      track('share_clicked', { outcome })
+      if (outcome === 'cancelled') return
       setShareToast(t(SHARE_TOAST_KEYS[outcome]))
     } catch {
+      track('share_clicked', { outcome: 'failed' })
       setShareToast(t('share.failed'))
     }
   }

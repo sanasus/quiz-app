@@ -39,6 +39,7 @@
     "idb": "^8.0.4",
     "lucide-react": "^1.59.0",
     "motion": "^14.0.0",
+    "posthog-js": "^1.438.13",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
     "react-i18next": "^17.0.16",

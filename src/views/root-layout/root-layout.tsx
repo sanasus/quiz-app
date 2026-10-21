@@ -18,6 +18,7 @@ import { AppBackground } from '../../shared/ui/app-background'
 import { Button } from '../../shared/ui/button'
 import { NavItem } from '../../shared/ui/nav-item'
 import { TextLink } from '../../shared/ui/text-link'
+import { trackPageview } from '../../shared/analytics/analytics'
 import { documentTitle } from './document-title'
 
 const routes: { path: string; icon: LucideIcon; key: string }[] = [
@@ -62,6 +63,10 @@ export function RootLayout() {
   useEffect(() => {
     document.title = documentTitle(pathname, t)
   }, [pathname, t])
+
+  useEffect(() => {
+    trackPageview(pathname)
+  }, [pathname])
 
   const toggleLang = () => {
     const next = i18n.language === 'ru' ? 'en' : 'ru'

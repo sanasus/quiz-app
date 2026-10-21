@@ -6,6 +6,7 @@
 import { useState } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
+import { trackRunAbandoned } from '../../shared/analytics/run-events'
 import { Button } from '../../shared/ui/button'
 import { Modal } from '../../shared/ui/modal'
 import { useQuizSessionStore } from '../../shared/lib/session-store'
@@ -53,7 +54,14 @@ export function ResumeQuizPrompt() {
         })}
       </p>
       <div className="flex justify-end gap-3">
-        <Button variant="ghost" size="sm" onClick={reset}>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => {
+            trackRunAbandoned()
+            reset()
+          }}
+        >
           {t('resume.restart')}
         </Button>
         <Button size="sm" onClick={handleContinue}>

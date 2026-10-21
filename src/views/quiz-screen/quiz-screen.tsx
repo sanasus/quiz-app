@@ -10,9 +10,11 @@ import { motion } from 'motion/react'
 import { useTranslation } from 'react-i18next'
 import { useQuizSessionStore } from '../../shared/lib/session-store'
 import { useMotionEnabled } from '../../shared/lib/use-motion-enabled'
+import { QuizApiError } from '../../shared/api/errors'
 import { useProviderStore } from '../../shared/api/provider-store'
 import { PROVIDERS } from '../../shared/api/providers'
 import { ApiErrorDialog } from '../../shared/ui/api-error-dialog'
+import { track } from '../../shared/analytics/analytics'
 import { AppToast } from '../../shared/ui/app-toast'
 import { ConfirmDialog } from '../../shared/ui/confirm-dialog'
 import { reportQuestion } from '../../features/history/history-db'
@@ -195,7 +197,15 @@ export function QuizScreen() {
         errorMessage={errorMessage}
         retrying={initialError ? result.isFetching : batchFetching}
         onRetry={handleRetry}
-        onChangeApi={changeProvider}
+        onChangeApi={() =>
+          changeProvider(undefined, {
+            reason: 'error_dialog',
+            kind:
+              initialError instanceof QuizApiError
+                ? initialError.kind
+                : undefined,
+          })
+        }
       />
       <ConfirmDialog
         open={leaveGuard.open}
@@ -305,6 +315,7 @@ export function QuizScreen() {
         reported={reportedIds.includes(question.id)}
         onReport={() => {
           void reportQuestion(providerId, question.id)
+          track('question_reported', { provider: providerId })
           setReportedIds((ids) => [...ids, question.id])
           setReportToast(t('quiz.reported'))
         }}

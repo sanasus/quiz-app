@@ -76,7 +76,10 @@ describe('useProviderFallback', () => {
     )
 
     expect(changeProviderMock).toHaveBeenCalledTimes(1)
-    expect(changeProviderMock).toHaveBeenCalledWith('trivia')
+    expect(changeProviderMock).toHaveBeenCalledWith('trivia', {
+      reason: 'auto_setup',
+      kind: 'auth',
+    })
     expect(result.current.toast?.title).toBe('Question source changed')
     expect(result.current.toast?.message).toContain('Trivia API')
     expect(result.current.inlineError).toBeNull()
@@ -103,7 +106,10 @@ describe('useProviderFallback', () => {
     )
 
     expect(changeProviderMock).toHaveBeenCalledTimes(1)
-    expect(changeProviderMock).toHaveBeenCalledWith('trivia')
+    expect(changeProviderMock).toHaveBeenCalledWith('trivia', {
+      reason: 'auto_setup',
+      kind: 'timeout',
+    })
     expect(result.current.toast?.title).toBe('Question source changed')
     expect(result.current.inlineError).toBeNull()
   })
@@ -115,7 +121,10 @@ describe('useProviderFallback', () => {
 
       renderFallback(withError(apiError(kind, `${kind} failure`)))
 
-      expect(changeProviderMock).toHaveBeenCalledWith('trivia')
+      expect(changeProviderMock).toHaveBeenCalledWith('trivia', {
+        reason: 'auto_setup',
+        kind,
+      })
     }
   })
 

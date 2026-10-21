@@ -82,7 +82,11 @@ export function useProviderFallback(
         provider: t(`provider.${next}`),
       }),
     })
-    changeProvider(next)
+    changeProvider(next, {
+      reason: 'auto_setup',
+      kind:
+        catalogError instanceof QuizApiError ? catalogError.kind : undefined,
+    })
   }, [broken, switchedFrom, changeProvider, t, catalogError])
 
   // Before any switch the current error is the one to report. After it,

@@ -4,6 +4,7 @@ import {
   canLoadMoreQuestions,
   useQuizSessionStore,
 } from '../../../shared/lib/session-store'
+import { trackRunFinished } from '../../../shared/analytics/run-events'
 import { useProviderStore } from '../../../shared/api/provider-store'
 import { recordAnswer } from '../../../features/history/history-db'
 import { checkAnswer, countCorrect } from '../utils/answer-utils'
@@ -63,6 +64,14 @@ export function useQuizSessionEnd(
         attempt.question.id,
         attempt.correct ? 'correct' : 'wrong',
       )
+    }
+    const finished = useQuizSessionStore.getState().finishedSession
+    if (finished) {
+      trackRunFinished({
+        correct: finished.correctCount,
+        total: finished.totalQuestions,
+        score: finished.score,
+      })
     }
     navigate({ to: '/results' })
   }, [isSessionEnded, currentQuestion, navigate])
