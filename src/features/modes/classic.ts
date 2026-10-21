@@ -11,7 +11,6 @@ export const ClassicMode: GameMode = {
   timerLimit: null,
   timerBehavior: 'none',
   lives: null,
-  autoSubmitOnSelection: false,
   headerType: 'none',
 
   onTimeUp: (): Partial<QuizSession> => ({
@@ -22,12 +21,6 @@ export const ClassicMode: GameMode = {
   onQuestionAdvance: (state: QuizSession): Partial<QuizSession> => ({
     currentIndex: state.currentIndex + 1,
     status: 'playing',
-  }),
-
-  onSkip: (state: QuizSession): Partial<QuizSession> => ({
-    status: 'answered',
-    streak: 0,
-    bestStreak: state.bestStreak,
   }),
 
   onWrongAnswer: (): Partial<QuizSession> => ({}),

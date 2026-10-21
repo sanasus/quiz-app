@@ -34,7 +34,6 @@ export interface ProxyQuestion {
   text: string
   options: { id: string; text: string }[]
   correctOptionIds: string[]
-  multiple: boolean
   category?: string
   difficulty: ProxyDifficulty
 }
@@ -102,7 +101,6 @@ export function quizApiQuestions(count: number): ProxyQuestionsPage {
           'Third option',
         ]),
         correctOptionIds: [`${id}-0`],
-        multiple: false,
         category: 'Physics',
         difficulty: 'easy' as const,
       }
@@ -153,7 +151,6 @@ export const triviaQuestions: ProxyQuestion[] = [
     text: 'What is the capital of France?',
     options: optionList('trivia-1', ['Paris', 'London', 'Berlin', 'Rome']),
     correctOptionIds: ['trivia-1-0'],
-    multiple: false,
     category: 'Geography',
     difficulty: 'easy',
   },
@@ -162,7 +159,6 @@ export const triviaQuestions: ProxyQuestion[] = [
     text: 'Which planet is known as the Red Planet?',
     options: optionList('trivia-2', ['Mars', 'Venus', 'Jupiter', 'Saturn']),
     correctOptionIds: ['trivia-2-0'],
-    multiple: false,
     category: 'Science',
     difficulty: 'easy',
   },
@@ -176,7 +172,6 @@ export const triviaQuestions: ProxyQuestion[] = [
       'Jane Austen',
     ]),
     correctOptionIds: ['trivia-3-0'],
-    multiple: false,
     category: 'Literature',
     difficulty: 'medium',
   },

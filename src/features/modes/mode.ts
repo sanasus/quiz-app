@@ -24,9 +24,6 @@ export interface GameMode {
   /** Initial lives (null = infinite / not applicable) */
   readonly lives: number | null
 
-  /** Whether to auto-submit when the user changes their answer selection */
-  readonly autoSubmitOnSelection: boolean
-
   /** What the header should show for this mode */
   readonly headerType: 'timer' | 'lives' | 'none'
 
@@ -35,9 +32,6 @@ export interface GameMode {
 
   /** Called when advancing to the next question */
   onQuestionAdvance: (state: QuizSession) => Partial<QuizSession>
-
-  /** Called when the user skips the current question */
-  onSkip: (state: QuizSession) => Partial<QuizSession>
 
   /** Called when the user gives a wrong answer */
   onWrongAnswer: (state: QuizSession) => Partial<QuizSession>

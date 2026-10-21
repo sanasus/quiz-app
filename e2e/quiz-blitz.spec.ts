@@ -25,15 +25,13 @@ test.describe('Blitz mode', { tag: ['@slow'] }, () => {
   // Auto-submit behavior
   // ---------------------------------------------------------------------------
 
-  test('auto-submits on selection without a Submit button', async ({
-    page,
-  }) => {
+  test('answers on selection without a Submit button', async ({ page }) => {
     const options = optionLocator(page)
     await expect(options.first()).toBeVisible()
 
-    // Clicking an option auto-submits: Submit disappears, Next appears
+    // Clicking an option answers it: Next appears
     await options.first().click()
-    await expect(page.getByRole('button', { name: 'Submit' })).not.toBeVisible()
+    await expect(page.getByRole('button', { name: 'Submit' })).toHaveCount(0)
     await expect(page.getByRole('button', { name: 'Next' })).toBeVisible()
   })
 
@@ -51,29 +49,16 @@ test.describe('Blitz mode', { tag: ['@slow'] }, () => {
   })
 
   // ---------------------------------------------------------------------------
-  // Question progression
-  // ---------------------------------------------------------------------------
-
-  test('skip button is available in Blitz mode', async ({ page }) => {
-    const skipBtn = page.getByRole('button', { name: 'Skip' })
-    await expect(skipBtn).toBeVisible()
-    await skipBtn.click()
-
-    // Next button should appear after skip
-    await expect(page.getByRole('button', { name: 'Next' })).toBeVisible()
-  })
-
-  // ---------------------------------------------------------------------------
   // Results
   // ---------------------------------------------------------------------------
 
   test('completes all questions and navigates to results', async ({ page }) => {
-    await completeQuiz(page, 3, { autoSubmit: true })
+    await completeQuiz(page, 3)
     await waitForResults(page)
   })
 
   test('results show correct score for Blitz mode', async ({ page }) => {
-    await completeQuiz(page, 3, { autoSubmit: true })
+    await completeQuiz(page, 3)
     await waitForResults(page)
 
     // Score card and stats labels should be visible
@@ -84,7 +69,7 @@ test.describe('Blitz mode', { tag: ['@slow'] }, () => {
   })
 
   test('New Quiz button works from results in Blitz mode', async ({ page }) => {
-    await completeQuiz(page, 3, { autoSubmit: true })
+    await completeQuiz(page, 3)
     await startNewQuiz(page)
   })
 })
@@ -118,13 +103,14 @@ test.describe('Blitz answer feedback', { tag: ['@slow'] }, () => {
 })
 
 test.describe('Blitz custom settings', { tag: ['@slow'] }, () => {
-  test('timer starts at the limit for the question count', async ({ page }) => {
-    // getBlitzTimeLimit(5) = max(10, 5 * 3) = 15s (allow one tick of drift)
+  test('timer starts at 10s per question', async ({ page }) => {
+    // Fixed 10s per question, whatever the question count (allow one
+    // tick of drift)
     await startQuiz(page, { mode: 'blitz', questionCount: 5 })
-    await expect(page.getByTestId('quiz-timer')).toHaveText(/^1[0-5]s$/)
+    await expect(page.getByTestId('quiz-timer')).toHaveText(/^(9|10)s$/)
 
     // Answer all questions before time runs out
-    await completeQuiz(page, 5, { autoSubmit: true })
+    await completeQuiz(page, 5)
     await waitForResults(page)
   })
 
@@ -134,7 +120,7 @@ test.describe('Blitz custom settings', { tag: ['@slow'] }, () => {
       difficulty: 'medium',
       questionCount: 3,
     })
-    await completeQuiz(page, 3, { autoSubmit: true })
+    await completeQuiz(page, 3)
     await waitForResults(page)
   })
 })

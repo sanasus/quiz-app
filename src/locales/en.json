@@ -43,9 +43,7 @@
   },
   "quiz": {
     "question": "Question",
-    "submit": "Submit",
-    "skip": "Skip",
-    "next": "Next",
+    "next": "Next question",
     "loading_next": "Loading…",
     "time_remaining": "Time remaining",
     "lives": "Lives",
@@ -72,7 +70,6 @@
     "accuracy": "Accuracy",
     "mistakes_title": "Mistakes",
     "time_spent": "Time spent",
-    "repeat_mistakes": "Repeat mistakes",
     "new_quiz": "New Quiz"
   },
   "stats": {

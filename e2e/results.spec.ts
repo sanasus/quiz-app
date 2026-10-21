@@ -38,13 +38,15 @@ test.describe('Results screen', () => {
     ).toBeVisible()
   })
 
-  test('repeat mistakes button navigates to quiz', async ({ page }) => {
-    // Repeat mistakes button should be visible (guaranteed by beforeEach)
-    const repeatBtn = page.getByRole('button', { name: 'Repeat mistakes' })
-    await expect(repeatBtn).toBeVisible()
-    await repeatBtn.click()
+  test('repeating the last session from home starts a new run', async ({
+    page,
+  }) => {
+    await page.getByRole('link', { name: 'Home' }).click()
+    await page.getByRole('link', { name: /^Repeat/ }).click()
 
     await expect(page).toHaveURL(/\/quiz/)
-    await expect(page.getByRole('heading', { name: 'Question' })).toBeVisible()
+    await expect(
+      page.getByRole('heading', { name: 'Question 1/2' }),
+    ).toBeVisible()
   })
 })

@@ -104,7 +104,6 @@ const proxyQuestion = {
     { id: 'a2', text: '5' },
   ],
   correctOptionIds: ['a1'],
-  multiple: false,
   difficulty: 'easy',
 }
 

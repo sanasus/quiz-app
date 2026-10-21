@@ -24,7 +24,6 @@ export const mockQuestions: Question[] = [
       { id: 'q1d', text: 'Madrid' },
     ],
     correctOptionIds: ['q1a'],
-    multiple: false,
     category: 'geography',
     difficulty: 'easy',
     explanation:
@@ -40,7 +39,6 @@ export const mockQuestions: Question[] = [
       { id: 'q2d', text: 'Earth' },
     ],
     correctOptionIds: ['q2b'],
-    multiple: false,
     category: 'science',
     difficulty: 'easy',
     explanation:
@@ -56,27 +54,24 @@ export const mockQuestions: Question[] = [
       { id: 'q3d', text: 'Cu' },
     ],
     correctOptionIds: ['q3a'],
-    multiple: false,
     category: 'science',
     difficulty: 'medium',
     explanation: 'Au comes from the Latin word "aurum" meaning gold.',
   },
   {
     id: 'q4',
-    text: 'Which of the following are JavaScript frameworks?',
-    description: 'Select all that apply.',
+    text: 'Which of the following is a JavaScript framework?',
     options: [
       { id: 'q4a', text: 'React' },
       { id: 'q4b', text: 'Django' },
-      { id: 'q4c', text: 'Vue' },
-      { id: 'q4d', text: 'Flask' },
+      { id: 'q4c', text: 'Flask' },
+      { id: 'q4d', text: 'Rails' },
     ],
-    correctOptionIds: ['q4a', 'q4c'],
-    multiple: true,
+    correctOptionIds: ['q4a'],
     category: 'technology',
     difficulty: 'medium',
     explanation:
-      'React and Vue are JavaScript frameworks. Django and Flask are Python frameworks.',
+      'React is a JavaScript framework. Django and Flask are Python, Rails is Ruby.',
   },
   {
     id: 'q5',
@@ -88,7 +83,6 @@ export const mockQuestions: Question[] = [
       { id: 'q5d', text: '1946' },
     ],
     correctOptionIds: ['q5c'],
-    multiple: false,
     category: 'history',
     difficulty: 'easy',
     explanation:
@@ -104,7 +98,6 @@ export const mockQuestions: Question[] = [
       { id: 'q6d', text: 'Arctic Ocean' },
     ],
     correctOptionIds: ['q6c'],
-    multiple: false,
     category: 'geography',
     difficulty: 'easy',
     explanation:
@@ -120,7 +113,6 @@ export const mockQuestions: Question[] = [
       { id: 'q7d', text: '3.18' },
     ],
     correctOptionIds: ['q7a'],
-    multiple: false,
     category: 'math',
     difficulty: 'easy',
     explanation:
@@ -136,7 +128,6 @@ export const mockQuestions: Question[] = [
       { id: 'q8d', text: 'C++' },
     ],
     correctOptionIds: ['q8a'],
-    multiple: false,
     category: 'technology',
     difficulty: 'easy',
     explanation:
@@ -153,7 +144,6 @@ export const mockQuestions: Question[] = [
       { id: 'q9d', text: '150,000 km/s' },
     ],
     correctOptionIds: ['q9b'],
-    multiple: false,
     category: 'science',
     difficulty: 'medium',
     explanation:
@@ -169,7 +159,6 @@ export const mockQuestions: Question[] = [
       { id: 'q10d', text: 'Graph' },
     ],
     correctOptionIds: ['q10b'],
-    multiple: false,
     category: 'technology',
     difficulty: 'medium',
     explanation:
@@ -185,7 +174,6 @@ export const mockQuestions: Question[] = [
       { id: 'q11d', text: 'O(n²)' },
     ],
     correctOptionIds: ['q11b'],
-    multiple: false,
     category: 'technology',
     difficulty: 'hard',
     explanation:
@@ -201,7 +189,6 @@ export const mockQuestions: Question[] = [
       { id: 'q12d', text: '120°C' },
     ],
     correctOptionIds: ['q12b'],
-    multiple: false,
     category: 'science',
     difficulty: 'hard',
     explanation:

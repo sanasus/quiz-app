@@ -43,9 +43,7 @@
   },
   "quiz": {
     "question": "Вопрос",
-    "submit": "Ответить",
-    "skip": "Пропустить",
-    "next": "Далее",
+    "next": "Следующий вопрос",
     "loading_next": "Загрузка…",
     "time_remaining": "Оставшееся время",
     "lives": "Жизни",
@@ -72,7 +70,6 @@
     "accuracy": "Точность",
     "mistakes_title": "Ошибки",
     "time_spent": "Затраченное время",
-    "repeat_mistakes": "Повторить ошибки",
     "new_quiz": "Новый тест"
   },
   "stats": {

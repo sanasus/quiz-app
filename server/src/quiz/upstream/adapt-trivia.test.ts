@@ -32,7 +32,6 @@ describe('adaptTriviaQuestion', () => {
     expect(result!.id).toBe('q1')
     expect(result!.text).toBe('What is 2+2?')
     expect(result!.options.length).toBe(4)
-    expect(result!.multiple).toBe(false)
     expect(result!.explanation).toBeUndefined()
     expect(result!.category).toBe('Science: Mathematics')
     expect(result!.difficulty).toBe('easy')

@@ -25,7 +25,6 @@ function makeQuestion(id: string): Question {
       { id: `${id}-b`, text: 'B' },
     ],
     correctOptionIds: [`${id}-a`],
-    multiple: false,
     difficulty: 'easy',
   }
 }
@@ -57,7 +56,6 @@ function makeSession(overrides: Partial<QuizSession> = {}): QuizSession {
     mode: 'survival',
     config: survivalConfig,
     questionsExhausted: false,
-    repeatConfig: null,
     ...overrides,
   }
 }
@@ -90,11 +88,6 @@ describe('canLoadMoreQuestions', () => {
 
   it('never batches outside survival mode', () => {
     expect(canLoadMoreQuestions(makeSession({ mode: 'classic' }))).toBe(false)
-  })
-
-  it('never batches a repeat-mistakes session', () => {
-    const session = makeSession({ repeatConfig: survivalConfig })
-    expect(canLoadMoreQuestions(session)).toBe(false)
   })
 })
 
@@ -184,13 +177,6 @@ describe('store batch actions', () => {
     useQuizSessionStore.getState().markQuestionsExhausted()
 
     expect(useQuizSessionStore.getState().questionsExhausted).toBe(true)
-  })
-
-  it('repeatMistakes resets the exhausted flag', () => {
-    useQuizSessionStore.getState().markQuestionsExhausted()
-    useQuizSessionStore.getState().repeatMistakes(survivalConfig)
-
-    expect(useQuizSessionStore.getState().questionsExhausted).toBe(false)
   })
 })
 
@@ -329,25 +315,6 @@ describe('questionsTotal', () => {
     useQuizSessionStore.getState().appendQuestions([makeQuestion('new2')])
 
     expect(useQuizSessionStore.getState().questionsTotal).toBe(20)
-  })
-
-  it('is the repeated question count in a repeat session', () => {
-    // Every attempted question wrong → all of them come back for review.
-    const answers: Record<string, string[]> = {}
-    for (const q of pool) {
-      answers[q.id] = q.options
-        .filter((o) => !q.correctOptionIds.includes(o.id))
-        .map((o) => o.id)
-    }
-    useQuizSessionStore.setState({
-      answers,
-      currentIndex: pool.length - 1,
-      status: 'answered',
-    })
-    useQuizSessionStore.getState().finishSession(0, 30, 0)
-    useQuizSessionStore.getState().repeatMistakes(survivalConfig)
-
-    expect(useQuizSessionStore.getState().questionsTotal).toBe(pool.length)
   })
 })
 

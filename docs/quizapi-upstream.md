@@ -285,6 +285,9 @@ curl -X GET \
 }
 ```
 
+Проксирующий сервер оставляет только вопросы ровно с одним `isCorrect: true` (UI — single-choice, один клик = ответ); остальные отбрасываются в `adapt-quizapi.ts`.
+
+
 ## Пагинация browse mode
 
 Для browse mode `meta` содержит:

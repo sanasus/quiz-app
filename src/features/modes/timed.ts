@@ -17,7 +17,6 @@ export const TimedMode: GameMode = {
   timerLimit: getTimedTotalLimit,
   timerBehavior: 'total',
   lives: null,
-  autoSubmitOnSelection: false,
   headerType: 'timer',
 
   onTimeUp: (): Partial<QuizSession> => ({
@@ -28,12 +27,6 @@ export const TimedMode: GameMode = {
   onQuestionAdvance: (state: QuizSession): Partial<QuizSession> => ({
     currentIndex: state.currentIndex + 1,
     status: 'playing',
-  }),
-
-  onSkip: (state: QuizSession): Partial<QuizSession> => ({
-    status: 'answered',
-    streak: 0,
-    bestStreak: state.bestStreak,
   }),
 
   onWrongAnswer: (): Partial<QuizSession> => ({}),

@@ -11,11 +11,9 @@
 
 import { useQuery } from '@tanstack/react-query'
 import type { QuizConfig } from '../types/quiz'
-import { useQuizSessionStore } from '../lib/session-store'
 import { QuizApiError } from './errors'
 import { useProviderStore } from './provider-store'
 import { getProvider } from './providers'
-import type { QuestionsPage } from './providers'
 import { SURVIVAL_BATCH_SIZE } from './fetch-limits'
 
 /** Shared base of every quiz query key. */
@@ -35,13 +33,7 @@ export function retryQuestions(count: number, error: Error): boolean {
 }
 
 export function useQuizQuestions(config: QuizConfig | null) {
-  const store = useQuizSessionStore()
   const providerId = useProviderStore((s) => s.providerId)
-
-  // If we're in a repeat session (questions already loaded in store),
-  // skip the API call entirely
-  const isRepeatSession =
-    store.questions.length > 0 && store.status === 'playing'
 
   const query = useQuery({
     queryKey: [...QUIZ_QUERY_BASE, providerId, 'questions', config],
@@ -49,23 +41,11 @@ export function useQuizQuestions(config: QuizConfig | null) {
       if (!config) throw new Error('Quiz config is required')
       return getProvider(providerId).fetchQuestions(config)
     },
-    enabled: config !== null && !isRepeatSession,
+    enabled: config !== null,
     retry: retryQuestions,
     staleTime: 5 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
   })
-
-  // If in a repeat session, return stored questions instead of query data
-  if (isRepeatSession) {
-    return {
-      data: {
-        questions: store.questions,
-        total: store.questions.length,
-      } satisfies QuestionsPage,
-      isLoading: false,
-      error: null,
-    }
-  }
 
   return query
 }

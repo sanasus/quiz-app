@@ -28,7 +28,11 @@ import { QuizHeader } from './components/quiz-header'
 import { QuizQuestion } from './components/quiz-question'
 import { QuizOptions } from './components/quiz-options'
 import { QuizExplanation } from './components/quiz-explanation'
-import { QuizActions } from './components/quiz-actions'
+import {
+  NEXT_DELAY_CORRECT_MS,
+  NEXT_DELAY_INCORRECT_MS,
+  NextCountdown,
+} from './components/next-countdown'
 
 // Static states hoisted to module level (rendering-hoist-jsx) so the
 // orchestrator's early returns stay one-liners.
@@ -54,12 +58,12 @@ function QuestionFlow({
   question,
   selectedIds,
   status,
-  onToggle,
+  onSelect,
 }: {
   question: NonNullable<ReturnType<typeof useQuizSession>['currentQuestion']>
   selectedIds: string[]
   status: string
-  onToggle: (id: string) => void
+  onSelect: (id: string) => void
 }) {
   const motionEnabled = useMotionEnabled()
 
@@ -76,7 +80,7 @@ function QuestionFlow({
         correctOptionIds={question.correctOptionIds}
         selectedIds={selectedIds}
         status={status}
-        onToggle={onToggle}
+        onSelect={onSelect}
       />
     </motion.div>
   )
@@ -93,34 +97,25 @@ export function QuizScreen() {
   useQuizTimers(effectiveConfig)
   useTotalTimer(effectiveConfig)
 
-  const {
-    currentSubmission,
-    handleSubmit,
-    handleSkip,
-    handleNext,
-    handleToggle,
-    handleClear,
-    hasSelection,
-  } = useQuizSubmission(result.currentQuestion, mode.autoSubmitOnSelection)
+  const { currentSubmission, handleNext, handleSelect } = useQuizSubmission(
+    result.currentQuestion,
+  )
 
-  // Keyboard: 1–6 select, Enter submit/next, Esc clear selection.
+  // Keyboard: 1–9 answer, Enter advances early.
   const options = result.currentQuestion?.options
-  const toggleByIndex = useCallback(
+  const selectByIndex = useCallback(
     (index: number) => {
       const option = options?.[index]
-      if (option) handleToggle(option.id)
+      if (option) handleSelect(option.id)
     },
-    [options, handleToggle],
+    [options, handleSelect],
   )
   const optionCount = options?.length ?? 0
   useQuizKeyboard({
     optionCount,
     status: store.status,
-    hasSelection,
-    onToggleIndex: toggleByIndex,
-    onSubmit: handleSubmit,
+    onSelectIndex: selectByIndex,
     onNext: handleNext,
-    onClear: handleClear,
   })
 
   useQuizSessionEnd(result.currentQuestion)
@@ -242,6 +237,8 @@ export function QuizScreen() {
         timeLimit={timeLimit}
         lives={store.lives}
         score={store.score}
+        streak={store.streak}
+        paused={store.status === 'answered'}
       />
 
       <QuestionFlow
@@ -249,7 +246,7 @@ export function QuizScreen() {
         question={question}
         selectedIds={currentSubmission}
         status={store.status}
-        onToggle={handleToggle}
+        onSelect={handleSelect}
       />
 
       {/* Screen-reader announcements for the answer outcome. */}
@@ -267,15 +264,16 @@ export function QuizScreen() {
 
       {/* A failed batch blocks progress at the pool's edge: the error
           dialog above offers a retry or a provider switch. */}
-      <QuizActions
-        streak={store.streak}
-        status={store.status}
-        hasSelection={hasSelection}
-        nextDisabled={waitingForBatch}
-        onSkip={handleSkip}
-        onSubmit={handleSubmit}
-        onNext={handleNext}
-      />
+      {store.status === 'answered' ? (
+        <NextCountdown
+          key={`next-${question.id}`}
+          delayMs={
+            isAnswerCorrect ? NEXT_DELAY_CORRECT_MS : NEXT_DELAY_INCORRECT_MS
+          }
+          blocked={waitingForBatch}
+          onNext={handleNext}
+        />
+      ) : null}
 
       {errorDialog}
     </div>

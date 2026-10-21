@@ -19,7 +19,6 @@ export interface Question {
   explanation?: string
   options: { id: string; text: string }[]
   correctOptionIds: string[]
-  multiple: boolean
   category?: string
   difficulty: Difficulty
 }

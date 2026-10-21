@@ -14,6 +14,7 @@ import type {
   SessionStatus,
 } from '../types/quiz'
 import { getMode } from '../../features/modes'
+import { BLITZ_TIME_LIMIT } from '../../features/modes/blitz'
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -35,11 +36,6 @@ export const DEFAULT_CONFIG: QuizConfig = {
 /** Timed mode: 10 seconds per question. */
 export function getTimedTimeLimit(questionCount: number): number {
   return questionCount * 10
-}
-
-/** Blitz mode: total time limit scales with question count (minimum 10s). */
-export function getBlitzTimeLimit(questionCount: number): number {
-  return Math.max(10, questionCount * 3)
 }
 
 // ---------------------------------------------------------------------------
@@ -65,7 +61,6 @@ interface QuizSessionStore extends QuizSession {
   timeUp: () => void
   selectOption: (optionId: string) => void
   submitAnswer: (scoreDelta: number) => void
-  skipQuestion: () => void
   nextQuestion: () => void
   updateConfig: (partial: Partial<QuizConfig>) => void
   finishSession: (
@@ -79,7 +74,6 @@ interface QuizSessionStore extends QuizSession {
   /** No further question batches will arrive (fetch error / pool empty). */
   markQuestionsExhausted: () => void
   resetBlitzTimer: () => void
-  repeatMistakes: (config: QuizConfig) => void
   reset: () => void
 }
 
@@ -102,7 +96,6 @@ function createInitialState(config: QuizConfig): QuizSession {
     config,
     questionsExhausted: false,
     questionsTotal: undefined,
-    repeatConfig: null,
   }
 }
 
@@ -123,11 +116,7 @@ export function isSessionActive(status: SessionStatus): boolean {
  * the next batch" and "finish the session".
  */
 export function canLoadMoreQuestions(state: QuizSession): boolean {
-  return (
-    state.mode === 'survival' &&
-    state.repeatConfig === null &&
-    !state.questionsExhausted
-  )
+  return state.mode === 'survival' && !state.questionsExhausted
 }
 
 /**
@@ -231,26 +220,12 @@ function sessionReducer(
       const question = state.questions[state.currentIndex]
       if (!question) return state
 
-      const currentAnswers = state.answers[question.id] ?? []
-      const newAnswers: string[] = []
-
-      if (question.multiple) {
-        // Toggle option for multiple choice
-        if (currentAnswers.includes(optionId)) {
-          newAnswers.push(...currentAnswers.filter((id) => id !== optionId))
-        } else {
-          newAnswers.push(...currentAnswers, optionId)
-        }
-      } else {
-        // Single choice: replace
-        newAnswers.push(optionId)
-      }
-
+      // Single choice: the pick replaces any previous one.
       return {
         ...state,
         answers: {
           ...state.answers,
-          [questionId]: newAnswers,
+          [questionId]: [optionId],
         },
       }
     }
@@ -291,17 +266,6 @@ function sessionReducer(
           streak: 0,
           bestStreak: state.bestStreak,
         }),
-      }
-    }
-
-    case 'SKIP_QUESTION': {
-      const mode = getMode(state.mode)
-      return {
-        ...state,
-        status: 'answered',
-        streak: 0,
-        bestStreak: state.bestStreak,
-        ...mode.onSkip(state),
       }
     }
 
@@ -364,15 +328,6 @@ function sessionReducer(
     case 'LOSE_LIFE':
       return { ...state, lives: Math.max(0, state.lives - 1) }
 
-    case 'REPEAT_MISTAKES':
-      return {
-        ...createInitialState(action.payload.config),
-        questions: action.payload.questions,
-        status: 'playing',
-        repeatConfig: action.payload.config,
-        questionsTotal: action.payload.questions.length,
-      }
-
     case 'RESET':
       return {
         ...createInitialState(state.config),
@@ -382,7 +337,7 @@ function sessionReducer(
     case 'RESET_BLITZ_TIMER':
       return {
         ...state,
-        timeRemaining: getBlitzTimeLimit(state.questions.length),
+        timeRemaining: BLITZ_TIME_LIMIT,
       }
 
     case 'UPDATE_CONFIG':
@@ -441,8 +396,6 @@ export const useQuizSessionStore = create<QuizSessionStore>((set) => ({
     set((s) => ({
       ...sessionReducer(s, { type: 'SUBMIT_ANSWER', payload: { scoreDelta } }),
     })),
-  skipQuestion: () =>
-    set((s) => ({ ...sessionReducer(s, { type: 'SKIP_QUESTION' }) })),
   nextQuestion: () =>
     set((s) => ({ ...sessionReducer(s, { type: 'NEXT_QUESTION' }) })),
   updateConfig: (partial) =>
@@ -506,16 +459,6 @@ export const useQuizSessionStore = create<QuizSessionStore>((set) => ({
     })),
   resetBlitzTimer: () =>
     set((s) => ({ ...sessionReducer(s, { type: 'RESET_BLITZ_TIMER' }) })),
-  repeatMistakes: (config) =>
-    set((s) => {
-      const mistakes = s.finishedSession?.mistakes ?? []
-      return {
-        ...sessionReducer(s, {
-          type: 'REPEAT_MISTAKES',
-          payload: { questions: mistakes.map((m) => m.question), config },
-        }),
-      }
-    }),
   reset: () =>
     set((s) => ({
       ...sessionReducer(s, { type: 'RESET' }),

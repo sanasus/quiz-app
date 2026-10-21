@@ -5,15 +5,16 @@
 
 import type { GameMode } from './mode'
 import type { QuizSession } from '../../shared/types/quiz'
-import { getBlitzTimeLimit } from '../../shared/lib/session-store'
+
+/** Fixed time per question, in seconds. */
+export const BLITZ_TIME_LIMIT = 10
 
 export const BlitzMode: GameMode = {
   id: 'blitz',
   timeLimitPerQuestion: null,
-  timerLimit: getBlitzTimeLimit,
+  timerLimit: BLITZ_TIME_LIMIT,
   timerBehavior: 'per-question',
   lives: null,
-  autoSubmitOnSelection: true,
   headerType: 'timer',
 
   onTimeUp: (state: QuizSession): Partial<QuizSession> => {
@@ -43,21 +44,14 @@ export const BlitzMode: GameMode = {
       },
       streak: 0,
       bestStreak: state.bestStreak,
-      timeRemaining: getBlitzTimeLimit(state.questions.length),
+      timeRemaining: BLITZ_TIME_LIMIT,
     }
   },
 
   onQuestionAdvance: (state: QuizSession): Partial<QuizSession> => ({
     currentIndex: state.currentIndex + 1,
     status: 'playing',
-    timeRemaining: getBlitzTimeLimit(state.questions.length),
-  }),
-
-  onSkip: (state: QuizSession): Partial<QuizSession> => ({
-    status: 'answered',
-    streak: 0,
-    bestStreak: state.bestStreak,
-    timeRemaining: getBlitzTimeLimit(state.questions.length),
+    timeRemaining: BLITZ_TIME_LIMIT,
   }),
 
   onWrongAnswer: (): Partial<QuizSession> => ({}),

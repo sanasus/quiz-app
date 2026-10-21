@@ -22,7 +22,6 @@ function makeQuestion(id: string): Question {
       { id: `${id}-b`, text: 'B' },
     ],
     correctOptionIds: [`${id}-a`],
-    multiple: false,
     difficulty: 'easy',
     category: 'Code',
   }
@@ -117,7 +116,7 @@ describe('useSessionMetrics', () => {
     expect(useProgressStore.getState().xp).toBe(10)
   })
 
-  it('processes repeat-mistakes sessions as new sessions', () => {
+  it('processes consecutive sessions as new sessions', () => {
     const base = {
       status: 'finished' as const,
       questions: [makeQuestion('q1')],
@@ -144,7 +143,7 @@ describe('useSessionMetrics', () => {
     const first = renderHook(() => useSessionMetrics())
     expect(first.result.current?.xpGained).toBe(10)
 
-    // Finish again (repeat session, new finishedAt).
+    // Finish again (second session, new finishedAt).
     act(() => {
       useQuizSessionStore.setState({
         finishedSession: {
