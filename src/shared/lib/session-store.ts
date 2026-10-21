@@ -57,6 +57,7 @@ interface QuizSessionStore extends QuizSession {
     questions: Question[],
     config: QuizConfig,
     total?: number,
+    pool?: { start: number; consumed: number },
   ) => void
   startPlaying: () => void
   startTimer: (timeRemaining: number) => void
@@ -73,7 +74,11 @@ interface QuizSessionStore extends QuizSession {
   ) => void
   loseLife: () => void
   /** Append a fetched question batch (survival batch loading). */
-  appendQuestions: (questions: Question[], total?: number) => void
+  appendQuestions: (
+    questions: Question[],
+    total?: number,
+    batch?: { rawCount?: number; exhausted?: boolean },
+  ) => void
   /** No further question batches will arrive (fetch error / pool empty). */
   markQuestionsExhausted: () => void
   resetBlitzTimer: () => void
@@ -99,6 +104,8 @@ function createInitialState(config: QuizConfig): QuizSession {
     config,
     questionsExhausted: false,
     questionsTotal: undefined,
+    poolStart: 0,
+    poolConsumed: 0,
   }
 }
 
@@ -193,6 +200,8 @@ function sessionReducer(
         timeRemaining: undefined,
         questionsExhausted: false,
         questionsTotal: action.payload.total,
+        poolStart: action.payload.pool?.start ?? 0,
+        poolConsumed: action.payload.pool?.consumed ?? 0,
       }
     }
 
@@ -311,9 +320,13 @@ function sessionReducer(
           state.questionsTotal,
           action.payload.total,
         ),
+        poolConsumed: state.poolConsumed + (action.payload.rawCount ?? 0),
       }
-      // Nothing new in the batch — no further batches will arrive.
-      if (added === 0) return { ...withTotal, questionsExhausted: true }
+      // The source says whether the pool is over. A batch that was merely
+      // filtered down to nothing (all seen / reported) is not the end;
+      // without a verdict, nothing new means no further batches.
+      const exhausted = action.payload.exhausted ?? added === 0
+      if (exhausted) return { ...withTotal, questionsExhausted: true }
       return withTotal
     }
 
@@ -359,12 +372,14 @@ function sessionReducer(
 // ---------------------------------------------------------------------------
 
 /** Bump when the persisted schema changes. */
-export const SESSION_STORE_VERSION = 1
+export const SESSION_STORE_VERSION = 2
 
 /** Key = old version, value = upgrade step; one step per version bump. */
 const migrations: Record<number, (data: unknown) => unknown> = {
   // v0 → v1 is a no-op rename.
   0: (data) => data,
+  // v1 → v2: pool cursor fields (a stored run resumes without a cursor).
+  1: (data) => ({ ...(data as object), poolStart: 0, poolConsumed: 0 }),
 }
 
 /**
@@ -401,11 +416,11 @@ export const useQuizSessionStore = create<QuizSessionStore>()(
 
       startLoading: () =>
         set((s) => ({ ...sessionReducer(s, { type: 'START_LOADING' }) })),
-      loadQuestions: (questions, config, total) =>
+      loadQuestions: (questions, config, total, pool) =>
         set((s) => ({
           ...sessionReducer(s, {
             type: 'LOAD_QUESTIONS',
-            payload: { questions, config, total },
+            payload: { questions, config, total, pool },
           }),
         })),
       startPlaying: () =>
@@ -492,11 +507,11 @@ export const useQuizSessionStore = create<QuizSessionStore>()(
         }),
       loseLife: () =>
         set((s) => ({ ...sessionReducer(s, { type: 'LOSE_LIFE' }) })),
-      appendQuestions: (questions, total) =>
+      appendQuestions: (questions, total, batch) =>
         set((s) => ({
           ...sessionReducer(s, {
             type: 'APPEND_QUESTIONS',
-            payload: { questions, total },
+            payload: { questions, total, ...batch },
           }),
         })),
       markQuestionsExhausted: () =>
@@ -557,6 +572,8 @@ export const useQuizSessionStore = create<QuizSessionStore>()(
         timeRemaining: s.timeRemaining,
         questionsExhausted: s.questionsExhausted,
         questionsTotal: s.questionsTotal,
+        poolStart: s.poolStart,
+        poolConsumed: s.poolConsumed,
         finishedSession: s.finishedSession,
         sessionStartTime: s.sessionStartTime,
         savedAt: Date.now(),

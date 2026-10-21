@@ -1,6 +1,12 @@
 import { useEffect, useRef } from 'react'
 import { useQuestionBatch } from '../../../shared/api/quizapi'
-import type { QuestionsPage } from '../../../shared/api/providers'
+import { getProvider } from '../../../shared/api/providers'
+import { useProviderStore } from '../../../shared/api/provider-store'
+import {
+  cursorKey,
+  useCursorStore,
+} from '../../../features/history/cursor-store'
+import type { LoadedBatch } from '../../../features/history/load-quiz'
 import {
   canLoadMoreQuestions,
   useQuizSessionStore,
@@ -55,16 +61,20 @@ export function useQuestionFeed(config: QuizConfig | null): QuestionFeedResult {
     loaded > 0 &&
     currentIndex >= loaded - PREFETCH_THRESHOLD
 
+  const poolStart = useQuizSessionStore((s) => s.poolStart)
+  const poolConsumed = useQuizSessionStore((s) => s.poolConsumed)
+  const providerId = useProviderStore((s) => s.providerId)
+
   const { data, error, refetch, isFetching } = useQuestionBatch(
     config,
-    loaded,
+    { poolStart, poolConsumed, loaded },
     shouldFetch,
   )
 
   // StrictMode re-runs effects on mount: without this guard an
   // already-resolved batch would be appended twice, and the second
   // (fully duplicated) pass would wrongly mark the pool exhausted.
-  const processedRef = useRef<QuestionsPage | undefined>(undefined)
+  const processedRef = useRef<LoadedBatch | undefined>(undefined)
 
   // Gated on `shouldFetch`: a disabled query still returns cached data
   // for its key, which must not spill into the session early.
@@ -72,8 +82,23 @@ export function useQuestionFeed(config: QuizConfig | null): QuestionFeedResult {
     if (!shouldFetch) return
     if (!data || processedRef.current === data) return
     processedRef.current = data
-    appendQuestions(data.questions, data.total)
-  }, [shouldFetch, data, appendQuestions])
+    appendQuestions(data.questions, data.total, {
+      rawCount: data.rawCount,
+      exhausted: data.exhausted,
+    })
+    // Remember how far into the pool this run got, for the next quiz.
+    if (config && getProvider(providerId).paging === 'cursor') {
+      const state = useQuizSessionStore.getState()
+      const total = state.questionsTotal
+      const position = state.poolStart + state.poolConsumed
+      useCursorStore
+        .getState()
+        .setCursor(
+          cursorKey(providerId, config.category, config.difficulty),
+          total ? position % total : position,
+        )
+    }
+  }, [shouldFetch, data, appendQuestions, config, providerId])
 
   // At the last loaded question, Next waits for the pending batch —
   // unless the run is already over (0 lives), where Next finishes it.

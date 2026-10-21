@@ -13,8 +13,9 @@ import { useQuery } from '@tanstack/react-query'
 import type { QuizConfig } from '../types/quiz'
 import { QuizApiError } from './errors'
 import { useProviderStore } from './provider-store'
-import { getProvider } from './providers'
 import { SURVIVAL_BATCH_SIZE } from './fetch-limits'
+import { loadBatch, loadQuiz } from '../../features/history/quiz-loader'
+import { getProvider } from './providers'
 
 /** Shared base of every quiz query key. */
 const QUIZ_QUERY_BASE = ['quiz'] as const
@@ -39,12 +40,15 @@ export function useQuizQuestions(config: QuizConfig | null) {
     queryKey: [...QUIZ_QUERY_BASE, providerId, 'questions', config],
     queryFn: () => {
       if (!config) throw new Error('Quiz config is required')
-      return getProvider(providerId).fetchQuestions(config)
+      return loadQuiz(providerId, config)
     },
     enabled: config !== null,
     retry: retryQuestions,
-    staleTime: 5 * 60 * 1000,
-    gcTime: 10 * 60 * 1000,
+    // A quiz is assembled from the history and the cursor as they are NOW:
+    // a cached page would hand the same questions to the next run.
+    staleTime: 0,
+    gcTime: 0,
+    refetchOnWindowFocus: false,
   })
 
   return query
@@ -53,14 +57,16 @@ export function useQuizQuestions(config: QuizConfig | null) {
 /**
  * Fetch one survival question batch.
  *
- * The offset is the number of questions already loaded, so each key
- * fetches a distinct slice of the pool (the proxy paginates by
- * `offset` upstream). Disabled outside the survival prefetch window —
- * see useQuestionFeed.
+ * The key carries the pool position (`poolStart` + `poolConsumed`, the
+ * raw items already used) and the loaded count, so every batch is its own
+ * query: a batch that was filtered down to nothing still advances the
+ * position, and random-paged providers (no position) still get a new key
+ * per batch. Disabled outside the survival prefetch window — see
+ * useQuestionFeed.
  */
 export function useQuestionBatch(
   config: QuizConfig | null,
-  offset: number,
+  position: { poolStart: number; poolConsumed: number; loaded: number },
   enabled: boolean,
 ) {
   const providerId = useProviderStore((s) => s.providerId)
@@ -72,19 +78,19 @@ export function useQuestionBatch(
       'questions',
       'batch',
       config,
-      offset,
+      position.poolStart,
+      position.poolConsumed,
+      position.loaded,
     ],
     queryFn: () => {
       if (!config) throw new Error('Quiz config is required')
-      return getProvider(providerId).fetchQuestions(config, {
-        limit: SURVIVAL_BATCH_SIZE,
-        offset,
-      })
+      return loadBatch(providerId, config, SURVIVAL_BATCH_SIZE)
     },
     enabled: enabled && config !== null,
     retry: retryQuestions,
-    staleTime: 5 * 60 * 1000,
-    gcTime: 10 * 60 * 1000,
+    staleTime: 0,
+    gcTime: 0,
+    refetchOnWindowFocus: false,
   })
 }
 

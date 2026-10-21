@@ -232,25 +232,29 @@ export async function answerCorrectly(page: Page) {
  *
  * Mirror of answerCorrectly for the fixture-driven trivia pool of
  * provider-switch.spec.ts (mockQuestions doesn't contain these
- * questions); the heading assertion pins the question before acting
- * on it.
+ * questions); the question shown is looked up in `pool` by its text.
  *
  * `next: false` on the run's last question — its Next stays disabled
  * while the failed survival batch opens the error dialog.
  */
 export async function answerTriviaCorrectly(
   page: Page,
-  question: ProxyQuestion,
+  pool: readonly ProxyQuestion[],
   { next = true }: { next?: boolean } = {},
 ) {
+  // Live providers are shuffled on the client: find the question that is
+  // actually on screen instead of assuming a fixture order.
+  const heading = page.getByRole('heading', { level: 3 })
+  await expect(heading).toBeVisible()
+  const text = await heading.textContent()
+  const question = pool.find((q) => q.text === text)
+  if (!question) throw new Error(`Unknown trivia question: ${text}`)
+
   const correct = question.options.find((option) =>
     question.correctOptionIds.includes(option.id),
   )
   if (!correct) throw new Error(`Question ${question.id} has no correct option`)
 
-  await expect(page.getByRole('heading', { level: 3 })).toHaveText(
-    question.text,
-  )
   await optionLocator(page).filter({ hasText: correct.text }).click()
 
   if (next) {

@@ -249,21 +249,27 @@ async function handleQuizApi(
 
 export interface TriviaRouteOptions {
   /**
-   * Answer a /questions request with a non-zero offset with a typed
-   * failure: the first survival batch (offset=0) succeeds, the next
-   * one fails.
+   * Answer every /questions request after the first `n` with a typed
+   * failure. Trivia has no usable offset (every page is a random draw),
+   * so "the initial load succeeds, the next survival batch fails" is
+   * expressed by counting requests: the initial load of a survival run
+   * takes two (a generous page, then one top-up while the fixture pool
+   * is smaller than a batch).
    */
-  failBatchOffset?: boolean
+  failQuestionsAfter?: number
 }
 
 async function handleTrivia(
   route: Route,
   url: URL,
   options: TriviaRouteOptions,
+  questionRequest: () => number,
 ) {
   if (endpointOf(url) === 'questions') {
-    const offset = url.searchParams.get('offset')
-    if (options.failBatchOffset && offset !== null && offset !== '0') {
+    if (
+      options.failQuestionsAfter !== undefined &&
+      questionRequest() > options.failQuestionsAfter
+    ) {
       await route.fulfill(upstreamDown('trivia', 'The Trivia API'))
       return
     }
@@ -314,8 +320,9 @@ export function routeQuizApi(page: Page, options: QuizApiRouteOptions = {}) {
 
 /** Intercept every trivia request against the proxy (see options). */
 export function routeTrivia(page: Page, options: TriviaRouteOptions = {}) {
+  let questionRequests = 0
   return routeProvider(page, 'trivia', (route, url) =>
-    handleTrivia(route, url, options),
+    handleTrivia(route, url, options, () => ++questionRequests),
   )
 }
 

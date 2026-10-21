@@ -35,6 +35,8 @@ function persisted(
     },
     timeRemaining: 7,
     questionsExhausted: false,
+    poolStart: 0,
+    poolConsumed: 0,
     finishedSession: null,
     sessionStartTime: 1_000,
     savedAt: 5_000,
@@ -86,5 +88,19 @@ describe('store persistence', () => {
     expect(raw).not.toBeNull()
     expect(JSON.parse(raw ?? '{}').state.config.category).toBe('persist-check')
     useQuizSessionStore.getState().updateConfig({ category: 'all' })
+  })
+})
+
+describe('persisted session migration', () => {
+  it('upgrades a v1 payload with an empty pool cursor', () => {
+    const migrate = useQuizSessionStore.persist.getOptions().migrate
+    const { poolStart, poolConsumed, ...v1 } = persisted()
+    void poolStart
+    void poolConsumed
+
+    const upgraded = migrate?.(v1, 1)
+
+    expect(persistedSessionSchema.safeParse(upgraded).success).toBe(true)
+    expect(upgraded).toMatchObject({ poolStart: 0, poolConsumed: 0 })
   })
 })

@@ -56,6 +56,8 @@ function makeSession(overrides: Partial<QuizSession> = {}): QuizSession {
     mode: 'survival',
     config: survivalConfig,
     questionsExhausted: false,
+    poolStart: 0,
+    poolConsumed: 0,
     ...overrides,
   }
 }
@@ -361,5 +363,60 @@ describe('isSessionActive', () => {
   it('treats idle/finished as inactive', () => {
     expect(isSessionActive('idle')).toBe(false)
     expect(isSessionActive('finished')).toBe(false)
+  })
+})
+
+// ---------------------------------------------------------------------------
+// Pool cursor + filtered batches
+// ---------------------------------------------------------------------------
+
+describe('pool cursor and filtered batches', () => {
+  beforeEach(() => {
+    useQuizSessionStore.getState().reset()
+    useQuizSessionStore
+      .getState()
+      .loadQuestions(pool.slice(0, 2), survivalConfig, 20, {
+        start: 4,
+        consumed: 3,
+      })
+  })
+
+  it('loadQuestions keeps the pool position of the run', () => {
+    const state = useQuizSessionStore.getState()
+    expect(state.poolStart).toBe(4)
+    expect(state.poolConsumed).toBe(3)
+  })
+
+  it('a batch advances the consumed count by the raw items it used', () => {
+    useQuizSessionStore
+      .getState()
+      .appendQuestions([makeQuestion('n1')], 20, { rawCount: 5 })
+
+    expect(useQuizSessionStore.getState().poolConsumed).toBe(8)
+  })
+
+  it('an all-filtered batch is not exhaustion when the source says so', () => {
+    useQuizSessionStore
+      .getState()
+      .appendQuestions([], 20, { rawCount: 5, exhausted: false })
+
+    const state = useQuizSessionStore.getState()
+    expect(state.questionsExhausted).toBe(false)
+    expect(state.poolConsumed).toBe(8)
+  })
+
+  it('the source can end the run even when the batch added questions', () => {
+    useQuizSessionStore
+      .getState()
+      .appendQuestions([makeQuestion('n1')], 20, { exhausted: true })
+
+    expect(useQuizSessionStore.getState().questionsExhausted).toBe(true)
+  })
+
+  it('reset clears the pool position', () => {
+    useQuizSessionStore.getState().reset()
+
+    expect(useQuizSessionStore.getState().poolStart).toBe(0)
+    expect(useQuizSessionStore.getState().poolConsumed).toBe(0)
   })
 })

@@ -13,7 +13,9 @@ import { useMotionEnabled } from '../../shared/lib/use-motion-enabled'
 import { useProviderStore } from '../../shared/api/provider-store'
 import { PROVIDERS } from '../../shared/api/providers'
 import { ApiErrorDialog } from '../../shared/ui/api-error-dialog'
+import { AppToast } from '../../shared/ui/app-toast'
 import { ConfirmDialog } from '../../shared/ui/confirm-dialog'
+import { reportQuestion } from '../../features/history/history-db'
 import { useChangeProvider } from '../../features/provider/use-change-provider'
 import { useQuizConfig } from './hooks/use-quiz-config'
 import { useQuizSession } from './hooks/use-quiz-session'
@@ -21,6 +23,7 @@ import { useQuizTimers } from './hooks/use-quiz-timers'
 import { useTotalTimer } from './hooks/use-total-timer'
 import { useQuizSubmission } from './hooks/use-quiz-submission'
 import { useQuizSessionEnd } from './hooks/use-quiz-session-end'
+import { useHistoryRecorder } from './hooks/use-history-recorder'
 import { useLeaveGuard } from './hooks/use-leave-guard'
 import { useQuestionFeed } from './hooks/use-question-feed'
 import { useDevAnswerHint } from './hooks/use-dev-answer-hint'
@@ -30,6 +33,7 @@ import { QuizHeader } from './components/quiz-header'
 import { QuizQuestion } from './components/quiz-question'
 import { QuizOptions } from './components/quiz-options'
 import { QuizExplanation } from './components/quiz-explanation'
+import { ReportQuestionButton } from './components/report-question-button'
 import {
   NEXT_DELAY_CORRECT_MS,
   NEXT_DELAY_INCORRECT_MS,
@@ -129,6 +133,13 @@ export function QuizScreen() {
   } = useQuestionFeed(effectiveConfig)
   useDevAnswerHint(result.currentQuestion)
   const leaveGuard = useLeaveGuard()
+  useHistoryRecorder(result.currentQuestion)
+
+  // Notices: «no new questions, repeating» at the start, and the report
+  // confirmation. `reportedIds` also disables the button per question.
+  const [repeatsDismissed, setRepeatsDismissed] = useState(false)
+  const [reportedIds, setReportedIds] = useState<string[]>([])
+  const [reportToast, setReportToast] = useState<string | null>(null)
 
   // ---------------------------------------------------------------------------
   // Error dialog (initial fetch vs survival batch)
@@ -287,6 +298,29 @@ export function QuizScreen() {
           }
           blocked={waitingForBatch}
           onNext={handleNext}
+        />
+      ) : null}
+
+      <ReportQuestionButton
+        reported={reportedIds.includes(question.id)}
+        onReport={() => {
+          void reportQuestion(providerId, question.id)
+          setReportedIds((ids) => [...ids, question.id])
+          setReportToast(t('quiz.reported'))
+        }}
+      />
+
+      {reportToast ? (
+        <AppToast
+          message={reportToast}
+          position="bottom"
+          onDismiss={() => setReportToast(null)}
+        />
+      ) : result.repeats && !repeatsDismissed ? (
+        <AppToast
+          message={t('quiz.repeats_notice')}
+          position="bottom"
+          onDismiss={() => setRepeatsDismissed(true)}
         />
       ) : null}
 

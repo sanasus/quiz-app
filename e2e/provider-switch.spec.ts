@@ -115,7 +115,7 @@ test.describe('Provider switching', () => {
 
   test('opens the dialog when a survival batch fails', async ({ page }) => {
     await page.goto('/settings')
-    await routeTrivia(page, { failBatchOffset: true })
+    await routeTrivia(page, { failQuestionsAfter: 2 })
     // Change API toggles trivia → quizapi; /setup loads cleanly there.
     await routeQuizApi(page)
 
@@ -128,11 +128,11 @@ test.describe('Provider switching', () => {
       page.getByRole('heading', { name: 'Question 1/3', exact: true }),
     ).toBeVisible()
 
-    await answerTriviaCorrectly(page, triviaQuestions[0])
-    await answerTriviaCorrectly(page, triviaQuestions[1])
+    await answerTriviaCorrectly(page, triviaQuestions)
+    await answerTriviaCorrectly(page, triviaQuestions)
     // The next batch (offset=3) already failed; answering the last
     // loaded question opens the dialog instead of Next.
-    await answerTriviaCorrectly(page, triviaQuestions[2], { next: false })
+    await answerTriviaCorrectly(page, triviaQuestions, { next: false })
 
     const dialog = page.getByRole('alertdialog')
     await expect(

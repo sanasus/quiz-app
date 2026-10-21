@@ -50,7 +50,11 @@
     "score": "Score: {{score}}",
     "score_label": "Score:",
     "streak": "Streak",
-    "explanation": "Explanation"
+    "explanation": "Explanation",
+    "report": "Report a problem",
+    "reported_short": "Reported",
+    "reported": "Thanks! This question will not be shown again.",
+    "repeats_notice": "No new questions left here, so some are repeats."
   },
   "api_error": {
     "title": "Question source unavailable",

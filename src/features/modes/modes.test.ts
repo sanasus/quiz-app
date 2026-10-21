@@ -53,6 +53,8 @@ function makeSession(overrides: Partial<QuizSession> = {}): QuizSession {
       mode: 'classic',
     },
     questionsExhausted: false,
+    poolStart: 0,
+    poolConsumed: 0,
     ...overrides,
   }
 }

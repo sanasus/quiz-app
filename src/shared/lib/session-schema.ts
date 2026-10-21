@@ -64,6 +64,8 @@ export const persistedSessionSchema = z.object({
   timeRemaining: z.number().optional(),
   questionsExhausted: z.boolean(),
   questionsTotal: z.number().optional(),
+  poolStart: z.number().int().nonnegative(),
+  poolConsumed: z.number().int().nonnegative(),
   finishedSession: sessionResultSchema.nullable(),
   sessionStartTime: z.number().nullable(),
   /** Epoch ms of the write; shifts `sessionStartTime` on restore. */

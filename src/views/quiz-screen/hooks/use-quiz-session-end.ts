@@ -4,6 +4,8 @@ import {
   canLoadMoreQuestions,
   useQuizSessionStore,
 } from '../../../shared/lib/session-store'
+import { useProviderStore } from '../../../shared/api/provider-store'
+import { recordAnswer } from '../../../features/history/history-db'
 import { checkAnswer, countCorrect } from '../utils/answer-utils'
 
 export function useQuizSessionEnd(
@@ -51,6 +53,17 @@ export function useQuizSessionEnd(
       elapsed,
       prevCorrect + (currentCorrect ? 1 : 0),
     )
+    // Covers what the per-answer recorder cannot see: a time-up on the
+    // very last question finishes the run without an «answered» pause.
+    const providerId = useProviderStore.getState().providerId
+    for (const attempt of useQuizSessionStore.getState().finishedSession
+      ?.attempts ?? []) {
+      void recordAnswer(
+        providerId,
+        attempt.question.id,
+        attempt.correct ? 'correct' : 'wrong',
+      )
+    }
     navigate({ to: '/results' })
   }, [isSessionEnded, currentQuestion, navigate])
 }

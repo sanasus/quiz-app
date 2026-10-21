@@ -197,7 +197,7 @@ describe('QuizController (e2e)', () => {
     expect(params.get('difficulty')).toBe('EASY')
     expect(params.get('limit')).toBe('10')
     expect(params.get('offset')).toBe('20')
-    expect(params.get('random')).toBe('true')
+    expect(params.has('random')).toBe(false)
   })
 
   it('questions (trivia): merges the count and always asks for text_choice', async () => {
