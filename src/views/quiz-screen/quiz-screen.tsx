@@ -36,7 +36,7 @@ import { useQuestionFeed } from './hooks/use-question-feed'
 import { useDevAnswerHint } from './hooks/use-dev-answer-hint'
 import { useQuizKeyboard } from './hooks/use-quiz-keyboard'
 import { getMode } from '../../features/modes'
-import { QuizHeader } from './components/quiz-header'
+import { QuizHeader, type QuizHeaderProps } from './components/quiz-header'
 import { QuizQuestion } from './components/quiz-question'
 import { QuizOptions } from './components/quiz-options'
 import { QuizExplanation } from './components/quiz-explanation'
@@ -99,12 +99,50 @@ function QuestionFlow({
   )
 }
 
+/**
+ * The header is the only part that follows the per-second timer, so it
+ * subscribes to the live numbers itself and the screen around it stays put.
+ */
+function ConnectedQuizHeader({
+  progress,
+  total,
+  timeLimit,
+  paused,
+}: Pick<QuizHeaderProps, 'progress' | 'total' | 'timeLimit' | 'paused'>) {
+  const mode = useQuizSessionStore((s) => s.mode)
+  const timeRemaining = useQuizSessionStore((s) => s.timeRemaining)
+  const lives = useQuizSessionStore((s) => s.lives)
+  const score = useQuizSessionStore((s) => s.score)
+  const streak = useQuizSessionStore((s) => s.streak)
+
+  return (
+    <QuizHeader
+      progress={progress}
+      total={total}
+      mode={mode}
+      timeRemaining={timeRemaining}
+      timeLimit={timeLimit}
+      lives={lives}
+      score={score}
+      streak={streak}
+      paused={paused}
+    />
+  )
+}
+
 export function QuizScreen() {
   // All hooks called unconditionally (before any early returns)
   const { t } = useTranslation()
-  const store = useQuizSessionStore()
+  // Selectors, not the whole store: the timer ticks every second and only
+  // the header (see ConnectedQuizHeader) needs to follow it.
+  const sessionMode = useQuizSessionStore((s) => s.mode)
+  const status = useQuizSessionStore((s) => s.status)
+  const currentIndex = useQuizSessionStore((s) => s.currentIndex)
+  const loaded = useQuizSessionStore((s) => s.questions.length)
+  const questionsTotal = useQuizSessionStore((s) => s.questionsTotal)
+  const answers = useQuizSessionStore((s) => s.answers)
   const { effectiveConfig } = useQuizConfig()
-  const mode = getMode(store.mode)
+  const mode = getMode(sessionMode)
 
   const result = useQuizSession(effectiveConfig)
   useQuizTimers(effectiveConfig)
@@ -126,7 +164,7 @@ export function QuizScreen() {
   const optionCount = options?.length ?? 0
   useQuizKeyboard({
     optionCount,
-    status: store.status,
+    status,
     onSelectIndex: selectByIndex,
     onNext: handleNext,
   })
@@ -180,7 +218,7 @@ export function QuizScreen() {
   // Reset timer when the question changes (blitz mode only).
   // Narrowed to primitive deps so the effect doesn't re-run on unrelated
   // store updates (rerender-dependencies).
-  const { status, currentIndex, resetBlitzTimer } = store
+  const resetBlitzTimer = useQuizSessionStore((s) => s.resetBlitzTimer)
   const prevQuestionIndexRef = useRef<number>(currentIndex)
   useEffect(() => {
     if (mode.timerBehavior !== 'per-question') return
@@ -263,15 +301,15 @@ export function QuizScreen() {
   }
 
   const question = result.currentQuestion
-  const progress = store.currentIndex + 1
+  const progress = currentIndex + 1
   // Survival shows the real pool size (API `meta.total`) — its
   // question-count setting is ignored and batches keep arriving until
   // the API runs out. Other modes: the loaded pool equals the
   // configured count.
   const total =
-    store.mode === 'survival' && store.questionsTotal
-      ? Math.max(store.questionsTotal, store.questions.length)
-      : store.questions.length
+    sessionMode === 'survival' && questionsTotal
+      ? Math.max(questionsTotal, loaded)
+      : loaded
 
   // Timer length for the header bar: static or derived from question count.
   const timeLimit =
@@ -280,7 +318,7 @@ export function QuizScreen() {
       : mode.timerLimit
 
   // Whether the just-submitted answer was right (for the live region).
-  const submitted = store.answers[question.id] ?? []
+  const submitted = answers[question.id] ?? []
   const isAnswerCorrect =
     submitted.length > 0 &&
     question.correctOptionIds.length === submitted.length &&
@@ -292,42 +330,37 @@ export function QuizScreen() {
 
   return (
     <div className="mx-auto max-w-2xl px-4 py-8" data-testid="quiz-screen">
-      <QuizHeader
+      <ConnectedQuizHeader
         progress={progress}
         total={total}
-        mode={store.mode}
-        timeRemaining={store.timeRemaining}
         timeLimit={timeLimit}
-        lives={store.lives}
-        score={store.score}
-        streak={store.streak}
-        paused={store.status === 'answered'}
+        paused={status === 'answered'}
       />
 
       <QuestionFlow
         key={question.id}
         question={question}
         selectedIds={currentSubmission}
-        status={store.status}
+        status={status}
         onSelect={handleSelect}
       />
 
       {/* Screen-reader announcements for the answer outcome. */}
       <p className="sr-only" role="status" aria-live="polite">
-        {store.status === 'answered'
+        {status === 'answered'
           ? isAnswerCorrect
             ? t('a11y.answer_correct')
             : t('a11y.answer_incorrect')
           : `${t('quiz.question')} ${progress}/${total}`}
       </p>
 
-      {store.status === 'answered' && question.explanation ? (
+      {status === 'answered' && question.explanation ? (
         <QuizExplanation explanation={question.explanation} />
       ) : null}
 
       {/* A failed batch blocks progress at the pool's edge: the error
           dialog above offers a retry or a provider switch. */}
-      {store.status === 'answered' ? (
+      {status === 'answered' ? (
         <NextCountdown
           key={`next-${question.id}`}
           delayMs={

@@ -17,6 +17,7 @@ import type {
 import { getMode } from '../../features/modes'
 import { BLITZ_TIME_LIMIT } from '../../features/modes/blitz'
 import { assertMigrationsMatchVersion } from './persist-guards'
+import { createThrottledStorage } from './throttled-storage'
 import { persistedSessionSchema, type PersistedSession } from './session-schema'
 
 // ---------------------------------------------------------------------------
@@ -371,6 +372,18 @@ function sessionReducer(
 // Store
 // ---------------------------------------------------------------------------
 
+/**
+ * The session ticks every second, so writes are coalesced (one per
+ * second at most) and flushed when the page is hidden or closed.
+ */
+const sessionStorageThrottled = createThrottledStorage(
+  () => sessionStorage,
+  1000,
+)
+
+/** Write any pending session snapshot now (tests, explicit checkpoints). */
+export const flushSessionStorage = sessionStorageThrottled.flush
+
 /** Bump when the persisted schema changes. */
 export const SESSION_STORE_VERSION = 2
 
@@ -536,7 +549,7 @@ export const useQuizSessionStore = create<QuizSessionStore>()(
       // F5 and mobile tab eviction without littering localStorage.
       name: 'quiz-session',
       version: SESSION_STORE_VERSION,
-      storage: createJSONStorage(() => sessionStorage),
+      storage: createJSONStorage(() => sessionStorageThrottled),
       migrate: (persisted, version) => {
         assertMigrationsMatchVersion(
           'session',

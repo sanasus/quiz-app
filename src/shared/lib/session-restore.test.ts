@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest'
-import { restoreSession, useQuizSessionStore } from './session-store'
+import {
+  flushSessionStorage,
+  restoreSession,
+  useQuizSessionStore,
+} from './session-store'
 import { persistedSessionSchema, type PersistedSession } from './session-schema'
 
 function persisted(
@@ -84,6 +88,7 @@ describe('persisted session schema', () => {
 describe('store persistence', () => {
   it('writes the session to sessionStorage', () => {
     useQuizSessionStore.getState().updateConfig({ category: 'persist-check' })
+    flushSessionStorage()
     const raw = sessionStorage.getItem('quiz-session')
     expect(raw).not.toBeNull()
     expect(JSON.parse(raw ?? '{}').state.config.category).toBe('persist-check')

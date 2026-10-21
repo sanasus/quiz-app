@@ -7,7 +7,7 @@ import type { QuizMode } from '../../../shared/types/quiz'
 export function useQuizTimers(
   effectiveConfig: { mode: string; questionCount: number } | null,
 ) {
-  const store = useQuizSessionStore()
+  const status = useQuizSessionStore((s) => s.status)
   const timerStartedRef = useRef(false)
 
   useEffect(() => {
@@ -30,7 +30,7 @@ export function useQuizTimers(
         ? rawLimit(effectiveConfig.questionCount)
         : rawLimit
 
-    if (timeLimit === null || store.status !== 'playing') {
+    if (timeLimit === null || status !== 'playing') {
       timerStartedRef.current = false
       return
     }
@@ -40,10 +40,12 @@ export function useQuizTimers(
     // A countdown restored from a reloaded page keeps its saved value;
     // fresh runs (LOAD_QUESTIONS clears it) and new questions (the mode
     // resets it) start from the full limit.
+    const store = useQuizSessionStore.getState()
     if (store.timeRemaining === undefined) store.startTimer(timeLimit)
     timerStartedRef.current = true
 
     return startTimerInterval(() => timerStartedRef.current)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [store.status, effectiveConfig?.mode])
+    // Re-arms per status change (a new question) and mode; the question
+    // count only matters for the limit read above.
+  }, [status, effectiveConfig])
 }
