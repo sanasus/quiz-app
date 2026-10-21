@@ -21,7 +21,7 @@ export function SettingsEffects() {
       root.style.colorScheme = resolved
 
       const meta = document.querySelector('meta[name="theme-color"]')
-      meta?.setAttribute('content', resolved === 'dark' ? '#0f0d1a' : '#f6f4ff')
+      meta?.setAttribute('content', resolved === 'dark' ? '#211d33' : '#e6e2f6')
     }
 
     apply()

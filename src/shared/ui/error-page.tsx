@@ -6,15 +6,22 @@
  * `reset()` re-renders the failed route without a full page reload.
  */
 
+import { useEffect } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import type { ErrorComponentProps } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
 import { TriangleAlert } from 'lucide-react'
+import { captureException } from '../analytics/analytics'
 import { Button } from './button'
 
 export function ErrorPage({ error, reset }: ErrorComponentProps) {
   const { t } = useTranslation()
   const navigate = useNavigate()
+
+  // The boundary swallows the error, so report it from here.
+  useEffect(() => {
+    captureException(error, { source: 'error-boundary' })
+  }, [error])
 
   return (
     <div

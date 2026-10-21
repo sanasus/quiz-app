@@ -8,11 +8,19 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { motion } from 'motion/react'
 import { useTranslation } from 'react-i18next'
+import { checkAnswer } from '../../shared/lib/answers'
 import { useQuizSessionStore } from '../../shared/lib/session-store'
 import { useMotionEnabled } from '../../shared/lib/use-motion-enabled'
+import { QuizApiError, type ApiProviderId } from '../../shared/api/errors'
 import { useProviderStore } from '../../shared/api/provider-store'
 import { PROVIDERS } from '../../shared/api/providers'
 import { ApiErrorDialog } from '../../shared/ui/api-error-dialog'
+import { track } from '../../shared/analytics/analytics'
+import { AppToast } from '../../shared/ui/app-toast'
+import { ConfirmDialog } from '../../shared/ui/confirm-dialog'
+import { SourcesUnavailable } from '../../shared/ui/sources-unavailable'
+import { useIsDegraded } from '../../features/provider/provider-health'
+import { reportQuestion } from '../../features/history/history-db'
 import { useChangeProvider } from '../../features/provider/use-change-provider'
 import { useQuizConfig } from './hooks/use-quiz-config'
 import { useQuizSession } from './hooks/use-quiz-session'
@@ -20,14 +28,17 @@ import { useQuizTimers } from './hooks/use-quiz-timers'
 import { useTotalTimer } from './hooks/use-total-timer'
 import { useQuizSubmission } from './hooks/use-quiz-submission'
 import { useQuizSessionEnd } from './hooks/use-quiz-session-end'
+import { useHistoryRecorder } from './hooks/use-history-recorder'
+import { useLeaveGuard } from './hooks/use-leave-guard'
 import { useQuestionFeed } from './hooks/use-question-feed'
 import { useDevAnswerHint } from './hooks/use-dev-answer-hint'
 import { useQuizKeyboard } from './hooks/use-quiz-keyboard'
 import { getMode } from '../../features/modes'
-import { QuizHeader } from './components/quiz-header'
+import { QuizHeader, type QuizHeaderProps } from './components/quiz-header'
 import { QuizQuestion } from './components/quiz-question'
 import { QuizOptions } from './components/quiz-options'
 import { QuizExplanation } from './components/quiz-explanation'
+import { ReportQuestionButton } from './components/report-question-button'
 import {
   NEXT_DELAY_CORRECT_MS,
   NEXT_DELAY_INCORRECT_MS,
@@ -86,12 +97,50 @@ function QuestionFlow({
   )
 }
 
+/**
+ * The header is the only part that follows the per-second timer, so it
+ * subscribes to the live numbers itself and the screen around it stays put.
+ */
+function ConnectedQuizHeader({
+  progress,
+  total,
+  timeLimit,
+  paused,
+}: Pick<QuizHeaderProps, 'progress' | 'total' | 'timeLimit' | 'paused'>) {
+  const mode = useQuizSessionStore((s) => s.mode)
+  const timeRemaining = useQuizSessionStore((s) => s.timeRemaining)
+  const lives = useQuizSessionStore((s) => s.lives)
+  const score = useQuizSessionStore((s) => s.score)
+  const streak = useQuizSessionStore((s) => s.streak)
+
+  return (
+    <QuizHeader
+      progress={progress}
+      total={total}
+      mode={mode}
+      timeRemaining={timeRemaining}
+      timeLimit={timeLimit}
+      lives={lives}
+      score={score}
+      streak={streak}
+      paused={paused}
+    />
+  )
+}
+
 export function QuizScreen() {
   // All hooks called unconditionally (before any early returns)
   const { t } = useTranslation()
-  const store = useQuizSessionStore()
+  // Selectors, not the whole store: the timer ticks every second and only
+  // the header (see ConnectedQuizHeader) needs to follow it.
+  const sessionMode = useQuizSessionStore((s) => s.mode)
+  const status = useQuizSessionStore((s) => s.status)
+  const currentIndex = useQuizSessionStore((s) => s.currentIndex)
+  const loaded = useQuizSessionStore((s) => s.questions.length)
+  const questionsTotal = useQuizSessionStore((s) => s.questionsTotal)
+  const answers = useQuizSessionStore((s) => s.answers)
   const { effectiveConfig } = useQuizConfig()
-  const mode = getMode(store.mode)
+  const mode = getMode(sessionMode)
 
   const result = useQuizSession(effectiveConfig)
   useQuizTimers(effectiveConfig)
@@ -113,7 +162,7 @@ export function QuizScreen() {
   const optionCount = options?.length ?? 0
   useQuizKeyboard({
     optionCount,
-    status: store.status,
+    status,
     onSelectIndex: selectByIndex,
     onNext: handleNext,
   })
@@ -126,6 +175,14 @@ export function QuizScreen() {
     isFetching: batchFetching,
   } = useQuestionFeed(effectiveConfig)
   useDevAnswerHint(result.currentQuestion)
+  const leaveGuard = useLeaveGuard()
+  useHistoryRecorder(result.currentQuestion)
+
+  // Notices: «no new questions, repeating» at the start, and the report
+  // confirmation. `reportedIds` also disables the button per question.
+  const [repeatsDismissed, setRepeatsDismissed] = useState(false)
+  const [reportedIds, setReportedIds] = useState<string[]>([])
+  const [reportToast, setReportToast] = useState<string | null>(null)
 
   // ---------------------------------------------------------------------------
   // Error dialog (initial fetch vs survival batch)
@@ -159,7 +216,7 @@ export function QuizScreen() {
   // Reset timer when the question changes (blitz mode only).
   // Narrowed to primitive deps so the effect doesn't re-run on unrelated
   // store updates (rerender-dependencies).
-  const { status, currentIndex, resetBlitzTimer } = store
+  const resetBlitzTimer = useQuizSessionStore((s) => s.resetBlitzTimer)
   const prevQuestionIndexRef = useRef<number>(currentIndex)
   useEffect(() => {
     if (mode.timerBehavior !== 'per-question') return
@@ -173,15 +230,45 @@ export function QuizScreen() {
   // Early returns
   // ---------------------------------------------------------------------------
 
+  // Both sources failed: switching cannot help, so the dialog drops
+  // «Change API» and a failed initial load shows the unavailable page.
+  const degraded = useIsDegraded()
+
+  const retryProvider = (id: ApiProviderId) => {
+    if (id === providerId) handleRetry()
+    else changeProvider(id, { reason: 'degraded_retry' })
+  }
+
   const errorDialog = (
-    <ApiErrorDialog
-      open={dialogOpen}
-      providerLabelKey={PROVIDERS[providerId].labelKey}
-      errorMessage={errorMessage}
-      retrying={initialError ? result.isFetching : batchFetching}
-      onRetry={handleRetry}
-      onChangeApi={changeProvider}
-    />
+    <>
+      <ApiErrorDialog
+        open={dialogOpen}
+        providerLabelKey={PROVIDERS[providerId].labelKey}
+        errorMessage={errorMessage}
+        retrying={initialError ? result.isFetching : batchFetching}
+        onRetry={handleRetry}
+        canChange={!degraded}
+        onChangeApi={() =>
+          changeProvider(undefined, {
+            reason: 'error_dialog',
+            kind:
+              initialError instanceof QuizApiError
+                ? initialError.kind
+                : undefined,
+          })
+        }
+      />
+      <ConfirmDialog
+        open={leaveGuard.open}
+        title={t('leave.title')}
+        message={t('leave.message')}
+        confirmLabel={t('leave.confirm')}
+        cancelLabel={t('leave.stay')}
+        testId="leave-quiz"
+        onConfirm={leaveGuard.leave}
+        onCancel={leaveGuard.stay}
+      />
+    </>
   )
 
   if (!effectiveConfig) {
@@ -191,6 +278,16 @@ export function QuizScreen() {
   // Error before loading: the dialog sits over the loading state until
   // the user retries or switches the provider.
   if (result.loadingState === 'loading' || !result.currentQuestion) {
+    if (degraded && initialError) {
+      return (
+        <div className="mx-auto max-w-lg px-4 py-8">
+          <SourcesUnavailable
+            busy={result.isFetching}
+            onRetry={retryProvider}
+          />
+        </div>
+      )
+    }
     return (
       <>
         <QuizLoading />
@@ -200,15 +297,15 @@ export function QuizScreen() {
   }
 
   const question = result.currentQuestion
-  const progress = store.currentIndex + 1
+  const progress = currentIndex + 1
   // Survival shows the real pool size (API `meta.total`) — its
   // question-count setting is ignored and batches keep arriving until
   // the API runs out. Other modes: the loaded pool equals the
   // configured count.
   const total =
-    store.mode === 'survival' && store.questionsTotal
-      ? Math.max(store.questionsTotal, store.questions.length)
-      : store.questions.length
+    sessionMode === 'survival' && questionsTotal
+      ? Math.max(questionsTotal, loaded)
+      : loaded
 
   // Timer length for the header bar: static or derived from question count.
   const timeLimit =
@@ -217,11 +314,9 @@ export function QuizScreen() {
       : mode.timerLimit
 
   // Whether the just-submitted answer was right (for the live region).
-  const submitted = store.answers[question.id] ?? []
+  const submitted = answers[question.id] ?? []
   const isAnswerCorrect =
-    submitted.length > 0 &&
-    question.correctOptionIds.length === submitted.length &&
-    question.correctOptionIds.every((id) => submitted.includes(id))
+    submitted.length > 0 && checkAnswer(question.correctOptionIds, submitted)
 
   // ---------------------------------------------------------------------------
   // Render
@@ -229,42 +324,37 @@ export function QuizScreen() {
 
   return (
     <div className="mx-auto max-w-2xl px-4 py-8" data-testid="quiz-screen">
-      <QuizHeader
+      <ConnectedQuizHeader
         progress={progress}
         total={total}
-        mode={store.mode}
-        timeRemaining={store.timeRemaining}
         timeLimit={timeLimit}
-        lives={store.lives}
-        score={store.score}
-        streak={store.streak}
-        paused={store.status === 'answered'}
+        paused={status === 'answered'}
       />
 
       <QuestionFlow
         key={question.id}
         question={question}
         selectedIds={currentSubmission}
-        status={store.status}
+        status={status}
         onSelect={handleSelect}
       />
 
       {/* Screen-reader announcements for the answer outcome. */}
       <p className="sr-only" role="status" aria-live="polite">
-        {store.status === 'answered'
+        {status === 'answered'
           ? isAnswerCorrect
             ? t('a11y.answer_correct')
             : t('a11y.answer_incorrect')
           : `${t('quiz.question')} ${progress}/${total}`}
       </p>
 
-      {store.status === 'answered' && question.explanation ? (
+      {status === 'answered' && question.explanation ? (
         <QuizExplanation explanation={question.explanation} />
       ) : null}
 
       {/* A failed batch blocks progress at the pool's edge: the error
           dialog above offers a retry or a provider switch. */}
-      {store.status === 'answered' ? (
+      {status === 'answered' ? (
         <NextCountdown
           key={`next-${question.id}`}
           delayMs={
@@ -272,6 +362,30 @@ export function QuizScreen() {
           }
           blocked={waitingForBatch}
           onNext={handleNext}
+        />
+      ) : null}
+
+      <ReportQuestionButton
+        reported={reportedIds.includes(question.id)}
+        onReport={() => {
+          void reportQuestion(providerId, question.id)
+          track('question_reported', { provider: providerId })
+          setReportedIds((ids) => [...ids, question.id])
+          setReportToast(t('quiz.reported'))
+        }}
+      />
+
+      {reportToast ? (
+        <AppToast
+          message={reportToast}
+          position="bottom"
+          onDismiss={() => setReportToast(null)}
+        />
+      ) : result.repeats && !repeatsDismissed ? (
+        <AppToast
+          message={t('quiz.repeats_notice')}
+          position="bottom"
+          onDismiss={() => setRepeatsDismissed(true)}
         />
       ) : null}
 

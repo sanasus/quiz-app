@@ -18,12 +18,13 @@ npm run test         # vitest (jsdom, globals: true)
 npm run test:server  # vitest for server/ (node env, own project)
 npm run e2e          # playwright test (runs against dev server with mock data)
 npm run preview      # vite preview
+npm run pwa:assets    # regenerate PWA icons from public/logo.svg
 ```
 Run `typecheck` before committing — `noUnusedLocals` and `noUnusedParameters` are enforced.
 
 ## Env
-- Client: `VITE_USE_MOCK_DATA=true` — switch to mock data and force `providerId='mock'` on every page load (see `src/shared/api/mock-*.ts`); the settings switcher lists mock only while it is the active source — no manual way back. There is no other client env: **no API key reaches the browser**.
-- Server (`server/`): `QUIZAPI_KEY` (required only for the `quizapi` provider; missing key → typed `auth` error, the server still boots), `QUIZAPI_BASE_URL`, `TRIVIA_BASE_URL`, `UPSTREAM_TIMEOUT_MS` (default 10 000), `CORS_ORIGIN`, `PORT` (default 3000), `THROTTLE_TTL_MS`/`THROTTLE_LIMIT` (60 000 / 30 per IP, `/health` exempt), `TRUST_PROXY` (hops; required behind a balancer).
+- Client: `VITE_USE_MOCK_DATA=true` — switch to mock data and force `providerId='mock'` on every page load (see `src/shared/api/mock-*.ts`); the settings switcher lists mock only while it is the active source — no manual way back. `VITE_POSTHOG_KEY` (+ optional `VITE_POSTHOG_HOST`, default `/ingest`) — PostHog project key; **the one deliberate exception to "no API key reaches the browser"**: it is public by design (write-only) and analytics is production-only, off in dev, mock mode, e2e and CI (`src/shared/analytics/`). There is no other client env: **no secret reaches the browser**.
+- Server (`server/`): `QUIZAPI_KEY` (required only for the `quizapi` provider; missing key → typed `auth` error, the server still boots), `QUIZAPI_BASE_URL`, `TRIVIA_BASE_URL`, `UPSTREAM_TIMEOUT_MS` (default 10 000), `CORS_ORIGIN`, `PORT` (default 3000), `THROTTLE_TTL_MS`/`THROTTLE_LIMIT` (60 000 / 30 per IP, `/health` exempt), `TRUST_PROXY` (hops; required behind a balancer), `POSTHOG_KEY`/`POSTHOG_HOST` (error reporting of upstream failures; production only, off without a key).
 
 ## Architecture
 - **Entry**: `src/main.tsx` → `<Providers>` → `<RouterProvider>`
@@ -51,6 +52,7 @@ Run `typecheck` before committing — `noUnusedLocals` and `noUnusedParameters` 
 - Run single file: `npm run test src/shared/api/adapter.test.ts`
 - Run single test: `npm run test -- -t "test name"`
 - E2E: `npm run e2e` — Playwright against `localhost:5173` (dev server auto-started with mock data)
+- `e2e/a11y.spec.ts` runs axe on every screen in light and dark; serious/critical violations fail the test.
 - E2E tests carry tags: `@smoke`, `@slow`, `@mobile`, `@i18n` — `npm run e2e:smoke` runs the
   PR subset, `npm run e2e:ui` opens the interactive UI, `npm run e2e:report` shows the HTML
   report; filter manually with `npm run e2e -- --grep '@smoke'` (quote `@` in PowerShell)

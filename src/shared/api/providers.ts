@@ -97,6 +97,12 @@ export interface QuizProvider {
   id: ProviderId
   /** i18n key for the user-facing provider name (see T9). */
   labelKey: string
+  /**
+   * How a quiz walks the pool: `cursor` - stable order, honours `offset`
+   * (the client remembers where it stopped); `random` - every page is a
+   * fresh random draw, `offset` is ignored.
+   */
+  paging: 'cursor' | 'random'
   /** One page of questions; `limit`/`offset` default to the batch policy. */
   fetchQuestions(
     config: QuizConfig,
@@ -129,6 +135,7 @@ export const PROVIDERS: Record<ProviderId, QuizProvider> = {
   quizapi: {
     id: 'quizapi',
     labelKey: 'provider.quizapi',
+    paging: 'cursor',
     fetchQuestions: (config, options) =>
       fetchBackendQuestions('quizapi', config, options),
     fetchCatalog: () => fetchBackendCatalog('quizapi'),
@@ -136,6 +143,7 @@ export const PROVIDERS: Record<ProviderId, QuizProvider> = {
   trivia: {
     id: 'trivia',
     labelKey: 'provider.trivia',
+    paging: 'random',
     fetchQuestions: (config, options) =>
       fetchBackendQuestions('trivia', config, options),
     fetchCatalog: () => fetchBackendCatalog('trivia'),
@@ -143,6 +151,7 @@ export const PROVIDERS: Record<ProviderId, QuizProvider> = {
   mock: {
     id: 'mock',
     labelKey: 'provider.mock',
+    paging: 'cursor',
     fetchQuestions: fetchMockQuestionsPage,
     fetchCatalog: fetchMockCatalog,
   },

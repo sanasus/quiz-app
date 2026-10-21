@@ -3,8 +3,8 @@
  *
  * The controller stays thin: it validates the query and delegates here.
  * Catalogs go through a per-provider TTL cache; question pages are
- * always live (survival batches rely on fresh `total` and on new random
- * picks from the upstream).
+ * always live (survival batches rely on a fresh `total`; the client owns
+ * the paging cursor).
  */
 
 import { Injectable } from '@nestjs/common'

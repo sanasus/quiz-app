@@ -20,6 +20,8 @@ export interface AppToastProps {
   onDismiss: () => void
   /** Auto-dismiss delay in ms. */
   duration?: number
+  /** Screen edge to stick to; `bottom` avoids the achievement toasts. */
+  position?: 'top' | 'bottom'
 }
 
 export function AppToast({
@@ -27,6 +29,7 @@ export function AppToast({
   title,
   onDismiss,
   duration = 5000,
+  position = 'top',
 }: AppToastProps) {
   const { t } = useTranslation()
 
@@ -39,7 +42,7 @@ export function AppToast({
     <div
       role="status"
       aria-live="polite"
-      className="fixed inset-x-0 top-4 z-50 flex justify-center px-4"
+      className={`fixed inset-x-0 z-50 flex justify-center px-4 ${position === 'top' ? 'top-4' : 'bottom-16'}`}
     >
       <Card
         variant="overlay"

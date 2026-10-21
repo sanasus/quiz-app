@@ -5,6 +5,7 @@
  */
 
 import { create } from 'zustand'
+import { createJSONStorage, persist } from 'zustand/middleware'
 import type {
   Question,
   QuizConfig,
@@ -15,6 +16,10 @@ import type {
 } from '../types/quiz'
 import { getMode } from '../../features/modes'
 import { BLITZ_TIME_LIMIT } from '../../features/modes/blitz'
+import { checkAnswer } from './answers'
+import { assertMigrationsMatchVersion } from './persist-guards'
+import { createThrottledStorage } from './throttled-storage'
+import { persistedSessionSchema, type PersistedSession } from './session-schema'
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -54,6 +59,7 @@ interface QuizSessionStore extends QuizSession {
     questions: Question[],
     config: QuizConfig,
     total?: number,
+    pool?: { start: number; consumed: number },
   ) => void
   startPlaying: () => void
   startTimer: (timeRemaining: number) => void
@@ -70,7 +76,11 @@ interface QuizSessionStore extends QuizSession {
   ) => void
   loseLife: () => void
   /** Append a fetched question batch (survival batch loading). */
-  appendQuestions: (questions: Question[], total?: number) => void
+  appendQuestions: (
+    questions: Question[],
+    total?: number,
+    batch?: { rawCount?: number; exhausted?: boolean },
+  ) => void
   /** No further question batches will arrive (fetch error / pool empty). */
   markQuestionsExhausted: () => void
   resetBlitzTimer: () => void
@@ -96,6 +106,9 @@ function createInitialState(config: QuizConfig): QuizSession {
     config,
     questionsExhausted: false,
     questionsTotal: undefined,
+    poolStart: 0,
+    poolConsumed: 0,
+    advancePending: false,
   }
 }
 
@@ -190,6 +203,8 @@ function sessionReducer(
         timeRemaining: undefined,
         questionsExhausted: false,
         questionsTotal: action.payload.total,
+        poolStart: action.payload.pool?.start ?? 0,
+        poolConsumed: action.payload.pool?.consumed ?? 0,
       }
     }
 
@@ -238,9 +253,7 @@ function sessionReducer(
       if (selected.length === 0) return state
 
       // Correct = exact match of option sets
-      const isCorrect =
-        question.correctOptionIds.length === selected.length &&
-        question.correctOptionIds.every((id) => selected.includes(id))
+      const isCorrect = checkAnswer(question.correctOptionIds, selected)
 
       const base: QuizSession = {
         ...state,
@@ -270,6 +283,11 @@ function sessionReducer(
     }
 
     case 'NEXT_QUESTION': {
+      // Only an answered question can be left. A second trigger in the same
+      // tick (auto-advance timer, click, Enter) must not skip the question
+      // that the first one just moved to.
+      if (state.status !== 'answered') return state
+
       const mode = getMode(state.mode)
       const delta = mode.onQuestionAdvance(state)
       const nextIndex = state.currentIndex + 1
@@ -283,8 +301,11 @@ function sessionReducer(
 
       if (nextIndex >= state.questions.length) {
         // Survival batch loading: the next question may still be on its
-        // way — wait instead of finishing the session.
-        if (canLoadMoreQuestions(state)) return state
+        // way — wait instead of finishing the session, and remember that
+        // the player already asked to move on.
+        if (canLoadMoreQuestions(state)) {
+          return { ...state, advancePending: true }
+        }
         return { ...state, status: 'finished' }
       }
 
@@ -308,9 +329,28 @@ function sessionReducer(
           state.questionsTotal,
           action.payload.total,
         ),
+        poolConsumed: state.poolConsumed + (action.payload.rawCount ?? 0),
       }
-      // Nothing new in the batch — no further batches will arrive.
-      if (added === 0) return { ...withTotal, questionsExhausted: true }
+      // The source says whether the pool is over. A batch that was merely
+      // filtered down to nothing (all seen / reported) is not the end;
+      // without a verdict, nothing new means no further batches.
+      const exhausted = action.payload.exhausted ?? added === 0
+      if (exhausted) {
+        return {
+          ...withTotal,
+          questionsExhausted: true,
+          advancePending: false,
+        }
+      }
+      // The player was already waiting at the end of the pool: take the
+      // step they asked for now that there is somewhere to go.
+      if (state.advancePending && added > 0) {
+        return {
+          ...withTotal,
+          ...getMode(state.mode).onQuestionAdvance(withTotal),
+          advancePending: false,
+        }
+      }
       return withTotal
     }
 
@@ -355,118 +395,223 @@ function sessionReducer(
 // Store
 // ---------------------------------------------------------------------------
 
-export const useQuizSessionStore = create<QuizSessionStore>((set) => ({
-  ...createInitialState(DEFAULT_CONFIG),
-  finishedSession: null,
-  sessionStartTime: null,
+/**
+ * The session ticks every second, so writes are coalesced (one per
+ * second at most) and flushed when the page is hidden or closed.
+ */
+const sessionStorageThrottled = createThrottledStorage(
+  () => sessionStorage,
+  1000,
+)
 
-  startLoading: () =>
-    set((s) => ({ ...sessionReducer(s, { type: 'START_LOADING' }) })),
-  loadQuestions: (questions, config, total) =>
-    set((s) => ({
-      ...sessionReducer(s, {
-        type: 'LOAD_QUESTIONS',
-        payload: { questions, config, total },
-      }),
-    })),
-  startPlaying: () =>
-    set((s) => ({ ...sessionReducer(s, { type: 'START_PLAYING' }) })),
-  startTimer: (timeRemaining) =>
-    set((s) => ({
-      ...sessionReducer(s, {
-        type: 'START_TIMER',
-        payload: { timeRemaining },
-      }),
-    })),
-  timerTick: () =>
-    set((s) => ({ ...sessionReducer(s, { type: 'TIMER_TICK' }) })),
-  timeUp: () => set((s) => ({ ...sessionReducer(s, { type: 'TIME_UP' }) })),
-  selectOption: (optionId) =>
-    set((s) => {
-      const question = s.questions[s.currentIndex]
-      if (!question) return s
-      return {
-        ...sessionReducer(s, {
-          type: 'SELECT_OPTION',
-          payload: { questionId: question.id, optionId },
-        }),
-      }
-    }),
-  submitAnswer: (scoreDelta) =>
-    set((s) => ({
-      ...sessionReducer(s, { type: 'SUBMIT_ANSWER', payload: { scoreDelta } }),
-    })),
-  nextQuestion: () =>
-    set((s) => ({ ...sessionReducer(s, { type: 'NEXT_QUESTION' }) })),
-  updateConfig: (partial) =>
-    set((s) => ({
-      ...sessionReducer(s, {
-        type: 'UPDATE_CONFIG',
-        payload: partial,
-      }),
-    })),
-  finishSession: (score, timeSpent, correctCount) =>
-    set((s) => {
-      // Only questions the user actually attempted (0..currentIndex):
-      // survival may end with a partially loaded pool, timed mode may
-      // run out of time mid-session — unattempted questions don't count.
-      const attempted = s.questions.slice(0, s.currentIndex + 1)
+/** Write any pending session snapshot now (tests, explicit checkpoints). */
+export const flushSessionStorage = sessionStorageThrottled.flush
 
-      const mistakes: SessionResult['mistakes'] = []
-      for (const q of attempted) {
-        const selected = s.answers[q.id] ?? []
-        const isCorrect =
-          q.correctOptionIds.length === selected.length &&
-          q.correctOptionIds.every((id) => selected.includes(id))
-        if (!isCorrect) {
-          mistakes.push({ question: q, selectedOptionIds: selected })
-        }
-      }
+/** Bump when the persisted schema changes. */
+export const SESSION_STORE_VERSION = 2
 
-      const result: SessionResult = {
-        score,
-        correctCount,
-        incorrectCount: attempted.length - correctCount,
-        totalQuestions: attempted.length,
-        timeSpent,
-        bestStreak: s.bestStreak,
-        finishedAt: Date.now(),
-        mode: s.mode,
-        difficulty: s.config.difficulty,
-        category: s.config.category,
-        mistakes,
-      }
+/** Key = old version, value = upgrade step; one step per version bump. */
+const migrations: Record<number, (data: unknown) => unknown> = {
+  // v0 → v1 is a no-op rename.
+  0: (data) => data,
+  // v1 → v2: pool cursor fields (a stored run resumes without a cursor).
+  1: (data) => ({ ...(data as object), poolStart: 0, poolConsumed: 0 }),
+}
 
-      return {
-        ...sessionReducer(s, {
-          type: 'FINISH_SESSION',
-          payload: { score, timeSpent, correctCount },
-        }),
-        finishedSession: result,
-      }
-    }),
-  loseLife: () => set((s) => ({ ...sessionReducer(s, { type: 'LOSE_LIFE' }) })),
-  appendQuestions: (questions, total) =>
-    set((s) => ({
-      ...sessionReducer(s, {
-        type: 'APPEND_QUESTIONS',
-        payload: { questions, total },
-      }),
-    })),
-  markQuestionsExhausted: () =>
-    set((s) => ({
-      ...sessionReducer(s, { type: 'MARK_QUESTIONS_EXHAUSTED' }),
-    })),
-  resetBlitzTimer: () =>
-    set((s) => ({ ...sessionReducer(s, { type: 'RESET_BLITZ_TIMER' }) })),
-  reset: () =>
-    set((s) => ({
-      ...sessionReducer(s, { type: 'RESET' }),
+/**
+ * Apply a validated stored snapshot on top of the live state.
+ *
+ * - `loading` (questions still in flight when the page died) restarts
+ *   from `idle`: there is nothing to resume.
+ * - The session clock excludes the time the page was gone: the start
+ *   time moves forward by the gap since the last write. (Per-question
+ *   and total countdowns already freeze — they only tick in the page.)
+ */
+export function restoreSession(
+  persisted: PersistedSession,
+  now: number,
+): Partial<QuizSessionStore> {
+  const { savedAt, ...data } = persisted
+  const active = data.status === 'playing' || data.status === 'answered'
+  return {
+    ...data,
+    status: data.status === 'loading' ? 'idle' : data.status,
+    sessionStartTime:
+      active && data.sessionStartTime !== null
+        ? data.sessionStartTime + Math.max(0, now - savedAt)
+        : data.sessionStartTime,
+  }
+}
+
+export const useQuizSessionStore = create<QuizSessionStore>()(
+  persist(
+    (set) => ({
+      ...createInitialState(DEFAULT_CONFIG),
       finishedSession: null,
       sessionStartTime: null,
-      // Timed/blitz field lives outside createInitialState; a shallow
-      // set() would keep the stale value — clear it explicitly.
-      timeRemaining: undefined,
-    })),
-  startSessionTimer: () => set({ sessionStartTime: Date.now() }),
-}))
+
+      startLoading: () =>
+        set((s) => ({ ...sessionReducer(s, { type: 'START_LOADING' }) })),
+      loadQuestions: (questions, config, total, pool) =>
+        set((s) => ({
+          ...sessionReducer(s, {
+            type: 'LOAD_QUESTIONS',
+            payload: { questions, config, total, pool },
+          }),
+        })),
+      startPlaying: () =>
+        set((s) => ({ ...sessionReducer(s, { type: 'START_PLAYING' }) })),
+      startTimer: (timeRemaining) =>
+        set((s) => ({
+          ...sessionReducer(s, {
+            type: 'START_TIMER',
+            payload: { timeRemaining },
+          }),
+        })),
+      timerTick: () =>
+        set((s) => ({ ...sessionReducer(s, { type: 'TIMER_TICK' }) })),
+      timeUp: () => set((s) => ({ ...sessionReducer(s, { type: 'TIME_UP' }) })),
+      selectOption: (optionId) =>
+        set((s) => {
+          const question = s.questions[s.currentIndex]
+          if (!question) return s
+          return {
+            ...sessionReducer(s, {
+              type: 'SELECT_OPTION',
+              payload: { questionId: question.id, optionId },
+            }),
+          }
+        }),
+      submitAnswer: (scoreDelta) =>
+        set((s) => ({
+          ...sessionReducer(s, {
+            type: 'SUBMIT_ANSWER',
+            payload: { scoreDelta },
+          }),
+        })),
+      nextQuestion: () =>
+        set((s) => ({ ...sessionReducer(s, { type: 'NEXT_QUESTION' }) })),
+      updateConfig: (partial) =>
+        set((s) => ({
+          ...sessionReducer(s, {
+            type: 'UPDATE_CONFIG',
+            payload: partial,
+          }),
+        })),
+      finishSession: (score, timeSpent, correctCount) =>
+        set((s) => {
+          // Only questions the user actually attempted (0..currentIndex):
+          // survival may end with a partially loaded pool, timed mode may
+          // run out of time mid-session — unattempted questions don't count.
+          const attempted = s.questions.slice(0, s.currentIndex + 1)
+
+          const attempts: SessionResult['attempts'] = []
+          for (const q of attempted) {
+            const selected = s.answers[q.id] ?? []
+            const isCorrect = checkAnswer(q.correctOptionIds, selected)
+            attempts.push({
+              question: q,
+              selectedOptionIds: selected,
+              correct: isCorrect,
+            })
+          }
+
+          const result: SessionResult = {
+            score,
+            correctCount,
+            incorrectCount: attempted.length - correctCount,
+            totalQuestions: attempted.length,
+            timeSpent,
+            bestStreak: s.bestStreak,
+            finishedAt: Date.now(),
+            mode: s.mode,
+            difficulty: s.config.difficulty,
+            category: s.config.category,
+            attempts,
+            livesLeft: s.lives,
+          }
+
+          return {
+            ...sessionReducer(s, {
+              type: 'FINISH_SESSION',
+              payload: { score, timeSpent, correctCount },
+            }),
+            finishedSession: result,
+          }
+        }),
+      loseLife: () =>
+        set((s) => ({ ...sessionReducer(s, { type: 'LOSE_LIFE' }) })),
+      appendQuestions: (questions, total, batch) =>
+        set((s) => ({
+          ...sessionReducer(s, {
+            type: 'APPEND_QUESTIONS',
+            payload: { questions, total, ...batch },
+          }),
+        })),
+      markQuestionsExhausted: () =>
+        set((s) => ({
+          ...sessionReducer(s, { type: 'MARK_QUESTIONS_EXHAUSTED' }),
+        })),
+      resetBlitzTimer: () =>
+        set((s) => ({ ...sessionReducer(s, { type: 'RESET_BLITZ_TIMER' }) })),
+      reset: () =>
+        set((s) => ({
+          ...sessionReducer(s, { type: 'RESET' }),
+          finishedSession: null,
+          sessionStartTime: null,
+          // Timed/blitz field lives outside createInitialState; a shallow
+          // set() would keep the stale value — clear it explicitly.
+          timeRemaining: undefined,
+        })),
+      startSessionTimer: () => set({ sessionStartTime: Date.now() }),
+    }),
+    {
+      // sessionStorage: a session lives as long as its tab — it survives
+      // F5 and mobile tab eviction without littering localStorage.
+      name: 'quiz-session',
+      version: SESSION_STORE_VERSION,
+      storage: createJSONStorage(() => sessionStorageThrottled),
+      migrate: (persisted, version) => {
+        assertMigrationsMatchVersion(
+          'session',
+          SESSION_STORE_VERSION,
+          Object.keys(migrations).length,
+        )
+        let data: unknown = persisted
+        for (let v = version; v < SESSION_STORE_VERSION; v++) {
+          const step = migrations[v]
+          if (!step) return undefined
+          data = step(data)
+        }
+        return data
+      },
+      merge: (persisted, current) => {
+        // Corrupt data must never break the app — start from scratch.
+        const parsed = persistedSessionSchema.safeParse(persisted)
+        if (!parsed.success) return current
+        return { ...current, ...restoreSession(parsed.data, Date.now()) }
+      },
+      partialize: (s): PersistedSession => ({
+        status: s.status,
+        questions: s.questions,
+        currentIndex: s.currentIndex,
+        answers: s.answers,
+        score: s.score,
+        streak: s.streak,
+        bestStreak: s.bestStreak,
+        lives: s.lives,
+        timeSpent: s.timeSpent,
+        mode: s.mode,
+        config: s.config,
+        timeRemaining: s.timeRemaining,
+        questionsExhausted: s.questionsExhausted,
+        questionsTotal: s.questionsTotal,
+        poolStart: s.poolStart,
+        poolConsumed: s.poolConsumed,
+        finishedSession: s.finishedSession,
+        sessionStartTime: s.sessionStartTime,
+        savedAt: Date.now(),
+      }),
+    },
+  ),
+)

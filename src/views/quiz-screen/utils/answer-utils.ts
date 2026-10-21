@@ -1,15 +1,8 @@
 /**
- * Answer-checking utilities.
+ * Answer-counting utilities (the correctness rule itself: shared/lib/answers).
  */
 
-export function checkAnswer(
-  correctOptionIds: readonly string[],
-  selectedIds: readonly string[],
-): boolean {
-  if (correctOptionIds.length !== selectedIds.length) return false
-  const correctSet = new Set(correctOptionIds)
-  return selectedIds.every((id) => correctSet.has(id))
-}
+import { checkAnswer } from '../../../shared/lib/answers'
 
 export function countCorrect(
   questions: readonly { id: string; correctOptionIds: readonly string[] }[],

@@ -22,6 +22,11 @@ export interface ApiErrorDialogProps {
   retrying: boolean
   /** A provider switch is navigating away — both actions are blocked. */
   switching?: boolean
+  /**
+   * Offer «Change API». False when every source has failed — switching
+   * would only bounce between two broken providers.
+   */
+  canChange?: boolean
   onRetry: () => void
   onChangeApi: () => void
 }
@@ -32,6 +37,7 @@ export function ApiErrorDialog({
   errorMessage,
   retrying,
   switching = false,
+  canChange = true,
   onRetry,
   onChangeApi,
 }: ApiErrorDialogProps) {
@@ -64,18 +70,20 @@ export function ApiErrorDialog({
         </p>
       ) : null}
       <div className="flex justify-end gap-3">
-        <Button
-          variant="ghost"
-          size="sm"
-          // Wrapped on purpose: passing the raw handler would leak
-          // the click event into a `changeProvider(next?)` caller,
-          // which would swallow it as a provider id.
-          onClick={() => onChangeApi()}
-          disabled={busy}
-          data-testid="api-error-change"
-        >
-          {t('api_error.change_api')}
-        </Button>
+        {canChange ? (
+          <Button
+            variant="ghost"
+            size="sm"
+            // Wrapped on purpose: passing the raw handler would leak
+            // the click event into a `changeProvider(next?)` caller,
+            // which would swallow it as a provider id.
+            onClick={() => onChangeApi()}
+            disabled={busy}
+            data-testid="api-error-change"
+          >
+            {t('api_error.change_api')}
+          </Button>
+        ) : null}
         <Button
           ref={retryRef}
           size="sm"

@@ -1,5 +1,11 @@
 import { test, expect } from '@playwright/test'
-import { completeQuiz, startQuiz, waitForResults } from './fixtures'
+import {
+  answerCorrectly,
+  answerFirstOption,
+  completeQuiz,
+  startQuiz,
+  waitForResults,
+} from './fixtures'
 
 test.describe('Results screen', () => {
   test.beforeEach(async ({ page }) => {
@@ -19,12 +25,23 @@ test.describe('Results screen', () => {
     await expect(page.getByTestId('result-time')).toHaveText(/^\d+:\d{2}$/)
   })
 
-  test('shows mistakes list when there are mistakes', async ({ page }) => {
-    // Mistakes section should be visible (guaranteed by beforeEach)
-    const mistakesTitle = page.getByRole('heading', { name: 'Mistakes' })
-    await expect(mistakesTitle).toBeVisible()
+  test('shows the review with mistakes first', async ({ page }) => {
+    // Both answers are wrong → the mistakes filter is the default.
+    await expect(page.getByRole('heading', { name: 'Review' })).toBeVisible()
+    await expect(page.getByRole('radio', { name: /^Mistakes/ })).toBeChecked()
     await expect(page.getByText('❌ O(n)')).toBeVisible()
     await expect(page.getByText('✅ O(log n)')).toBeVisible()
+  })
+
+  test('results survive a reload', async ({ page }) => {
+    await page.reload()
+
+    await expect(page).toHaveURL(/\/results/)
+    await expect(page.getByTestId('result-incorrect')).toHaveText('2')
+    // The share card is rebuilt from the restored session.
+    await expect(
+      page.getByRole('button', { name: 'Share result' }),
+    ).toBeEnabled()
   })
 
   test('new quiz button navigates to setup', async ({ page }) => {
@@ -48,5 +65,49 @@ test.describe('Results screen', () => {
     await expect(
       page.getByRole('heading', { name: 'Question 1/2' }),
     ).toBeVisible()
+  })
+})
+
+test.describe('Answers review', () => {
+  test('the All filter adds the questions answered correctly', async ({
+    page,
+  }) => {
+    await startQuiz(page, { difficulty: 'hard', questionCount: 2 })
+    await answerCorrectly(page)
+    await answerFirstOption(page, { next: false })
+    await waitForResults(page)
+
+    // One mistake shown by default, both questions after switching.
+    const items = page.getByRole('listitem').filter({ hasText: /^\d+\. / })
+    await expect(items).toHaveCount(1)
+
+    await page.getByRole('radio', { name: /^All/ }).click()
+    await expect(items).toHaveCount(2)
+  })
+})
+
+test.describe('Share result', () => {
+  test('falls back to downloading the PNG without Web Share', async ({
+    page,
+  }) => {
+    // Headless Chromium has no navigator.share; deny the clipboard too so
+    // the chain reaches its last step deterministically.
+    await page.addInitScript(() => {
+      Object.defineProperty(navigator, 'share', { value: undefined })
+      Object.defineProperty(navigator, 'clipboard', { value: undefined })
+    })
+    await startQuiz(page, { difficulty: 'hard', questionCount: 2 })
+    await completeQuiz(page, 2)
+    await waitForResults(page)
+
+    const shareButton = page.getByRole('button', { name: 'Share result' })
+    await expect(shareButton).toBeEnabled()
+
+    const downloadPromise = page.waitForEvent('download')
+    await shareButton.click()
+    const download = await downloadPromise
+
+    expect(download.suggestedFilename()).toBe('quiz-result.png')
+    await expect(page.getByText('Image saved, text copied')).toBeVisible()
   })
 })
