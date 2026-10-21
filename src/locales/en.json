@@ -136,7 +136,22 @@
     "api_provider": "Question source",
     "api_provider_hint": "Changing the source resets the current session and returns you to setup.",
     "api_provider_switch_confirm_title": "Change question source?",
-    "api_provider_switch_confirm": "The current session will be lost and you will return to the setup screen."
+    "api_provider_switch_confirm": "The current session will be lost and you will return to the setup screen.",
+    "backup": "Backup",
+    "backup_hint": "Your XP, statistics, achievements and settings are stored only in this browser. Save a file to keep them or move to another device.",
+    "backup_download": "Download backup",
+    "backup_restore": "Restore from file",
+    "backup_confirm_title": "Restore this backup?",
+    "backup_confirm": "Your current XP, statistics, achievements and settings will be replaced by the backup from {{date}}. This cannot be undone.",
+    "backup_confirm_button": "Replace",
+    "backup_restored": "Backup restored",
+    "backup_error": {
+      "invalid_json": "This file is not valid JSON.",
+      "not_a_backup": "This is not a QuizApp backup.",
+      "unsupported_format": "This backup format is not supported.",
+      "newer_version": "This backup was made by a newer version of the app ({{section}}).",
+      "invalid_data": "The backup is damaged ({{section}}). Nothing was changed."
+    }
   },
   "common": {
     "loading": "Loading…",

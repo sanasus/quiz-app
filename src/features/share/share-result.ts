@@ -7,6 +7,8 @@
  * so nothing here may await before `share()`.
  */
 
+import { downloadBlob } from '../../shared/lib/download'
+
 export type ShareOutcome =
   'shared' | 'copied-image' | 'downloaded' | 'cancelled'
 
@@ -36,16 +38,7 @@ export function browserShareEnv(): ShareEnv {
       typeof ClipboardItem === 'undefined'
         ? undefined
         : (blob) => new ClipboardItem({ [blob.type]: blob }),
-    download: (blob, filename) => {
-      const url = URL.createObjectURL(blob)
-      const a = document.createElement('a')
-      a.href = url
-      a.download = filename
-      document.body.appendChild(a)
-      a.click()
-      a.remove()
-      setTimeout(() => URL.revokeObjectURL(url), 1000)
-    },
+    download: downloadBlob,
   }
 }
 

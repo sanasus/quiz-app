@@ -106,6 +106,22 @@ export function parsePersistedStats(
   persisted: unknown,
   version: number,
 ): StatsState {
+  const parsed = statsDataSchema.safeParse(
+    upgradePersistedStats(persisted, version),
+  )
+  return parsed.success ? parsed.data : createInitialStats()
+}
+
+/**
+ * Run the migration steps from `version` up to the current one. Returns
+ * null when the payload cannot be upgraded (no step for a version, or not
+ * an object) — callers decide whether that means "start over"
+ * (hydration) or "reject the file" (backup import).
+ */
+export function upgradePersistedStats(
+  persisted: unknown,
+  version: number,
+): unknown | null {
   assertMigrationsMatchVersion(
     'stats',
     STATS_STORE_VERSION,
@@ -114,11 +130,8 @@ export function parsePersistedStats(
   let data: unknown = persisted
   for (let v = version; v < STATS_STORE_VERSION; v++) {
     const step = migrations[v]
-    if (!step || data === null || typeof data !== 'object') {
-      return createInitialStats()
-    }
+    if (!step || data === null || typeof data !== 'object') return null
     data = step(data as Record<string, unknown>)
   }
-  const parsed = statsDataSchema.safeParse(data)
-  return parsed.success ? parsed.data : createInitialStats()
+  return data
 }
