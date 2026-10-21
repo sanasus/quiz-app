@@ -155,4 +155,8 @@ export interface SessionResult {
   difficulty: 'easy' | 'medium' | 'hard'
   category: string
   mistakes: { question: Question; selectedOptionIds: string[] }[]
+  /** Per attempted question, in order: answered correctly or not. */
+  outcomes: boolean[]
+  /** Lives left at the end (meaningful for survival only). */
+  livesLeft: number
 }

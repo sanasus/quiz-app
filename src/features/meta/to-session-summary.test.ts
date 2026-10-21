@@ -19,6 +19,8 @@ function makeResult(overrides: Partial<SessionResult> = {}): SessionResult {
     difficulty: 'medium',
     category: 'Code',
     mistakes: [],
+    outcomes: [],
+    livesLeft: 3,
     ...overrides,
   }
 }

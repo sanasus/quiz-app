@@ -15,6 +15,7 @@ import { useAchievementsStore } from '../achievements/achievements-store'
 import { checkAchievements } from '../achievements/registry'
 import type { Achievement } from '../../shared/types/meta'
 import { useProgressStore } from '../progress/progress-store'
+import { levelFromXp } from '../progress/xp'
 import { toSessionSummary } from './to-session-summary'
 import { useProviderStore } from '../../shared/api/provider-store'
 
@@ -23,6 +24,10 @@ export interface SessionMetrics {
   xpGained: number
   /** Achievements unlocked by the session. */
   newAchievements: Achievement[]
+  /** Player level after the session's XP was awarded. */
+  level: number
+  /** The session beat the previous best score (never on the first session). */
+  isNewRecord: boolean
 }
 
 export function useSessionMetrics(): SessionMetrics | null {
@@ -48,6 +53,8 @@ export function useSessionMetrics(): SessionMetrics | null {
 
     // Order matters: achievements see the post-session stats (cumulative
     // rules like «expert» count this session too), XP uses the session.
+    const isNewRecord =
+      statsStore.totalSessions > 0 && summary.score > statsStore.bestScore
     const nextStats = applySessionToStats(statsStore, summary)
     statsStore.recordSession(summary)
 
@@ -66,7 +73,12 @@ export function useSessionMetrics(): SessionMetrics | null {
 
     const xpGained = useProgressStore.getState().awardSession(summary)
 
-    setMetrics({ xpGained, newAchievements: fresh })
+    setMetrics({
+      xpGained,
+      newAchievements: fresh,
+      level: levelFromXp(useProgressStore.getState().xp),
+      isNewRecord,
+    })
     // finishedAt is the one-shot key; stores are read imperatively.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [finishedAt])

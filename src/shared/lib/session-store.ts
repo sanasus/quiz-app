@@ -413,11 +413,13 @@ export const useQuizSessionStore = create<QuizSessionStore>((set) => ({
       const attempted = s.questions.slice(0, s.currentIndex + 1)
 
       const mistakes: SessionResult['mistakes'] = []
+      const outcomes: boolean[] = []
       for (const q of attempted) {
         const selected = s.answers[q.id] ?? []
         const isCorrect =
           q.correctOptionIds.length === selected.length &&
           q.correctOptionIds.every((id) => selected.includes(id))
+        outcomes.push(isCorrect)
         if (!isCorrect) {
           mistakes.push({ question: q, selectedOptionIds: selected })
         }
@@ -435,6 +437,8 @@ export const useQuizSessionStore = create<QuizSessionStore>((set) => ({
         difficulty: s.config.difficulty,
         category: s.config.category,
         mistakes,
+        outcomes,
+        livesLeft: s.lives,
       }
 
       return {

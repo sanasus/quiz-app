@@ -50,3 +50,29 @@ test.describe('Results screen', () => {
     ).toBeVisible()
   })
 })
+
+test.describe('Share result', () => {
+  test('falls back to downloading the PNG without Web Share', async ({
+    page,
+  }) => {
+    // Headless Chromium has no navigator.share; deny the clipboard too so
+    // the chain reaches its last step deterministically.
+    await page.addInitScript(() => {
+      Object.defineProperty(navigator, 'share', { value: undefined })
+      Object.defineProperty(navigator, 'clipboard', { value: undefined })
+    })
+    await startQuiz(page, { difficulty: 'hard', questionCount: 2 })
+    await completeQuiz(page, 2)
+    await waitForResults(page)
+
+    const shareButton = page.getByRole('button', { name: 'Share result' })
+    await expect(shareButton).toBeEnabled()
+
+    const downloadPromise = page.waitForEvent('download')
+    await shareButton.click()
+    const download = await downloadPromise
+
+    expect(download.suggestedFilename()).toBe('quiz-result.png')
+    await expect(page.getByText('Image saved, text copied')).toBeVisible()
+  })
+})

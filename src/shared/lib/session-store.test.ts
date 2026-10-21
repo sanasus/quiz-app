@@ -278,6 +278,7 @@ describe('finishSession', () => {
     expect(result?.finishedAt).toBeGreaterThan(0)
     expect(result?.mistakes).toHaveLength(1)
     expect(result?.mistakes[0].question.id).toBe('q5')
+    expect(result?.outcomes).toEqual([true, true, true, true, false])
   })
 })
 

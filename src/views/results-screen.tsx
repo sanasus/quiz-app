@@ -5,6 +5,7 @@
 import { useCallback, useState } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
+import { Share2 } from 'lucide-react'
 import { Button } from '../shared/ui/button'
 import { useQuizSessionStore } from '../shared/lib/session-store'
 import { useSessionMetrics } from '../features/meta/use-session-metrics'
@@ -17,6 +18,15 @@ import { Confetti } from '../shared/ui/confetti'
 import { Card } from '../shared/ui/card'
 import { PageTitle, SectionTitle } from '../shared/ui/heading'
 import { StatTile } from '../shared/ui/stat-tile'
+import { AppToast } from '../shared/ui/app-toast'
+import { useShareCard } from '../features/share/use-share-card'
+import type { ShareOutcome } from '../features/share/share-result'
+
+const SHARE_TOAST_KEYS: Record<Exclude<ShareOutcome, 'cancelled'>, string> = {
+  shared: 'share.shared',
+  'copied-image': 'share.copied',
+  downloaded: 'share.downloaded',
+}
 
 /** Accuracy (%) at or above which the win confetti fires. */
 const CONFETTI_THRESHOLD = 70
@@ -40,6 +50,10 @@ export function ResultsScreen() {
     setDismissed((prev) => [...prev, toastKey])
   }, [])
 
+  const shareCard = useShareCard(store.finishedSession, metrics)
+  const [shareToast, setShareToast] = useState<string | null>(null)
+  const dismissShareToast = useCallback(() => setShareToast(null), [])
+
   // The route's beforeLoad guard redirects to /setup without a finished
   // session; this is only a render-time safety net.
   if (store.status !== 'finished') return null
@@ -61,6 +75,18 @@ export function ResultsScreen() {
   const handleNewQuiz = () => {
     store.reset()
     navigate({ to: '/setup' })
+  }
+
+  // Called straight from the click: the PNG is already rendered, so
+  // `share()` runs inside the user activation Safari requires.
+  const handleShare = async () => {
+    try {
+      const outcome = await shareCard.share()
+      if (outcome === null || outcome === 'cancelled') return
+      setShareToast(t(SHARE_TOAST_KEYS[outcome]))
+    } catch {
+      setShareToast(t('share.failed'))
+    }
   }
 
   return (
@@ -165,7 +191,25 @@ export function ResultsScreen() {
       {/* Actions */}
       <div className="flex flex-col gap-3 sm:flex-row sm:justify-center">
         <Button onClick={handleNewQuiz}>{t('results.new_quiz')}</Button>
+        {!shareCard.failed && (
+          <Button
+            variant="secondary"
+            onClick={handleShare}
+            disabled={!shareCard.ready}
+          >
+            <Share2 className="size-4" aria-hidden />
+            {shareCard.ready ? t('share.button') : t('share.preparing')}
+          </Button>
+        )}
       </div>
+
+      {shareToast && (
+        <AppToast
+          message={shareToast}
+          position="bottom"
+          onDismiss={dismissShareToast}
+        />
+      )}
 
       {/* Achievement unlock toasts */}
       <AchievementToast toasts={toasts} onDismiss={dismissToast} />

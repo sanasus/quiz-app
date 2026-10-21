@@ -157,5 +157,25 @@
   "provider_switch": {
     "toast_title": "Источник вопросов изменён",
     "toast_message": "Предыдущий источник не ответил. Сейчас используется {{provider}}."
+  },
+  "share": {
+    "button": "Поделиться результатом",
+    "preparing": "Готовим…",
+    "shared": "Результат отправлен",
+    "copied": "Картинка скопирована в буфер",
+    "downloaded": "Картинка сохранена, текст скопирован",
+    "failed": "Не удалось поделиться результатом",
+    "new_record": "Новый рекорд",
+    "cta": "Побьёшь?",
+    "streak": "Серия",
+    "level": "Уровень",
+    "points_one": "{{formatted}} очко",
+    "points_few": "{{formatted}} очка",
+    "points_many": "{{formatted}} очков",
+    "points_other": "{{formatted}} очка",
+    "survival_passed_one": "вопрос пройден",
+    "survival_passed_few": "вопроса пройдено",
+    "survival_passed_many": "вопросов пройдено",
+    "survival_passed_other": "вопроса пройдено"
   }
 }

@@ -157,5 +157,21 @@
   "provider_switch": {
     "toast_title": "Question source changed",
     "toast_message": "The previous source did not respond. Now using {{provider}}."
+  },
+  "share": {
+    "button": "Share result",
+    "preparing": "Preparing…",
+    "shared": "Result shared",
+    "copied": "Image copied to clipboard",
+    "downloaded": "Image saved, text copied",
+    "failed": "Couldn't share the result",
+    "new_record": "New record",
+    "cta": "Think you can beat it?",
+    "streak": "Streak",
+    "level": "Level",
+    "points_one": "{{formatted}} point",
+    "points_other": "{{formatted}} points",
+    "survival_passed_one": "question passed",
+    "survival_passed_other": "questions passed"
   }
 }
