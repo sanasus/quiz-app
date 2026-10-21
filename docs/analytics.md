@@ -52,10 +52,22 @@
 
 ## Source maps
 
-Сборка выпускает `sourcemap: 'hidden'` (карты есть в `dist/`, но бандлы на
-них не ссылаются). Чтобы стектрейсы в PostHog читались, карты нужно
-загрузить в PostHog при деплое (`posthog-cli sourcemap`, нужен personal API
-key в секретах CI) — этот шаг пока **не настроен**.
+Сборка выпускает `sourcemap: 'hidden'` (карты есть, но бандлы на них не
+ссылаются). Job `deploy` в `.github/workflows/ci.yml` между
+`Build for Vercel` и `Deploy to production` делает `posthog-cli sourcemap
+inject` и `upload --delete-after`: карты уходят в PostHog и не попадают в
+выдачу, а деплоится уже обработанная сборка (`--prebuilt`).
+
+Шаг включается, только если задан секрет, и не блокирует релиз при сбое
+(`continue-on-error`). Нужно задать в GitHub:
+
+- секрет `POSTHOG_CLI_API_KEY` — personal API key (`phx_...`) с правами
+  `error tracking write` и `organization read`;
+- переменную репозитория `POSTHOG_PROJECT_ID` — числовой ID проекта.
+
+CLI ходит в EU-облако (`POSTHOG_CLI_HOST=https://eu.posthog.com`). Папки с
+картами ищутся под `.vercel/output`, а не зашиты, потому что раскладка
+вывода Vercel Services не проверялась.
 
 ## Не проверено
 
@@ -63,3 +75,6 @@ key в секретах CI) — этот шаг пока **не настроен
   перед подключением.
 - `rewrites` для `/ingest` в `vercel.json` не проверены на реальном
   деплое (конфиг с `services`).
+- Шаг загрузки source maps не запускался: нужен первый деплой с ключом,
+  после него в PostHog → Error tracking → Symbol sets должны появиться
+  наборы карт.
