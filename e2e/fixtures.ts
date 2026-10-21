@@ -61,6 +61,14 @@ export async function setQuestionCount(page: Page, count: number) {
  */
 export async function goToSetup(page: Page) {
   await page.goto('/setup')
+  // A run left unfinished in this tab survives the reload and offers to
+  // continue; helpers that want a fresh quiz start over.
+  // The prompt renders with the screen's first paint, so wait for that.
+  await expect(page.getByText('Quiz Settings')).toBeVisible()
+  const resume = page.getByTestId('resume-quiz')
+  if (await resume.isVisible()) {
+    await resume.getByRole('button', { name: 'Start over' }).click()
+  }
   await expect(page.getByTestId('category-dropdown')).toBeVisible()
 }
 

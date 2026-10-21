@@ -13,6 +13,7 @@ import { useMotionEnabled } from '../../shared/lib/use-motion-enabled'
 import { useProviderStore } from '../../shared/api/provider-store'
 import { PROVIDERS } from '../../shared/api/providers'
 import { ApiErrorDialog } from '../../shared/ui/api-error-dialog'
+import { ConfirmDialog } from '../../shared/ui/confirm-dialog'
 import { useChangeProvider } from '../../features/provider/use-change-provider'
 import { useQuizConfig } from './hooks/use-quiz-config'
 import { useQuizSession } from './hooks/use-quiz-session'
@@ -20,6 +21,7 @@ import { useQuizTimers } from './hooks/use-quiz-timers'
 import { useTotalTimer } from './hooks/use-total-timer'
 import { useQuizSubmission } from './hooks/use-quiz-submission'
 import { useQuizSessionEnd } from './hooks/use-quiz-session-end'
+import { useLeaveGuard } from './hooks/use-leave-guard'
 import { useQuestionFeed } from './hooks/use-question-feed'
 import { useDevAnswerHint } from './hooks/use-dev-answer-hint'
 import { useQuizKeyboard } from './hooks/use-quiz-keyboard'
@@ -126,6 +128,7 @@ export function QuizScreen() {
     isFetching: batchFetching,
   } = useQuestionFeed(effectiveConfig)
   useDevAnswerHint(result.currentQuestion)
+  const leaveGuard = useLeaveGuard()
 
   // ---------------------------------------------------------------------------
   // Error dialog (initial fetch vs survival batch)
@@ -174,14 +177,26 @@ export function QuizScreen() {
   // ---------------------------------------------------------------------------
 
   const errorDialog = (
-    <ApiErrorDialog
-      open={dialogOpen}
-      providerLabelKey={PROVIDERS[providerId].labelKey}
-      errorMessage={errorMessage}
-      retrying={initialError ? result.isFetching : batchFetching}
-      onRetry={handleRetry}
-      onChangeApi={changeProvider}
-    />
+    <>
+      <ApiErrorDialog
+        open={dialogOpen}
+        providerLabelKey={PROVIDERS[providerId].labelKey}
+        errorMessage={errorMessage}
+        retrying={initialError ? result.isFetching : batchFetching}
+        onRetry={handleRetry}
+        onChangeApi={changeProvider}
+      />
+      <ConfirmDialog
+        open={leaveGuard.open}
+        title={t('leave.title')}
+        message={t('leave.message')}
+        confirmLabel={t('leave.confirm')}
+        cancelLabel={t('leave.stay')}
+        testId="leave-quiz"
+        onConfirm={leaveGuard.leave}
+        onCancel={leaveGuard.stay}
+      />
+    </>
   )
 
   if (!effectiveConfig) {

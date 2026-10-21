@@ -173,5 +173,17 @@
     "points_other": "{{formatted}} points",
     "survival_passed_one": "question passed",
     "survival_passed_other": "questions passed"
+  },
+  "resume": {
+    "title": "Continue the quiz?",
+    "message": "You have an unfinished quiz: {{mode}}, question {{current}} of {{total}}.",
+    "continue": "Continue",
+    "restart": "Start over"
+  },
+  "leave": {
+    "title": "Leave the quiz?",
+    "message": "Your progress in this quiz will be lost.",
+    "confirm": "Leave",
+    "stay": "Stay"
   }
 }

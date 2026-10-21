@@ -27,6 +27,17 @@ test.describe('Results screen', () => {
     await expect(page.getByText('✅ O(log n)')).toBeVisible()
   })
 
+  test('results survive a reload', async ({ page }) => {
+    await page.reload()
+
+    await expect(page).toHaveURL(/\/results/)
+    await expect(page.getByTestId('result-incorrect')).toHaveText('2')
+    // The share card is rebuilt from the restored session.
+    await expect(
+      page.getByRole('button', { name: 'Share result' }),
+    ).toBeEnabled()
+  })
+
   test('new quiz button navigates to setup', async ({ page }) => {
     const newQuizBtn = page.getByRole('button', { name: 'New Quiz' })
     await expect(newQuizBtn).toBeVisible()

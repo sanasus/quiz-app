@@ -5,6 +5,7 @@
  */
 
 import { create } from 'zustand'
+import { createJSONStorage, persist } from 'zustand/middleware'
 import type {
   Question,
   QuizConfig,
@@ -15,6 +16,8 @@ import type {
 } from '../types/quiz'
 import { getMode } from '../../features/modes'
 import { BLITZ_TIME_LIMIT } from '../../features/modes/blitz'
+import { assertMigrationsMatchVersion } from './persist-guards'
+import { persistedSessionSchema, type PersistedSession } from './session-schema'
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -355,122 +358,210 @@ function sessionReducer(
 // Store
 // ---------------------------------------------------------------------------
 
-export const useQuizSessionStore = create<QuizSessionStore>((set) => ({
-  ...createInitialState(DEFAULT_CONFIG),
-  finishedSession: null,
-  sessionStartTime: null,
+/** Bump when the persisted schema changes. */
+export const SESSION_STORE_VERSION = 1
 
-  startLoading: () =>
-    set((s) => ({ ...sessionReducer(s, { type: 'START_LOADING' }) })),
-  loadQuestions: (questions, config, total) =>
-    set((s) => ({
-      ...sessionReducer(s, {
-        type: 'LOAD_QUESTIONS',
-        payload: { questions, config, total },
-      }),
-    })),
-  startPlaying: () =>
-    set((s) => ({ ...sessionReducer(s, { type: 'START_PLAYING' }) })),
-  startTimer: (timeRemaining) =>
-    set((s) => ({
-      ...sessionReducer(s, {
-        type: 'START_TIMER',
-        payload: { timeRemaining },
-      }),
-    })),
-  timerTick: () =>
-    set((s) => ({ ...sessionReducer(s, { type: 'TIMER_TICK' }) })),
-  timeUp: () => set((s) => ({ ...sessionReducer(s, { type: 'TIME_UP' }) })),
-  selectOption: (optionId) =>
-    set((s) => {
-      const question = s.questions[s.currentIndex]
-      if (!question) return s
-      return {
-        ...sessionReducer(s, {
-          type: 'SELECT_OPTION',
-          payload: { questionId: question.id, optionId },
-        }),
-      }
-    }),
-  submitAnswer: (scoreDelta) =>
-    set((s) => ({
-      ...sessionReducer(s, { type: 'SUBMIT_ANSWER', payload: { scoreDelta } }),
-    })),
-  nextQuestion: () =>
-    set((s) => ({ ...sessionReducer(s, { type: 'NEXT_QUESTION' }) })),
-  updateConfig: (partial) =>
-    set((s) => ({
-      ...sessionReducer(s, {
-        type: 'UPDATE_CONFIG',
-        payload: partial,
-      }),
-    })),
-  finishSession: (score, timeSpent, correctCount) =>
-    set((s) => {
-      // Only questions the user actually attempted (0..currentIndex):
-      // survival may end with a partially loaded pool, timed mode may
-      // run out of time mid-session — unattempted questions don't count.
-      const attempted = s.questions.slice(0, s.currentIndex + 1)
+/** Key = old version, value = upgrade step; one step per version bump. */
+const migrations: Record<number, (data: unknown) => unknown> = {
+  // v0 → v1 is a no-op rename.
+  0: (data) => data,
+}
 
-      const mistakes: SessionResult['mistakes'] = []
-      const outcomes: boolean[] = []
-      for (const q of attempted) {
-        const selected = s.answers[q.id] ?? []
-        const isCorrect =
-          q.correctOptionIds.length === selected.length &&
-          q.correctOptionIds.every((id) => selected.includes(id))
-        outcomes.push(isCorrect)
-        if (!isCorrect) {
-          mistakes.push({ question: q, selectedOptionIds: selected })
-        }
-      }
+/**
+ * Apply a validated stored snapshot on top of the live state.
+ *
+ * - `loading` (questions still in flight when the page died) restarts
+ *   from `idle`: there is nothing to resume.
+ * - The session clock excludes the time the page was gone: the start
+ *   time moves forward by the gap since the last write. (Per-question
+ *   and total countdowns already freeze — they only tick in the page.)
+ */
+export function restoreSession(
+  persisted: PersistedSession,
+  now: number,
+): Partial<QuizSessionStore> {
+  const { savedAt, ...data } = persisted
+  const active = data.status === 'playing' || data.status === 'answered'
+  return {
+    ...data,
+    status: data.status === 'loading' ? 'idle' : data.status,
+    sessionStartTime:
+      active && data.sessionStartTime !== null
+        ? data.sessionStartTime + Math.max(0, now - savedAt)
+        : data.sessionStartTime,
+  }
+}
 
-      const result: SessionResult = {
-        score,
-        correctCount,
-        incorrectCount: attempted.length - correctCount,
-        totalQuestions: attempted.length,
-        timeSpent,
-        bestStreak: s.bestStreak,
-        finishedAt: Date.now(),
-        mode: s.mode,
-        difficulty: s.config.difficulty,
-        category: s.config.category,
-        mistakes,
-        outcomes,
-        livesLeft: s.lives,
-      }
-
-      return {
-        ...sessionReducer(s, {
-          type: 'FINISH_SESSION',
-          payload: { score, timeSpent, correctCount },
-        }),
-        finishedSession: result,
-      }
-    }),
-  loseLife: () => set((s) => ({ ...sessionReducer(s, { type: 'LOSE_LIFE' }) })),
-  appendQuestions: (questions, total) =>
-    set((s) => ({
-      ...sessionReducer(s, {
-        type: 'APPEND_QUESTIONS',
-        payload: { questions, total },
-      }),
-    })),
-  markQuestionsExhausted: () =>
-    set((s) => ({
-      ...sessionReducer(s, { type: 'MARK_QUESTIONS_EXHAUSTED' }),
-    })),
-  resetBlitzTimer: () =>
-    set((s) => ({ ...sessionReducer(s, { type: 'RESET_BLITZ_TIMER' }) })),
-  reset: () =>
-    set((s) => ({
-      ...sessionReducer(s, { type: 'RESET' }),
+export const useQuizSessionStore = create<QuizSessionStore>()(
+  persist(
+    (set) => ({
+      ...createInitialState(DEFAULT_CONFIG),
       finishedSession: null,
       sessionStartTime: null,
-      // Timed/blitz field lives outside createInitialState; a shallow
-      // set() would keep the stale value — clear it explicitly.
-      timeRemaining: undefined,
-    })),
-  startSessionTimer: () => set({ sessionStartTime: Date.now() }),
-}))
+
+      startLoading: () =>
+        set((s) => ({ ...sessionReducer(s, { type: 'START_LOADING' }) })),
+      loadQuestions: (questions, config, total) =>
+        set((s) => ({
+          ...sessionReducer(s, {
+            type: 'LOAD_QUESTIONS',
+            payload: { questions, config, total },
+          }),
+        })),
+      startPlaying: () =>
+        set((s) => ({ ...sessionReducer(s, { type: 'START_PLAYING' }) })),
+      startTimer: (timeRemaining) =>
+        set((s) => ({
+          ...sessionReducer(s, {
+            type: 'START_TIMER',
+            payload: { timeRemaining },
+          }),
+        })),
+      timerTick: () =>
+        set((s) => ({ ...sessionReducer(s, { type: 'TIMER_TICK' }) })),
+      timeUp: () => set((s) => ({ ...sessionReducer(s, { type: 'TIME_UP' }) })),
+      selectOption: (optionId) =>
+        set((s) => {
+          const question = s.questions[s.currentIndex]
+          if (!question) return s
+          return {
+            ...sessionReducer(s, {
+              type: 'SELECT_OPTION',
+              payload: { questionId: question.id, optionId },
+            }),
+          }
+        }),
+      submitAnswer: (scoreDelta) =>
+        set((s) => ({
+          ...sessionReducer(s, {
+            type: 'SUBMIT_ANSWER',
+            payload: { scoreDelta },
+          }),
+        })),
+      nextQuestion: () =>
+        set((s) => ({ ...sessionReducer(s, { type: 'NEXT_QUESTION' }) })),
+      updateConfig: (partial) =>
+        set((s) => ({
+          ...sessionReducer(s, {
+            type: 'UPDATE_CONFIG',
+            payload: partial,
+          }),
+        })),
+      finishSession: (score, timeSpent, correctCount) =>
+        set((s) => {
+          // Only questions the user actually attempted (0..currentIndex):
+          // survival may end with a partially loaded pool, timed mode may
+          // run out of time mid-session — unattempted questions don't count.
+          const attempted = s.questions.slice(0, s.currentIndex + 1)
+
+          const mistakes: SessionResult['mistakes'] = []
+          const outcomes: boolean[] = []
+          for (const q of attempted) {
+            const selected = s.answers[q.id] ?? []
+            const isCorrect =
+              q.correctOptionIds.length === selected.length &&
+              q.correctOptionIds.every((id) => selected.includes(id))
+            outcomes.push(isCorrect)
+            if (!isCorrect) {
+              mistakes.push({ question: q, selectedOptionIds: selected })
+            }
+          }
+
+          const result: SessionResult = {
+            score,
+            correctCount,
+            incorrectCount: attempted.length - correctCount,
+            totalQuestions: attempted.length,
+            timeSpent,
+            bestStreak: s.bestStreak,
+            finishedAt: Date.now(),
+            mode: s.mode,
+            difficulty: s.config.difficulty,
+            category: s.config.category,
+            mistakes,
+            outcomes,
+            livesLeft: s.lives,
+          }
+
+          return {
+            ...sessionReducer(s, {
+              type: 'FINISH_SESSION',
+              payload: { score, timeSpent, correctCount },
+            }),
+            finishedSession: result,
+          }
+        }),
+      loseLife: () =>
+        set((s) => ({ ...sessionReducer(s, { type: 'LOSE_LIFE' }) })),
+      appendQuestions: (questions, total) =>
+        set((s) => ({
+          ...sessionReducer(s, {
+            type: 'APPEND_QUESTIONS',
+            payload: { questions, total },
+          }),
+        })),
+      markQuestionsExhausted: () =>
+        set((s) => ({
+          ...sessionReducer(s, { type: 'MARK_QUESTIONS_EXHAUSTED' }),
+        })),
+      resetBlitzTimer: () =>
+        set((s) => ({ ...sessionReducer(s, { type: 'RESET_BLITZ_TIMER' }) })),
+      reset: () =>
+        set((s) => ({
+          ...sessionReducer(s, { type: 'RESET' }),
+          finishedSession: null,
+          sessionStartTime: null,
+          // Timed/blitz field lives outside createInitialState; a shallow
+          // set() would keep the stale value — clear it explicitly.
+          timeRemaining: undefined,
+        })),
+      startSessionTimer: () => set({ sessionStartTime: Date.now() }),
+    }),
+    {
+      // sessionStorage: a session lives as long as its tab — it survives
+      // F5 and mobile tab eviction without littering localStorage.
+      name: 'quiz-session',
+      version: SESSION_STORE_VERSION,
+      storage: createJSONStorage(() => sessionStorage),
+      migrate: (persisted, version) => {
+        assertMigrationsMatchVersion(
+          'session',
+          SESSION_STORE_VERSION,
+          Object.keys(migrations).length,
+        )
+        let data: unknown = persisted
+        for (let v = version; v < SESSION_STORE_VERSION; v++) {
+          const step = migrations[v]
+          if (!step) return undefined
+          data = step(data)
+        }
+        return data
+      },
+      merge: (persisted, current) => {
+        // Corrupt data must never break the app — start from scratch.
+        const parsed = persistedSessionSchema.safeParse(persisted)
+        if (!parsed.success) return current
+        return { ...current, ...restoreSession(parsed.data, Date.now()) }
+      },
+      partialize: (s): PersistedSession => ({
+        status: s.status,
+        questions: s.questions,
+        currentIndex: s.currentIndex,
+        answers: s.answers,
+        score: s.score,
+        streak: s.streak,
+        bestStreak: s.bestStreak,
+        lives: s.lives,
+        timeSpent: s.timeSpent,
+        mode: s.mode,
+        config: s.config,
+        timeRemaining: s.timeRemaining,
+        questionsExhausted: s.questionsExhausted,
+        questionsTotal: s.questionsTotal,
+        finishedSession: s.finishedSession,
+        sessionStartTime: s.sessionStartTime,
+        savedAt: Date.now(),
+      }),
+    },
+  ),
+)

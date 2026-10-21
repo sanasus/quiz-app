@@ -22,6 +22,7 @@ import DifficultySelector, {
 import QuestionCountSlider from '../../shared/ui/question-count-slider'
 import ModeSelector from '../../shared/ui/mode-selector'
 import StartButton from '../../shared/ui/start-button'
+import { ResumeQuizPrompt } from '../../features/quiz-resume/resume-quiz-prompt'
 import { AppToast } from '../../shared/ui/app-toast'
 import { MODE_IDS } from '../../features/modes'
 import { useProviderFallback } from './hooks/use-provider-fallback'
@@ -96,6 +97,7 @@ export function SetupScreen() {
 
   return (
     <div className="mx-auto max-w-lg px-4 py-8">
+      <ResumeQuizPrompt />
       <PageTitle>{t('setup.title')}</PageTitle>
 
       {/* A failed setup fetch the auto-switch doesn't handle (user's

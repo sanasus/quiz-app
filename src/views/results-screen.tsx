@@ -19,6 +19,9 @@ import { Card } from '../shared/ui/card'
 import { PageTitle, SectionTitle } from '../shared/ui/heading'
 import { StatTile } from '../shared/ui/stat-tile'
 import { AppToast } from '../shared/ui/app-toast'
+import { useProgressStore } from '../features/progress/progress-store'
+import { levelFromXp } from '../features/progress/xp'
+import { useStatsStore } from '../features/stats/stats-store'
 import { useShareCard } from '../features/share/use-share-card'
 import type { ShareOutcome } from '../features/share/share-result'
 
@@ -50,7 +53,16 @@ export function ResultsScreen() {
     setDismissed((prev) => [...prev, toastKey])
   }, [])
 
-  const shareCard = useShareCard(store.finishedSession, metrics)
+  // After a reload the session is restored but already folded into stats,
+  // so `metrics` stays null: rebuild what the card needs from the stores.
+  const xp = useProgressStore((s) => s.xp)
+  const recorded = useStatsStore(
+    (s) => s.history[0]?.finishedAt === store.finishedSession?.finishedAt,
+  )
+  const shareMetrics =
+    metrics ??
+    (recorded ? { level: levelFromXp(xp), isNewRecord: false } : null)
+  const shareCard = useShareCard(store.finishedSession, shareMetrics)
   const [shareToast, setShareToast] = useState<string | null>(null)
   const dismissShareToast = useCallback(() => setShareToast(null), [])
 

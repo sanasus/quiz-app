@@ -177,5 +177,17 @@
     "survival_passed_few": "вопроса пройдено",
     "survival_passed_many": "вопросов пройдено",
     "survival_passed_other": "вопроса пройдено"
+  },
+  "resume": {
+    "title": "Продолжить квиз?",
+    "message": "У вас есть незавершённый квиз: {{mode}}, вопрос {{current}} из {{total}}.",
+    "continue": "Продолжить",
+    "restart": "Начать заново"
+  },
+  "leave": {
+    "title": "Выйти из квиза?",
+    "message": "Прогресс в этом квизе будет потерян.",
+    "confirm": "Выйти",
+    "stay": "Остаться"
   }
 }

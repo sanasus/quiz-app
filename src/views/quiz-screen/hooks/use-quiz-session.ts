@@ -18,7 +18,10 @@ export function useQuizSession(
 ): QuizSessionResult {
   const store = useQuizSessionStore()
   const prevConfigRef = useRef<string | null>(null)
-  const query = useQuizQuestions(effectiveConfig)
+  // A session already in the store (restored after a reload, or resumed)
+  // has its questions: skip the fetch and its error dialog.
+  const hasSession = store.questions.length > 0
+  const query = useQuizQuestions(hasSession ? null : effectiveConfig)
   const { data, error } = query
   const questions = data?.questions
 

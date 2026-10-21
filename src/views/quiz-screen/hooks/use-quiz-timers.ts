@@ -37,7 +37,10 @@ export function useQuizTimers(
 
     if (timerStartedRef.current) return
 
-    store.startTimer(timeLimit)
+    // A countdown restored from a reloaded page keeps its saved value;
+    // fresh runs (LOAD_QUESTIONS clears it) and new questions (the mode
+    // resets it) start from the full limit.
+    if (store.timeRemaining === undefined) store.startTimer(timeLimit)
     timerStartedRef.current = true
 
     return startTimerInterval(() => timerStartedRef.current)
