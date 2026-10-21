@@ -68,9 +68,13 @@
     "correct": "Correct",
     "incorrect": "Incorrect",
     "accuracy": "Accuracy",
-    "mistakes_title": "Mistakes",
     "time_spent": "Time spent",
-    "new_quiz": "New Quiz"
+    "new_quiz": "New Quiz",
+    "review_title": "Review",
+    "review_filter": "Show answers",
+    "review_mistakes": "Mistakes",
+    "review_all": "All",
+    "no_answer": "No answer"
   },
   "stats": {
     "title": "Stats",

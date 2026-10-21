@@ -39,13 +39,13 @@ const sessionResultSchema = z.object({
   mode: modeSchema,
   difficulty: difficultySchema,
   category: z.string(),
-  mistakes: z.array(
+  attempts: z.array(
     z.object({
       question: questionSchema,
       selectedOptionIds: z.array(z.string()),
+      correct: z.boolean(),
     }),
   ),
-  outcomes: z.array(z.boolean()),
   livesLeft: z.number(),
 })
 

@@ -59,8 +59,7 @@ describe('useSessionMetrics', () => {
         mode: 'classic',
         difficulty: 'easy',
         category: 'Code',
-        mistakes: [],
-        outcomes: [],
+        attempts: [],
         livesLeft: 3,
       },
     })
@@ -106,8 +105,7 @@ describe('useSessionMetrics', () => {
         mode: 'classic',
         difficulty: 'easy',
         category: 'Code',
-        mistakes: [],
-        outcomes: [],
+        attempts: [],
         livesLeft: 3,
       },
     })
@@ -144,8 +142,7 @@ describe('useSessionMetrics', () => {
         mode: 'classic',
         difficulty: 'easy',
         category: 'Code',
-        mistakes: [],
-        outcomes: [],
+        attempts: [],
         livesLeft: 3,
       },
     })
@@ -166,8 +163,7 @@ describe('useSessionMetrics', () => {
           mode: 'classic',
           difficulty: 'easy',
           category: 'Code',
-          mistakes: [],
-          outcomes: [],
+          attempts: [],
           livesLeft: 3,
         },
       })

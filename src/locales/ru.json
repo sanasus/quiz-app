@@ -68,9 +68,13 @@
     "correct": "Правильные",
     "incorrect": "Неправильные",
     "accuracy": "Точность",
-    "mistakes_title": "Ошибки",
     "time_spent": "Затраченное время",
-    "new_quiz": "Новый тест"
+    "new_quiz": "Новый тест",
+    "review_title": "Разбор",
+    "review_filter": "Показать ответы",
+    "review_mistakes": "Ошибки",
+    "review_all": "Все",
+    "no_answer": "Нет ответа"
   },
   "stats": {
     "title": "Статистика",

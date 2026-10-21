@@ -88,7 +88,7 @@ export function buildShareCardData(
           lives: Math.max(0, Math.min(SURVIVAL_MAX_LIVES, result.livesLeft)),
           maxLives: SURVIVAL_MAX_LIVES,
         }
-      : { kind: 'grid', outcomes: result.outcomes }
+      : { kind: 'grid', outcomes: result.attempts.map((a) => a.correct) }
 
   return {
     dateLabel: new Intl.DateTimeFormat(locale, { dateStyle: 'long' }).format(

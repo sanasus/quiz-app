@@ -276,9 +276,14 @@ describe('finishSession', () => {
     expect(result?.incorrectCount).toBe(1)
     expect(result?.bestStreak).toBe(4)
     expect(result?.finishedAt).toBeGreaterThan(0)
-    expect(result?.mistakes).toHaveLength(1)
-    expect(result?.mistakes[0].question.id).toBe('q5')
-    expect(result?.outcomes).toEqual([true, true, true, true, false])
+    expect(result?.attempts.map((a) => a.correct)).toEqual([
+      true,
+      true,
+      true,
+      true,
+      false,
+    ])
+    expect(result?.attempts[4].question.id).toBe('q5')
   })
 })
 

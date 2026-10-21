@@ -1,5 +1,5 @@
 /**
- * /results — Session results with score, accuracy, and the list of mistakes.
+ * /results — Session results with score, accuracy, and the full answer review.
  */
 
 import { useCallback, useState } from 'react'
@@ -16,7 +16,8 @@ import {
 import { AnimatedNumber } from '../shared/ui/animated-number'
 import { Confetti } from '../shared/ui/confetti'
 import { Card } from '../shared/ui/card'
-import { PageTitle, SectionTitle } from '../shared/ui/heading'
+import { AnswersReview } from '../features/review/answers-review'
+import { PageTitle } from '../shared/ui/heading'
 import { StatTile } from '../shared/ui/stat-tile'
 import { AppToast } from '../shared/ui/app-toast'
 import { useProgressStore } from '../features/progress/progress-store'
@@ -164,41 +165,7 @@ export function ResultsScreen() {
         </StatTile>
       </div>
 
-      {/* Mistakes list */}
-      {result.mistakes.length > 0 && (
-        <Card className="mb-6">
-          <SectionTitle>{t('results.mistakes_title')}</SectionTitle>
-          <div className="flex flex-col gap-3">
-            {result.mistakes.map((m, idx) => (
-              <Card key={idx} variant="inset" padding="sm">
-                <p className="mb-1 font-medium text-text">{m.question.text}</p>
-                <div className="flex flex-col gap-1 text-body">
-                  <span className="text-danger-ink">
-                    ❌{' '}
-                    {m.selectedOptionIds
-                      .map(
-                        (id) =>
-                          m.question.options.find((o) => o.id === id)?.text ??
-                          id,
-                      )
-                      .join(', ')}
-                  </span>
-                  <span className="text-success-ink">
-                    ✅{' '}
-                    {m.question.correctOptionIds
-                      .map(
-                        (id) =>
-                          m.question.options.find((o) => o.id === id)?.text ??
-                          id,
-                      )
-                      .join(', ')}
-                  </span>
-                </div>
-              </Card>
-            ))}
-          </div>
-        </Card>
-      )}
+      <AnswersReview attempts={result.attempts} />
 
       {/* Actions */}
       <div className="flex flex-col gap-3 sm:flex-row sm:justify-center">

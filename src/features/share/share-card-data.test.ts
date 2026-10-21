@@ -26,8 +26,17 @@ function makeResult(overrides: Partial<SessionResult> = {}): SessionResult {
     mode: 'blitz',
     difficulty: 'hard',
     category: 'all',
-    mistakes: [],
-    outcomes: [true, true, false, true],
+    attempts: [true, true, false, true].map((correct, i) => ({
+      question: {
+        id: `q${i}`,
+        text: `Question ${i}`,
+        options: [],
+        correctOptionIds: [],
+        difficulty: 'hard' as const,
+      },
+      selectedOptionIds: [],
+      correct,
+    })),
     livesLeft: 3,
     ...overrides,
   }

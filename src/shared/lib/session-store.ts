@@ -454,17 +454,17 @@ export const useQuizSessionStore = create<QuizSessionStore>()(
           // run out of time mid-session — unattempted questions don't count.
           const attempted = s.questions.slice(0, s.currentIndex + 1)
 
-          const mistakes: SessionResult['mistakes'] = []
-          const outcomes: boolean[] = []
+          const attempts: SessionResult['attempts'] = []
           for (const q of attempted) {
             const selected = s.answers[q.id] ?? []
             const isCorrect =
               q.correctOptionIds.length === selected.length &&
               q.correctOptionIds.every((id) => selected.includes(id))
-            outcomes.push(isCorrect)
-            if (!isCorrect) {
-              mistakes.push({ question: q, selectedOptionIds: selected })
-            }
+            attempts.push({
+              question: q,
+              selectedOptionIds: selected,
+              correct: isCorrect,
+            })
           }
 
           const result: SessionResult = {
@@ -478,8 +478,7 @@ export const useQuizSessionStore = create<QuizSessionStore>()(
             mode: s.mode,
             difficulty: s.config.difficulty,
             category: s.config.category,
-            mistakes,
-            outcomes,
+            attempts,
             livesLeft: s.lives,
           }
 

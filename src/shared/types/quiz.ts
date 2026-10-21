@@ -141,6 +141,13 @@ export interface ApiMetadata {
 // Session result (for /results screen)
 // ---------------------------------------------------------------------------
 
+export interface SessionAttempt {
+  question: Question
+  /** Empty when the question timed out unanswered. */
+  selectedOptionIds: string[]
+  correct: boolean
+}
+
 export interface SessionResult {
   score: number
   correctCount: number
@@ -154,9 +161,8 @@ export interface SessionResult {
   mode: QuizMode
   difficulty: 'easy' | 'medium' | 'hard'
   category: string
-  mistakes: { question: Question; selectedOptionIds: string[] }[]
-  /** Per attempted question, in order: answered correctly or not. */
-  outcomes: boolean[]
+  /** Every attempted question, in order, with the player's answer. */
+  attempts: SessionAttempt[]
   /** Lives left at the end (meaningful for survival only). */
   livesLeft: number
 }
