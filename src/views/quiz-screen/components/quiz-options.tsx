@@ -7,7 +7,7 @@ export interface QuizOptionsProps {
   correctOptionIds: readonly string[]
   selectedIds: readonly string[]
   status: string
-  onToggle: (optionId: string) => void
+  onSelect: (optionId: string) => void
 }
 
 export const QuizOptions = memo(function QuizOptions({
@@ -15,7 +15,7 @@ export const QuizOptions = memo(function QuizOptions({
   correctOptionIds,
   selectedIds,
   status,
-  onToggle,
+  onSelect,
 }: QuizOptionsProps) {
   const { t } = useTranslation()
   const answered = status === 'answered'
@@ -35,7 +35,7 @@ export const QuizOptions = memo(function QuizOptions({
           isCorrect={correctSet.has(option.id)}
           showResult={answered}
           disabled={answered}
-          onToggle={onToggle}
+          onSelect={onSelect}
         />
       ))}
     </div>

@@ -17,7 +17,11 @@ import { RootLayout } from './root-layout'
 vi.mock('@tanstack/react-router', () => ({
   Link: ({ children }: { children?: ReactNode }) => <>{children}</>,
   Outlet: () => null,
-  useRouterState: () => ({ location: { pathname: '/' } }),
+  useRouterState: ({
+    select,
+  }: {
+    select: (state: { location: { pathname: string } }) => string
+  }) => select({ location: { pathname: '/' } }),
 }))
 
 beforeAll(async () => {
@@ -43,7 +47,7 @@ describe('RootLayout footer', () => {
     const footer = renderLayout()
 
     expect(footer).toHaveTextContent(
-      'QuizApp · Powered by QuizAPI and The Trivia API (CC BY-NC 4.0)',
+      'QuizApp · Powered by QuizAPI and The Trivia API (CC BY-NC 4.0), questions adapted',
     )
 
     const triviaLink = screen.getByRole('link', { name: 'The Trivia API' })
@@ -63,7 +67,7 @@ describe('RootLayout footer', () => {
     const footer = renderLayout()
 
     expect(footer).toHaveTextContent(
-      'QuizApp · Powered by QuizAPI and The Trivia API (CC BY-NC 4.0)',
+      'QuizApp · Powered by QuizAPI and The Trivia API (CC BY-NC 4.0), questions adapted',
     )
     expect(within(footer).getAllByRole('link')).toHaveLength(2)
   })
@@ -73,7 +77,7 @@ describe('RootLayout footer', () => {
     const footer = renderLayout()
 
     expect(footer).toHaveTextContent(
-      'QuizApp · Powered by QuizAPI and The Trivia API (CC BY-NC 4.0)',
+      'QuizApp · Powered by QuizAPI and The Trivia API (CC BY-NC 4.0), questions adapted',
     )
     expect(within(footer).getAllByRole('link')).toHaveLength(2)
   })

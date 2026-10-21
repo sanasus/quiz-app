@@ -6,6 +6,7 @@
  */
 
 import { useEffect, useState, type CSSProperties } from 'react'
+import { checkAnswer } from '../lib/answers'
 import { isSessionActive, useQuizSessionStore } from '../lib/session-store'
 
 /** Brand hue (oklch) of --color-primary. */
@@ -26,7 +27,7 @@ function categoryHue(category: string | undefined): number {
 
 /**
  * Verdict on the current question once answered; otherwise null. A
- * timeout or skip leaves no selection, which counts as wrong.
+ * timeout leaves no selection, which counts as wrong.
  */
 function useVerdict(): { key: string; verdict: Verdict } | null {
   const key = useQuizSessionStore((s) => {
@@ -34,9 +35,7 @@ function useVerdict(): { key: string; verdict: Verdict } | null {
     const q = s.questions[s.currentIndex]
     if (!q) return null
     const selected = s.answers[q.id] ?? []
-    const correct =
-      q.correctOptionIds.length === selected.length &&
-      q.correctOptionIds.every((id) => selected.includes(id))
+    const correct = checkAnswer(q.correctOptionIds, selected)
     return `${q.id}:${correct ? 'correct' : 'wrong'}`
   })
   if (!key) return null

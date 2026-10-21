@@ -28,7 +28,6 @@ function makeSession(overrides: Partial<QuizSession> = {}): QuizSession {
           { id: 'b', text: 'B' },
         ],
         correctOptionIds: ['a'],
-        multiple: false,
         difficulty: 'easy',
       },
       {
@@ -36,7 +35,6 @@ function makeSession(overrides: Partial<QuizSession> = {}): QuizSession {
         text: 'Question 2',
         options: [],
         correctOptionIds: [],
-        multiple: false,
         difficulty: 'easy',
       },
     ],
@@ -55,7 +53,8 @@ function makeSession(overrides: Partial<QuizSession> = {}): QuizSession {
       mode: 'classic',
     },
     questionsExhausted: false,
-    repeatConfig: null,
+    poolStart: 0,
+    poolConsumed: 0,
     ...overrides,
   }
 }
@@ -71,17 +70,6 @@ describe('ClassicMode', () => {
 
   it('has no lives', () => {
     expect(ClassicMode.lives).toBeNull()
-  })
-
-  it('does not auto-submit', () => {
-    expect(ClassicMode.autoSubmitOnSelection).toBe(false)
-  })
-
-  it('onSkip resets streak', () => {
-    const state = makeSession({ streak: 5, mode: 'classic' })
-    const delta = ClassicMode.onSkip(state)
-    expect(delta.status).toBe('answered')
-    expect(delta.streak).toBe(0)
   })
 
   it('onQuestionAdvance increments index', () => {
@@ -145,14 +133,8 @@ describe('BlitzMode', () => {
     expect(BlitzMode.timeLimitPerQuestion).toBeNull()
   })
 
-  it('has a dynamic timer limit', () => {
-    expect(typeof BlitzMode.timerLimit).toBe('function')
-    const limit = (BlitzMode.timerLimit as (count: number) => number)(5)
-    expect(limit).toBe(15)
-  })
-
-  it('auto-submits on selection', () => {
-    expect(BlitzMode.autoSubmitOnSelection).toBe(true)
+  it('has a fixed 10s timer per question', () => {
+    expect(BlitzMode.timerLimit).toBe(10)
   })
 
   it('onTimeUp on last question ends session', () => {
@@ -165,7 +147,6 @@ describe('BlitzMode', () => {
           text: '',
           options: [],
           correctOptionIds: [],
-          multiple: false,
           difficulty: 'easy',
         },
         {
@@ -173,7 +154,6 @@ describe('BlitzMode', () => {
           text: '',
           options: [],
           correctOptionIds: [],
-          multiple: false,
           difficulty: 'easy',
         },
       ],
@@ -221,12 +201,6 @@ describe('SurvivalMode', () => {
     expect(delta.streak).toBe(0)
   })
 
-  it('onSkip loses a life', () => {
-    const state = makeSession({ lives: 3, mode: 'survival' })
-    const delta = SurvivalMode.onSkip(state)
-    expect(delta.lives).toBe(2)
-  })
-
   it('onTimeUp on last question loses a life and ends session', () => {
     const state = makeSession({
       lives: 2,
@@ -238,7 +212,6 @@ describe('SurvivalMode', () => {
           text: '',
           options: [],
           correctOptionIds: [],
-          multiple: false,
           difficulty: 'easy',
         },
         {
@@ -246,7 +219,6 @@ describe('SurvivalMode', () => {
           text: '',
           options: [],
           correctOptionIds: [],
-          multiple: false,
           difficulty: 'easy',
         },
       ],

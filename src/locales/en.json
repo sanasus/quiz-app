@@ -6,7 +6,7 @@
     "footer_prefix": "QuizApp · Powered by ",
     "footer_and": " and ",
     "footer_mid": " (",
-    "footer_suffix": ")",
+    "footer_suffix": "), questions adapted",
     "nav": {
       "home": "Home",
       "new_quiz": "New Quiz",
@@ -43,16 +43,18 @@
   },
   "quiz": {
     "question": "Question",
-    "submit": "Submit",
-    "skip": "Skip",
-    "next": "Next",
+    "next": "Next question",
     "loading_next": "Loading…",
     "time_remaining": "Time remaining",
     "lives": "Lives",
     "score": "Score: {{score}}",
     "score_label": "Score:",
     "streak": "Streak",
-    "explanation": "Explanation"
+    "explanation": "Explanation",
+    "report": "Report a problem",
+    "reported_short": "Reported",
+    "reported": "Thanks! This question will not be shown again.",
+    "repeats_notice": "No new questions left here, so some are repeats."
   },
   "api_error": {
     "title": "Question source unavailable",
@@ -70,10 +72,13 @@
     "correct": "Correct",
     "incorrect": "Incorrect",
     "accuracy": "Accuracy",
-    "mistakes_title": "Mistakes",
     "time_spent": "Time spent",
-    "repeat_mistakes": "Repeat mistakes",
-    "new_quiz": "New Quiz"
+    "new_quiz": "New Quiz",
+    "review_title": "Review",
+    "review_filter": "Show answers",
+    "review_mistakes": "Mistakes",
+    "review_all": "All",
+    "no_answer": "No answer"
   },
   "stats": {
     "title": "Stats",
@@ -131,7 +136,22 @@
     "api_provider": "Question source",
     "api_provider_hint": "Changing the source resets the current session and returns you to setup.",
     "api_provider_switch_confirm_title": "Change question source?",
-    "api_provider_switch_confirm": "The current session will be lost and you will return to the setup screen."
+    "api_provider_switch_confirm": "The current session will be lost and you will return to the setup screen.",
+    "backup": "Backup",
+    "backup_hint": "Your XP, statistics, achievements and settings are stored only in this browser. Save a file to keep them or move to another device.",
+    "backup_download": "Download backup",
+    "backup_restore": "Restore from file",
+    "backup_confirm_title": "Restore this backup?",
+    "backup_confirm": "Your current XP, statistics, achievements and settings will be replaced by the backup from {{date}}. This cannot be undone.",
+    "backup_confirm_button": "Replace",
+    "backup_restored": "Backup restored",
+    "backup_error": {
+      "invalid_json": "This file is not valid JSON.",
+      "not_a_backup": "This is not a QuizApp backup.",
+      "unsupported_format": "This backup format is not supported.",
+      "newer_version": "This backup was made by a newer version of the app ({{section}}).",
+      "invalid_data": "The backup is damaged ({{section}}). Nothing was changed."
+    }
   },
   "common": {
     "loading": "Loading…",
@@ -160,5 +180,44 @@
   "provider_switch": {
     "toast_title": "Question source changed",
     "toast_message": "The previous source did not respond. Now using {{provider}}."
+  },
+  "share": {
+    "button": "Share result",
+    "preparing": "Preparing…",
+    "shared": "Result shared",
+    "copied": "Image copied to clipboard",
+    "downloaded": "Image saved, text copied",
+    "failed": "Couldn't share the result",
+    "new_record": "New record",
+    "cta": "Think you can beat it?",
+    "streak": "Streak",
+    "level": "Level",
+    "points_one": "{{formatted}} point",
+    "points_other": "{{formatted}} points",
+    "survival_passed_one": "question passed",
+    "survival_passed_other": "questions passed"
+  },
+  "resume": {
+    "title": "Continue the quiz?",
+    "message": "You have an unfinished quiz: {{mode}}, question {{current}} of {{total}}.",
+    "continue": "Continue",
+    "restart": "Start over"
+  },
+  "leave": {
+    "title": "Leave the quiz?",
+    "message": "Your progress in this quiz will be lost.",
+    "confirm": "Leave",
+    "stay": "Stay"
+  },
+  "pwa": {
+    "update_available": "A new version is available",
+    "update": "Update",
+    "later": "Later"
+  },
+  "sources_unavailable": {
+    "title": "Question sources unavailable",
+    "message": "Neither QuizAPI nor Trivia API is responding right now. Switching between them will not help — try again in a minute.",
+    "retry": "Try {{provider}} again",
+    "retrying": "Trying…"
   }
 }

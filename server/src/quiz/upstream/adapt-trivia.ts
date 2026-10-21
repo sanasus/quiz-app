@@ -58,7 +58,6 @@ export function adaptTriviaQuestion(raw: TriviaApiQuestion): Question | null {
     text: raw.question.text,
     options,
     correctOptionIds,
-    multiple: false,
     explanation: undefined,
     category: raw.category,
     difficulty: raw.difficulty,

@@ -22,7 +22,6 @@ function makeQuestion(id: string): Question {
       { id: `${id}-b`, text: 'B' },
     ],
     correctOptionIds: [`${id}-a`],
-    multiple: false,
     difficulty: 'easy',
     category: 'Code',
   }
@@ -60,13 +59,17 @@ describe('useSessionMetrics', () => {
         mode: 'classic',
         difficulty: 'easy',
         category: 'Code',
-        mistakes: [],
+        attempts: [],
+        livesLeft: 3,
       },
     })
 
     const { result, rerender } = renderHook(() => useSessionMetrics())
 
     expect(result.current?.xpGained).toBe(25)
+    // First ever session: nothing to beat, so no record badge.
+    expect(result.current?.isNewRecord).toBe(false)
+    expect(result.current?.level).toBe(0)
     expect(result.current?.newAchievements.map((a) => a.id).sort()).toEqual([
       'first_blood',
       'streak_10',
@@ -102,7 +105,8 @@ describe('useSessionMetrics', () => {
         mode: 'classic',
         difficulty: 'easy',
         category: 'Code',
-        mistakes: [],
+        attempts: [],
+        livesLeft: 3,
       },
     })
 
@@ -117,7 +121,7 @@ describe('useSessionMetrics', () => {
     expect(useProgressStore.getState().xp).toBe(10)
   })
 
-  it('processes repeat-mistakes sessions as new sessions', () => {
+  it('processes consecutive sessions as new sessions', () => {
     const base = {
       status: 'finished' as const,
       questions: [makeQuestion('q1')],
@@ -138,13 +142,14 @@ describe('useSessionMetrics', () => {
         mode: 'classic',
         difficulty: 'easy',
         category: 'Code',
-        mistakes: [],
+        attempts: [],
+        livesLeft: 3,
       },
     })
     const first = renderHook(() => useSessionMetrics())
     expect(first.result.current?.xpGained).toBe(10)
 
-    // Finish again (repeat session, new finishedAt).
+    // Finish again (second session, new finishedAt).
     act(() => {
       useQuizSessionStore.setState({
         finishedSession: {
@@ -158,7 +163,8 @@ describe('useSessionMetrics', () => {
           mode: 'classic',
           difficulty: 'easy',
           category: 'Code',
-          mistakes: [],
+          attempts: [],
+          livesLeft: 3,
         },
       })
     })

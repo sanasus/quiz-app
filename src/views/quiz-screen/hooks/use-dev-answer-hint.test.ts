@@ -29,7 +29,6 @@ function makeQuestion(overrides: Partial<Question> = {}): Question {
       { id: 'opt2', text: 'A UI library' },
     ],
     correctOptionIds: ['opt2'],
-    multiple: false,
     difficulty: 'easy',
     ...overrides,
   }
@@ -91,12 +90,10 @@ describe('useDevAnswerHint', () => {
     )
   })
 
-  it('highlights every correct option for multiple-answer questions', () => {
+  it('highlights every correct option for several correct ids', () => {
     const log = vi.spyOn(console, 'log').mockImplementation(() => {})
 
-    renderHint(
-      makeQuestion({ multiple: true, correctOptionIds: ['opt1', 'opt2'] }),
-    )
+    renderHint(makeQuestion({ correctOptionIds: ['opt1', 'opt2'] }))
 
     expect(log).toHaveBeenCalledWith(
       '[quiz] q1 «What is React?» → %cA database%c, %cA UI library%c ' +

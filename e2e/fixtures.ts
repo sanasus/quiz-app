@@ -31,7 +31,7 @@ const defaultConfig: QuizConfig = {
 }
 
 /**
- * Answer options only — excludes Skip/Submit/Next action buttons.
+ * Answer options only — excludes Next action button.
  * Single source of truth for scoping quiz option interactions.
  */
 export function optionLocator(page: Page) {
@@ -61,6 +61,14 @@ export async function setQuestionCount(page: Page, count: number) {
  */
 export async function goToSetup(page: Page) {
   await page.goto('/setup')
+  // A run left unfinished in this tab survives the reload and offers to
+  // continue; helpers that want a fresh quiz start over.
+  // The prompt renders with the screen's first paint, so wait for that.
+  await expect(page.getByText('Quiz Settings')).toBeVisible()
+  const resume = page.getByTestId('resume-quiz')
+  if (await resume.isVisible()) {
+    await resume.getByRole('button', { name: 'Start over' }).click()
+  }
   await expect(page.getByTestId('category-dropdown')).toBeVisible()
 }
 
@@ -153,8 +161,6 @@ export interface AnswerOptions {
    * the quiz finishes itself and navigates to /results automatically.
    */
   next?: boolean
-  /** Blitz auto-submits on selection, so there is no Submit button. */
-  autoSubmit?: boolean
 }
 
 /**
@@ -167,18 +173,15 @@ export async function selectFirstOption(page: Page) {
 }
 
 /**
- * Answer the first option: select it, submit (unless the mode
- * auto-submits) and optionally advance to the next question.
+ * Answer the first option (one click answers) and optionally advance
+ * to the next question. Next is clicked right away — the screen would
+ * also advance by itself after a short pause.
  */
 export async function answerFirstOption(
   page: Page,
-  { next = true, autoSubmit = false }: AnswerOptions = {},
+  { next = true }: AnswerOptions = {},
 ) {
   await selectFirstOption(page)
-
-  if (!autoSubmit) {
-    await page.getByRole('button', { name: 'Submit' }).click()
-  }
 
   if (next) {
     const nextBtn = page.getByRole('button', { name: 'Next' })
@@ -203,22 +206,11 @@ export async function completeQuiz(
 }
 
 /**
- * Skip the current question and advance to the next one.
- */
-export async function skipQuestion(page: Page) {
-  await page.getByRole('button', { name: 'Skip' }).click()
-  const nextBtn = page.getByRole('button', { name: 'Next' })
-  await expect(nextBtn).toBeVisible()
-  await nextBtn.click()
-}
-
-/**
  * Answer the current question correctly and advance.
  *
  * Survival grants only 3 lives, so blindly picking the first option
  * ends the run early. The mock pool is the source of truth: match the
- * visible question text and click the correct option(s). Handles
- * multiple-choice questions (several correct options) too.
+ * visible question text and click the correct option.
  *
  * At the pool's edge the Next click auto-waits for the prefetched
  * batch (Next is disabled while the batch is pending).
@@ -228,11 +220,7 @@ export async function answerCorrectly(page: Page) {
   const question = mockQuestions.find((q) => q.text === text)
   if (!question) throw new Error(`Unknown mock question: ${text}`)
 
-  for (const id of question.correctOptionIds) {
-    await page.getByTestId(`option-${id}`).click()
-  }
-
-  await page.getByRole('button', { name: 'Submit' }).click()
+  await page.getByTestId(`option-${question.correctOptionIds[0]}`).click()
   const nextBtn = page.getByRole('button', { name: 'Next' })
   await expect(nextBtn).toBeVisible()
   await nextBtn.click()
@@ -240,31 +228,34 @@ export async function answerCorrectly(page: Page) {
 
 /**
  * Answer the current Trivia API question correctly: pick the option the
- * fixture marks as correct, submit and (by default) advance.
+ * fixture marks as correct and (by default) advance.
  *
  * Mirror of answerCorrectly for the fixture-driven trivia pool of
  * provider-switch.spec.ts (mockQuestions doesn't contain these
- * questions); the heading assertion pins the question before acting
- * on it.
+ * questions); the question shown is looked up in `pool` by its text.
  *
  * `next: false` on the run's last question — its Next stays disabled
  * while the failed survival batch opens the error dialog.
  */
 export async function answerTriviaCorrectly(
   page: Page,
-  question: ProxyQuestion,
+  pool: readonly ProxyQuestion[],
   { next = true }: { next?: boolean } = {},
 ) {
+  // Live providers are shuffled on the client: find the question that is
+  // actually on screen instead of assuming a fixture order.
+  const heading = page.getByRole('heading', { level: 3 })
+  await expect(heading).toBeVisible()
+  const text = await heading.textContent()
+  const question = pool.find((q) => q.text === text)
+  if (!question) throw new Error(`Unknown trivia question: ${text}`)
+
   const correct = question.options.find((option) =>
     question.correctOptionIds.includes(option.id),
   )
   if (!correct) throw new Error(`Question ${question.id} has no correct option`)
 
-  await expect(page.getByRole('heading', { level: 3 })).toHaveText(
-    question.text,
-  )
   await optionLocator(page).filter({ hasText: correct.text }).click()
-  await page.getByRole('button', { name: 'Submit' }).click()
 
   if (next) {
     const nextBtn = page.getByRole('button', { name: 'Next' })

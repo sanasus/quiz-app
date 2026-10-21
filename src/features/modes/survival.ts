@@ -1,5 +1,5 @@
 /**
- * Survival mode — 3 lives, lose one on wrong answer or skip.
+ * Survival mode — 3 lives, lose one on wrong answer or timeout.
  * No timer.
  */
 
@@ -14,7 +14,6 @@ export const SurvivalMode: GameMode = {
   timerLimit: null,
   timerBehavior: 'none',
   lives: DEFAULT_LIVES,
-  autoSubmitOnSelection: false,
   headerType: 'lives',
 
   onTimeUp: (state: QuizSession): Partial<QuizSession> => {
@@ -55,13 +54,6 @@ export const SurvivalMode: GameMode = {
     if (state.lives <= 0) return { status: 'finished' }
     return { currentIndex: state.currentIndex + 1, status: 'playing' }
   },
-
-  onSkip: (state: QuizSession): Partial<QuizSession> => ({
-    status: 'answered',
-    streak: 0,
-    bestStreak: state.bestStreak,
-    lives: Math.max(0, state.lives - 1),
-  }),
 
   onWrongAnswer: (state: QuizSession): Partial<QuizSession> => ({
     streak: 0,

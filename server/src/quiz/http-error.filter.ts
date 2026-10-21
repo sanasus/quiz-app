@@ -30,8 +30,10 @@ import {
   ExceptionFilter,
   HttpStatus,
   Logger,
+  Optional,
 } from '@nestjs/common'
 import type { Response } from 'express'
+import { AnalyticsService } from '../analytics/analytics.service'
 import { UpstreamError } from './errors'
 import type { UpstreamErrorKind } from './errors'
 import type { UpstreamProviderId } from './providers/provider.interface'
@@ -72,6 +74,10 @@ export function envelopeStatus(error: UpstreamError): number {
 @Catch(UpstreamError)
 export class UpstreamErrorFilter implements ExceptionFilter {
   private readonly logger = new Logger(UpstreamErrorFilter.name)
+
+  // Optional so the filter still works (and is testable) without the
+  // reporting module wired in.
+  constructor(@Optional() private readonly analytics?: AnalyticsService) {}
 
   catch(exception: UpstreamError, host: ArgumentsHost): void {
     const ctx = host.switchToHttp()
@@ -123,6 +129,8 @@ export class UpstreamErrorFilter implements ExceptionFilter {
     }
 
     response.status(status).json(body)
+    // After the response is written: reporting never delays or breaks it.
+    this.analytics?.captureUpstreamError(exception, providerId)
   }
 }
 

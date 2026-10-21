@@ -12,7 +12,6 @@ const question: Question = {
     { id: 'b', text: 'B' },
   ],
   correctOptionIds: ['a'],
-  multiple: false,
   category: 'science',
   difficulty: 'easy',
 }

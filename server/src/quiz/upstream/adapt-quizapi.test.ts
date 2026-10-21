@@ -33,13 +33,12 @@ describe('adaptQuestion', () => {
     expect(result).not.toBeNull()
     expect(result!.id).toBe('q1')
     expect(result!.text).toBe('What is 2+2?')
-    expect(result!.multiple).toBe(false)
     expect(result!.correctOptionIds).toEqual(['a2'])
     expect(result!.options.length).toBe(4)
     expect(result!.difficulty).toBe('easy')
   })
 
-  it('adapts multiple correct answers', () => {
+  it('drops questions with several correct answers', () => {
     const result = adaptQuestion(
       makeFixture({
         id: 'q2',
@@ -54,9 +53,7 @@ describe('adaptQuestion', () => {
       }),
     )
 
-    expect(result).not.toBeNull()
-    expect(result!.multiple).toBe(true)
-    expect(result!.correctOptionIds).toEqual(['a1', 'a2'])
+    expect(result).toBeNull()
   })
 
   it('returns null when no correct answer', () => {

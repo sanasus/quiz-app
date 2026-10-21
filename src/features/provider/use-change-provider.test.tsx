@@ -20,6 +20,9 @@ import type { Question } from '../../shared/types/quiz'
 import { useChangeProvider } from './use-change-provider'
 
 const navigateMock = vi.fn()
+const trackMock = vi.hoisted(() => vi.fn())
+
+vi.mock('../../shared/analytics/analytics', () => ({ track: trackMock }))
 
 vi.mock('@tanstack/react-router', () => ({
   useNavigate: () => navigateMock,
@@ -33,13 +36,13 @@ const question: Question = {
     { id: 'b', text: '5' },
   ],
   correctOptionIds: ['a'],
-  multiple: false,
   difficulty: 'easy',
 }
 
 describe('useChangeProvider', () => {
   beforeEach(() => {
     navigateMock.mockClear()
+    trackMock.mockClear()
     localStorage.clear()
     // Stores are module singletons — pin their state per test. RESET
     // keeps the config by design, so restore it explicitly too.
@@ -137,5 +140,27 @@ describe('useChangeProvider', () => {
     expect(config.difficulty).toBe('hard')
     expect(config.questionCount).toBe(15)
     expect(config.mode).toBe('survival')
+  })
+
+  it('reports the switch with its reason, defaulting to settings', () => {
+    const { result } = renderHook(() => useChangeProvider())
+
+    act(() => result.current('trivia'))
+    expect(trackMock).toHaveBeenLastCalledWith('provider_switched', {
+      from: 'quizapi',
+      to: 'trivia',
+      reason: 'settings',
+      kind: undefined,
+    })
+
+    act(() =>
+      result.current(undefined, { reason: 'error_dialog', kind: 'auth' }),
+    )
+    expect(trackMock).toHaveBeenLastCalledWith('provider_switched', {
+      from: 'trivia',
+      to: 'quizapi',
+      reason: 'error_dialog',
+      kind: 'auth',
+    })
   })
 })

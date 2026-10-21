@@ -47,6 +47,11 @@ jobs:
       - name: Build
         run: npm run build
 
+      # Gzipped entry / chunk / total budgets (bundle-budget.json) and a
+      # tree-shaking guard for lucide-react and motion imports.
+      - name: Bundle size budget
+        run: npm run size
+
   server:
     name: Server (NestJS proxy)
     runs-on: ubuntu-latest
@@ -86,6 +91,12 @@ jobs:
       VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
       VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
       VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+      # PostHog CLI (source maps). Job-level on purpose: the `secrets`
+      # context is not allowed in a step's `if`, and a step-level `env` is
+      # not visible in that same step's `if` — job-level `env` is both.
+      POSTHOG_CLI_API_KEY: ${{ secrets.POSTHOG_CLI_API_KEY }}
+      POSTHOG_CLI_PROJECT_ID: ${{ secrets.POSTHOG_CLI_PROJECT_ID }}
+      POSTHOG_CLI_HOST: https://eu.posthog.com
     steps:
       - uses: actions/checkout@v5
 
@@ -109,6 +120,50 @@ jobs:
 
       - name: Build for Vercel
         run: npx vercel build --prod
+
+      # Stack traces of client errors in PostHog are minified without the
+      # source maps. `inject` stamps a chunk id into the built bundles and
+      # `upload` ships the maps (then deletes them from the output, so they
+      # are not served). It must run BEFORE the prebuilt deploy: the deployed
+      # files have to be the injected ones. Skipped without the key, and a
+      # failure here never blocks the release.
+      - name: Upload source maps to PostHog
+        if: env.POSTHOG_CLI_API_KEY != ''
+        continue-on-error: true
+        run: |
+          npm install -g @posthog/cli
+          # The Vercel output layout depends on the service setup: find the
+          # asset folders that actually hold maps instead of hard-coding one.
+          mapfile -t found < <(find .vercel/output -name '*.js.map' -not -path '*/node_modules/*' -printf '%h\n' | sort -u)
+          # The CLI walks folders recursively: keep only the outermost ones,
+          # so nothing is injected twice.
+          dirs=()
+          for dir in "${found[@]}"; do
+            if [ "${#dirs[@]}" -eq 0 ] || [[ "$dir" != "${dirs[-1]}"/* ]]; then
+              dirs+=("$dir")
+            fi
+          done
+          if [ "${#dirs[@]}" -eq 0 ]; then
+            echo "::warning::No source maps found in .vercel/output"
+            exit 0
+          fi
+          for dir in "${dirs[@]}"; do
+            posthog-cli sourcemap inject --directory "$dir"
+            posthog-cli sourcemap upload --directory "$dir" --release-name quiz-app --delete-after
+          done
+
+      # `--delete-after` only removes maps after a SUCCESSFUL upload. If
+      # inject/upload failed or was cancelled, maps would still be in the
+      # output and the prebuilt deploy below would serve them by direct URL.
+      # The bundles are built with `sourcemap: 'hidden'`, so nothing links
+      # to these files — deleting them is always safe.
+      - name: Remove source maps from the deploy output
+        if: always()
+        shell: bash
+        run: |
+          if [ -d .vercel/output ]; then
+            find .vercel/output -name '*.js.map' -delete
+          fi
 
       - name: Deploy to production
         shell: bash

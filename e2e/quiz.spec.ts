@@ -4,7 +4,6 @@ import {
   answerCorrectly,
   completeQuiz,
   optionLocator,
-  skipQuestion,
   startQuiz,
   waitForResults,
 } from './fixtures'
@@ -35,8 +34,8 @@ test.describe('Quiz screen', () => {
 
       // 4 answer options — action buttons asserted separately
       await expect(optionLocator(page)).toHaveCount(4)
-      await expect(page.getByRole('button', { name: 'Skip' })).toBeVisible()
-      await expect(page.getByRole('button', { name: 'Submit' })).toBeVisible()
+      await expect(page.getByRole('button', { name: 'Skip' })).toHaveCount(0)
+      await expect(page.getByRole('button', { name: 'Submit' })).toHaveCount(0)
     },
   )
 
@@ -49,19 +48,25 @@ test.describe('Quiz screen', () => {
     await expect(options.first()).toHaveAttribute('aria-selected', 'true')
   })
 
-  test('submitting an answer shows explanation and next button', async ({
-    page,
-  }) => {
+  test('one click answers and shows the next button', async ({ page }) => {
     const options = optionLocator(page)
     await expect(options.first()).toBeVisible()
     await options.first().click()
 
-    // Submit button should be visible, then Next appears after submit
-    const submitBtn = page.getByRole('button', { name: 'Submit' })
-    await expect(submitBtn).toBeVisible()
-    await submitBtn.click()
-
     await expect(page.getByRole('button', { name: 'Next' })).toBeVisible()
+  })
+
+  test('moves to the next question by itself after a pause', async ({
+    page,
+  }) => {
+    await expect(
+      page.getByRole('heading', { name: 'Question 1/2' }),
+    ).toBeVisible()
+    await optionLocator(page).first().click()
+
+    await expect(
+      page.getByRole('heading', { name: 'Question 2/2' }),
+    ).toBeVisible()
   })
 
   test(
@@ -75,23 +80,12 @@ test.describe('Quiz screen', () => {
       const options = optionLocator(page)
       await expect(options.first()).toBeVisible()
       await options.first().click()
-      await page.getByRole('button', { name: 'Submit' }).click()
 
       const next = page.getByRole('button', { name: 'Next' })
       await expect(next).toBeVisible()
       await expect(next).toBeInViewport()
     },
   )
-
-  test('skipping a question advances to next', async ({ page }) => {
-    await skipQuestion(page)
-
-    // Progress moved to the second (last) question — the heading,
-    // not the sr-only live region that repeats it.
-    await expect(
-      page.getByRole('heading', { name: 'Question 2/2' }),
-    ).toBeVisible()
-  })
 
   test(
     'completing all questions navigates to results',

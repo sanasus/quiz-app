@@ -4,7 +4,8 @@
  * Rules (identical to the frontend's former adapter.ts, so live
  * behaviour does not shift during the move to the server):
  * - drop questions with fewer than 2 options,
- * - drop questions with no correct answer,
+ * - drop questions without exactly one correct answer (the UI is
+ *   single-choice: one click answers),
  * - uppercase API difficulty → lowercase internal difficulty.
  */
 
@@ -39,7 +40,7 @@ export function adaptQuestion(raw: QuizApiQuestion): Question | null {
     }
   }
 
-  if (correctOptionIds.length === 0) {
+  if (correctOptionIds.length !== 1) {
     return null
   }
 
@@ -50,7 +51,6 @@ export function adaptQuestion(raw: QuizApiQuestion): Question | null {
     explanation: raw.explanation ?? undefined,
     options,
     correctOptionIds,
-    multiple: correctOptionIds.length > 1,
     category: raw.category ?? undefined,
     difficulty: DIFFICULTY_MAP[raw.difficulty] ?? 'medium',
   }

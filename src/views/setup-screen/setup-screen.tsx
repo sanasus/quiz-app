@@ -22,6 +22,8 @@ import DifficultySelector, {
 import QuestionCountSlider from '../../shared/ui/question-count-slider'
 import ModeSelector from '../../shared/ui/mode-selector'
 import StartButton from '../../shared/ui/start-button'
+import { SourcesUnavailable } from '../../shared/ui/sources-unavailable'
+import { ResumeQuizPrompt } from '../../features/quiz-resume/resume-quiz-prompt'
 import { AppToast } from '../../shared/ui/app-toast'
 import { MODE_IDS } from '../../features/modes'
 import { useProviderFallback } from './hooks/use-provider-fallback'
@@ -58,15 +60,17 @@ export function SetupScreen() {
     data: catalog,
     isLoading: loading,
     error: catalogError,
+    isFetching: catalogFetching,
     refetch: refetchCatalog,
   } = useCatalog()
 
   // Broken provider → auto-switch + toast; network failure → inline
   // error with Retry (see the hook for the full policy).
-  const { inlineError, toast, dismissToast, retry } = useProviderFallback({
-    catalogError,
-    refetchCatalog,
-  })
+  const { inlineError, toast, dismissToast, retry, degraded, retryProvider } =
+    useProviderFallback({
+      catalogError,
+      refetchCatalog,
+    })
 
   // Build the difficulties list, keeping only the levels the internal
   // model supports end to end. The proxy already drops EXPERT, but the
@@ -96,13 +100,16 @@ export function SetupScreen() {
 
   return (
     <div className="mx-auto max-w-lg px-4 py-8">
+      <ResumeQuizPrompt />
       <PageTitle>{t('setup.title')}</PageTitle>
 
       {/* A failed setup fetch the auto-switch doesn't handle (user's
           network, or the fallback provider failing too) replaces the
           form: nothing in it can work without the catalog, and below
           the form the error fell off-screen on mobile. */}
-      {inlineError ? (
+      {degraded ? (
+        <SourcesUnavailable busy={catalogFetching} onRetry={retryProvider} />
+      ) : inlineError ? (
         <Card
           padding="lg"
           role="alert"

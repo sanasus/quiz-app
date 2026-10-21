@@ -1,10 +1,11 @@
 /**
- * /results — Session results with score, accuracy, and repeat-mistakes.
+ * /results — Session results with score, accuracy, and the full answer review.
  */
 
 import { useCallback, useState } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
+import { Share2 } from 'lucide-react'
 import { Button } from '../shared/ui/button'
 import { useQuizSessionStore } from '../shared/lib/session-store'
 import { useSessionMetrics } from '../features/meta/use-session-metrics'
@@ -15,8 +16,22 @@ import {
 import { AnimatedNumber } from '../shared/ui/animated-number'
 import { Confetti } from '../shared/ui/confetti'
 import { Card } from '../shared/ui/card'
-import { PageTitle, SectionTitle } from '../shared/ui/heading'
+import { AnswersReview } from '../features/review/answers-review'
+import { PageTitle } from '../shared/ui/heading'
 import { StatTile } from '../shared/ui/stat-tile'
+import { AppToast } from '../shared/ui/app-toast'
+import { useProgressStore } from '../features/progress/progress-store'
+import { levelFromXp } from '../features/progress/xp'
+import { useStatsStore } from '../features/stats/stats-store'
+import { track } from '../shared/analytics/analytics'
+import { useShareCard } from '../features/share/use-share-card'
+import type { ShareOutcome } from '../features/share/share-result'
+
+const SHARE_TOAST_KEYS: Record<Exclude<ShareOutcome, 'cancelled'>, string> = {
+  shared: 'share.shared',
+  'copied-image': 'share.copied',
+  downloaded: 'share.downloaded',
+}
 
 /** Accuracy (%) at or above which the win confetti fires. */
 const CONFETTI_THRESHOLD = 70
@@ -40,6 +55,19 @@ export function ResultsScreen() {
     setDismissed((prev) => [...prev, toastKey])
   }, [])
 
+  // After a reload the session is restored but already folded into stats,
+  // so `metrics` stays null: rebuild what the card needs from the stores.
+  const xp = useProgressStore((s) => s.xp)
+  const recorded = useStatsStore(
+    (s) => s.history[0]?.finishedAt === store.finishedSession?.finishedAt,
+  )
+  const shareMetrics =
+    metrics ??
+    (recorded ? { level: levelFromXp(xp), isNewRecord: false } : null)
+  const shareCard = useShareCard(store.finishedSession, shareMetrics)
+  const [shareToast, setShareToast] = useState<string | null>(null)
+  const dismissShareToast = useCallback(() => setShareToast(null), [])
+
   // The route's beforeLoad guard redirects to /setup without a finished
   // session; this is only a render-time safety net.
   if (store.status !== 'finished') return null
@@ -58,22 +86,24 @@ export function ResultsScreen() {
     return `${m}:${s.toString().padStart(2, '0')}`
   }
 
-  const handleRepeatMistakes = () => {
-    store.repeatMistakes(store.config)
-    navigate({
-      to: '/quiz',
-      search: {
-        category: store.config.category,
-        difficulty: store.config.difficulty,
-        questionCount: store.config.questionCount,
-        mode: store.config.mode,
-      },
-    })
-  }
-
   const handleNewQuiz = () => {
     store.reset()
     navigate({ to: '/setup' })
+  }
+
+  // Called straight from the click: the PNG is already rendered, so
+  // `share()` runs inside the user activation Safari requires.
+  const handleShare = async () => {
+    try {
+      const outcome = await shareCard.share()
+      if (outcome === null) return
+      track('share_clicked', { outcome })
+      if (outcome === 'cancelled') return
+      setShareToast(t(SHARE_TOAST_KEYS[outcome]))
+    } catch {
+      track('share_clicked', { outcome: 'failed' })
+      setShareToast(t('share.failed'))
+    }
   }
 
   return (
@@ -139,51 +169,30 @@ export function ResultsScreen() {
         </StatTile>
       </div>
 
-      {/* Mistakes list */}
-      {result.mistakes.length > 0 && (
-        <Card className="mb-6">
-          <SectionTitle>{t('results.mistakes_title')}</SectionTitle>
-          <div className="flex flex-col gap-3">
-            {result.mistakes.map((m, idx) => (
-              <Card key={idx} variant="inset" padding="sm">
-                <p className="mb-1 font-medium text-text">{m.question.text}</p>
-                <div className="flex flex-col gap-1 text-body">
-                  <span className="text-danger-ink">
-                    ❌{' '}
-                    {m.selectedOptionIds
-                      .map(
-                        (id) =>
-                          m.question.options.find((o) => o.id === id)?.text ??
-                          id,
-                      )
-                      .join(', ')}
-                  </span>
-                  <span className="text-success-ink">
-                    ✅{' '}
-                    {m.question.correctOptionIds
-                      .map(
-                        (id) =>
-                          m.question.options.find((o) => o.id === id)?.text ??
-                          id,
-                      )
-                      .join(', ')}
-                  </span>
-                </div>
-              </Card>
-            ))}
-          </div>
-        </Card>
-      )}
+      <AnswersReview attempts={result.attempts} />
 
       {/* Actions */}
       <div className="flex flex-col gap-3 sm:flex-row sm:justify-center">
-        {result.mistakes.length > 0 && (
-          <Button variant="secondary" onClick={handleRepeatMistakes}>
-            {t('results.repeat_mistakes')}
+        <Button onClick={handleNewQuiz}>{t('results.new_quiz')}</Button>
+        {!shareCard.failed && (
+          <Button
+            variant="secondary"
+            onClick={handleShare}
+            disabled={!shareCard.ready}
+          >
+            <Share2 className="size-4" aria-hidden />
+            {shareCard.ready ? t('share.button') : t('share.preparing')}
           </Button>
         )}
-        <Button onClick={handleNewQuiz}>{t('results.new_quiz')}</Button>
       </div>
+
+      {shareToast && (
+        <AppToast
+          message={shareToast}
+          position="bottom"
+          onDismiss={dismissShareToast}
+        />
+      )}
 
       {/* Achievement unlock toasts */}
       <AchievementToast toasts={toasts} onDismiss={dismissToast} />
