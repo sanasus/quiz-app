@@ -6,7 +6,7 @@
     "footer_prefix": "QuizApp · на основе ",
     "footer_and": " и ",
     "footer_mid": " (",
-    "footer_suffix": ")",
+    "footer_suffix": "), вопросы адаптированы",
     "nav": {
       "home": "Главная",
       "new_quiz": "Новый тест",

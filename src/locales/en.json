@@ -6,7 +6,7 @@
     "footer_prefix": "QuizApp · Powered by ",
     "footer_and": " and ",
     "footer_mid": " (",
-    "footer_suffix": ")",
+    "footer_suffix": "), questions adapted",
     "nav": {
       "home": "Home",
       "new_quiz": "New Quiz",
