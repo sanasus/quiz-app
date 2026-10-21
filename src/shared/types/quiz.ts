@@ -13,7 +13,6 @@ export interface Question {
   explanation?: string
   options: { id: string; text: string }[]
   correctOptionIds: string[]
-  multiple: boolean
   category?: string
   difficulty: 'easy' | 'medium' | 'hard'
 }
@@ -56,8 +55,6 @@ export interface QuizSession {
    * shows it as the run's question count; undefined when unknown.
    */
   questionsTotal?: number
-  // Repeat-mistakes support
-  repeatConfig: QuizConfig | null
 }
 
 // ---------------------------------------------------------------------------
@@ -98,11 +95,6 @@ export type SessionAction =
       payload: { questions: Question[]; total?: number }
     }
   | { type: 'MARK_QUESTIONS_EXHAUSTED' }
-  | {
-      type: 'REPEAT_MISTAKES'
-      payload: { questions: Question[]; config: QuizConfig }
-    }
-  | { type: 'SKIP_QUESTION' }
   | {
       type: 'UPDATE_CONFIG'
       payload: Partial<QuizConfig>
@@ -157,7 +149,7 @@ export interface SessionResult {
   timeSpent: number
   /** Longest correct-answer streak within the session. */
   bestStreak: number
-  /** Epoch ms when the session finished (distinguishes repeat sessions). */
+  /** Epoch ms when the session finished (distinguishes consecutive sessions). */
   finishedAt: number
   mode: QuizMode
   difficulty: 'easy' | 'medium' | 'hard'

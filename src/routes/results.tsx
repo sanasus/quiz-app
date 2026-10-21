@@ -1,5 +1,5 @@
 /**
- * /results — Session results with score, accuracy, and repeat-mistakes.
+ * /results — Session results with score, accuracy, and the list of mistakes.
  */
 
 import { createFileRoute, redirect } from '@tanstack/react-router'

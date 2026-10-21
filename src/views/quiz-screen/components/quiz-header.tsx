@@ -1,10 +1,11 @@
+import { useState, type CSSProperties } from 'react'
 import { motion } from 'motion/react'
 import { useTranslation } from 'react-i18next'
+import { Flame } from 'lucide-react'
 import type { QuizMode } from '../../../shared/types/quiz'
 import { getMode } from '../../../features/modes'
 import { useMotionEnabled } from '../../../shared/lib/use-motion-enabled'
 import { AnimatedNumber } from '../../../shared/ui/animated-number'
-import { ProgressBar } from '../../../shared/ui/progress-bar'
 
 export interface QuizHeaderProps {
   progress: number
@@ -15,10 +16,50 @@ export interface QuizHeaderProps {
   timeLimit?: number | null
   lives?: number
   score: number
+  streak: number
+  /** The answer is on screen: the countdown stands still. */
+  paused?: boolean
 }
 
-/** Seconds of remaining time at which the timer starts pulsing. */
-const LOW_TIME = 10
+/** Share of the time left (%) at which the timer starts pulsing. */
+const LOW_TIME_PERCENT = 25
+
+/**
+ * Timer bar: one CSS animation drains it (and shifts green → red) over
+ * the whole limit, so it ends exactly when the 1 s ticks reach zero.
+ * Paused while the answer is shown. The start offset is captured once
+ * per mount (changing the delay mid-run would jump the animation), so
+ * the parent remounts it via `key` when the timer restarts.
+ */
+function TimerBar({
+  limit,
+  remaining,
+  paused,
+}: {
+  limit: number
+  remaining: number
+  paused: boolean
+}) {
+  const [elapsed] = useState(() => Math.max(0, limit - remaining))
+  return (
+    <div
+      aria-hidden
+      className="mt-3 h-3 overflow-hidden rounded-full bg-bg shadow-neu-inset-sm"
+    >
+      <div
+        data-testid="quiz-timer-bar"
+        className="timer-drain h-full rounded-full"
+        style={
+          {
+            '--timer-duration': `${limit}s`,
+            animationDelay: `-${elapsed}s`,
+            animationPlayState: paused ? 'paused' : 'running',
+          } as CSSProperties
+        }
+      />
+    </div>
+  )
+}
 
 export function QuizHeader({
   progress,
@@ -28,17 +69,19 @@ export function QuizHeader({
   timeLimit,
   lives,
   score,
+  streak,
+  paused = false,
 }: QuizHeaderProps) {
   const { t } = useTranslation()
   const modeDef = getMode(mode)
   const motionEnabled = useMotionEnabled()
 
   const hasTimer = modeDef.headerType === 'timer' && timeRemaining !== undefined
-  const lowTime = hasTimer && timeRemaining <= LOW_TIME
   const fill =
     hasTimer && timeLimit
       ? Math.max(0, Math.min(100, (timeRemaining / timeLimit) * 100))
       : 0
+  const lowTime = hasTimer && fill <= LOW_TIME_PERCENT
 
   return (
     <div className="mb-6">
@@ -76,6 +119,18 @@ export function QuizHeader({
               {'❤️'.repeat(lives ?? 0)}
             </span>
           ) : null}
+          <span
+            data-testid="quiz-streak"
+            className="flex items-center gap-1 text-caption text-text-2"
+          >
+            <Flame className="size-4 fill-current text-streak" aria-hidden />
+            <AnimatedNumber
+              value={streak}
+              duration={400}
+              className="text-base font-bold tabular-nums text-success"
+            />
+            {t('quiz.streak')}
+          </span>
           <span className="text-lg font-bold text-primary-ink">
             {t('quiz.score_label')}{' '}
             <AnimatedNumber value={score} className="tabular-nums" />
@@ -85,12 +140,12 @@ export function QuizHeader({
 
       {/* Timer bar — fill shrinks with the remaining time. */}
       {hasTimer && timeLimit ? (
-        <ProgressBar
-          className="mt-3"
-          value={fill}
-          max={100}
-          fillClassName={lowTime ? 'bg-danger' : 'bg-primary'}
-          animate="transition-[width] duration-1000 ease-linear"
+        <TimerBar
+          // Per-question timers restart with each question.
+          key={modeDef.timerBehavior === 'per-question' ? progress : 'total'}
+          limit={timeLimit}
+          remaining={timeRemaining}
+          paused={paused}
         />
       ) : null}
     </div>

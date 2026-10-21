@@ -27,7 +27,6 @@ const questionSchema = z.object({
   // violation here means the proxy broke the contract.
   options: z.array(z.object({ id: z.string(), text: z.string() })).min(2),
   correctOptionIds: z.array(z.string()).min(1),
-  multiple: z.boolean(),
   category: z.string().optional(),
   difficulty: difficultySchema,
 })

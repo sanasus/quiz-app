@@ -1,5 +1,5 @@
 /**
- * /results — Session results with score, accuracy, and repeat-mistakes.
+ * /results — Session results with score, accuracy, and the list of mistakes.
  */
 
 import { useCallback, useState } from 'react'
@@ -56,19 +56,6 @@ export function ResultsScreen() {
     const m = Math.floor(seconds / 60)
     const s = seconds % 60
     return `${m}:${s.toString().padStart(2, '0')}`
-  }
-
-  const handleRepeatMistakes = () => {
-    store.repeatMistakes(store.config)
-    navigate({
-      to: '/quiz',
-      search: {
-        category: store.config.category,
-        difficulty: store.config.difficulty,
-        questionCount: store.config.questionCount,
-        mode: store.config.mode,
-      },
-    })
   }
 
   const handleNewQuiz = () => {
@@ -177,11 +164,6 @@ export function ResultsScreen() {
 
       {/* Actions */}
       <div className="flex flex-col gap-3 sm:flex-row sm:justify-center">
-        {result.mistakes.length > 0 && (
-          <Button variant="secondary" onClick={handleRepeatMistakes}>
-            {t('results.repeat_mistakes')}
-          </Button>
-        )}
         <Button onClick={handleNewQuiz}>{t('results.new_quiz')}</Button>
       </div>
 

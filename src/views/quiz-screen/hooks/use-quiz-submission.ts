@@ -13,10 +13,7 @@ import { checkAnswer } from '../utils/answer-utils'
  * timer ticks and other store updates instead of recreating them every
  * render (rerender-defer-reads).
  */
-export function useQuizSubmission(
-  currentQuestion: Question | null,
-  autoSubmitOnSelection: boolean,
-) {
+export function useQuizSubmission(currentQuestion: Question | null) {
   const [currentSubmission, setCurrentSubmission] = useState<string[]>([])
 
   // Wall-clock start of the current question: the speed bonus is based
@@ -55,40 +52,15 @@ export function useQuizSubmission(
     [currentQuestion],
   )
 
-  const handleSubmit = useCallback(
-    () => submitSelection(currentSubmission),
-    [currentSubmission, submitSelection],
-  )
-
-  const handleToggle = useCallback(
+  /** One click answers: single choice, no confirmation step. */
+  const handleSelect = useCallback(
     (optionId: string) => {
-      const next = currentSubmission.includes(optionId)
-        ? currentSubmission.filter((id) => id !== optionId)
-        : [...currentSubmission, optionId]
-      setCurrentSubmission(next)
-
-      // Auto-submit (blitz mode) is interaction logic, so it lives in the
-      // event handler instead of an effect that re-ran on unrelated store
-      // updates (rerender-move-effect-to-event).
-      if (
-        autoSubmitOnSelection &&
-        useQuizSessionStore.getState().status === 'playing'
-      ) {
-        submitSelection(next)
-      }
+      if (useQuizSessionStore.getState().status !== 'playing') return
+      setCurrentSubmission([optionId])
+      submitSelection([optionId])
     },
-    [currentSubmission, autoSubmitOnSelection, submitSelection],
+    [submitSelection],
   )
-
-  const handleSkip = useCallback(() => {
-    if (!currentQuestion) return
-    useQuizSessionStore.getState().skipQuestion()
-  }, [currentQuestion])
-
-  /** Drop the in-progress selection (Esc). */
-  const handleClear = useCallback(() => {
-    setCurrentSubmission([])
-  }, [])
 
   const handleNext = useCallback(() => {
     if (!currentQuestion) return
@@ -96,15 +68,9 @@ export function useQuizSubmission(
     useQuizSessionStore.getState().nextQuestion()
   }, [currentQuestion])
 
-  const hasSelection = currentSubmission.some((id) => id !== '')
-
   return {
     currentSubmission,
-    handleSubmit,
-    handleSkip,
+    handleSelect,
     handleNext,
-    handleToggle,
-    handleClear,
-    hasSelection,
   } as const
 }

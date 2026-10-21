@@ -184,7 +184,6 @@ describe('QuizController (e2e)', () => {
       explanation: '2 + 2 = 4',
       category: 'Mathematics',
       difficulty: 'easy',
-      multiple: false,
       correctOptionIds: ['a2'],
     })
     expect(response.body.questions[0].options).toHaveLength(4)

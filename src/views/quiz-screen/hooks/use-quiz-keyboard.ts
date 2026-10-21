@@ -1,11 +1,12 @@
 /**
  * Keyboard controls for the quiz screen.
  *
- * - 1–6: toggle the option in that position
- * - Enter: submit the selection, or advance when already answered
- * - Esc: clear the current selection (manual pause was rejected by
- *   design — PLAN.md §2.1; timed modes pause automatically while the
- *   answer is shown)
+ * - 1–9: answer with the option in that position (one pick answers)
+ * - Enter: advance right away while the answer is shown (otherwise the
+ *   screen advances by itself after a short pause)
+ *
+ * No manual pause by design — PLAN.md §2.1; timed modes pause
+ * automatically while the answer is shown.
  *
  * Keys are ignored while focus sits in a form control or on a button
  * (native activation already handles Enter there).
@@ -17,11 +18,8 @@ import type { SessionStatus } from '../../../shared/types/quiz'
 export interface QuizKeyboardOptions {
   optionCount: number
   status: SessionStatus
-  hasSelection: boolean
-  onToggleIndex: (index: number) => void
-  onSubmit: () => void
+  onSelectIndex: (index: number) => void
   onNext: () => void
-  onClear: () => void
 }
 
 function isFormControl(target: EventTarget | null): boolean {
@@ -42,11 +40,8 @@ function isFormControl(target: EventTarget | null): boolean {
 export function useQuizKeyboard({
   optionCount,
   status,
-  hasSelection,
-  onToggleIndex,
-  onSubmit,
+  onSelectIndex,
   onNext,
-  onClear,
 }: QuizKeyboardOptions) {
   useEffect(() => {
     function handleKeyDown(event: KeyboardEvent) {
@@ -58,37 +53,18 @@ export function useQuizKeyboard({
         const index = Number(event.key) - 1
         if (index < optionCount && status === 'playing') {
           event.preventDefault()
-          onToggleIndex(index)
+          onSelectIndex(index)
         }
         return
       }
 
-      if (event.key === 'Enter') {
-        if (status === 'answered') {
-          event.preventDefault()
-          onNext()
-        } else if (status === 'playing' && hasSelection) {
-          event.preventDefault()
-          onSubmit()
-        }
-        return
-      }
-
-      if (event.key === 'Escape' && status === 'playing' && hasSelection) {
+      if (event.key === 'Enter' && status === 'answered') {
         event.preventDefault()
-        onClear()
+        onNext()
       }
     }
 
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [
-    optionCount,
-    status,
-    hasSelection,
-    onToggleIndex,
-    onSubmit,
-    onNext,
-    onClear,
-  ])
+  }, [optionCount, status, onSelectIndex, onNext])
 }

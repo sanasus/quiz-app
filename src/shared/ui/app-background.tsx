@@ -26,7 +26,7 @@ function categoryHue(category: string | undefined): number {
 
 /**
  * Verdict on the current question once answered; otherwise null. A
- * timeout or skip leaves no selection, which counts as wrong.
+ * timeout leaves no selection, which counts as wrong.
  */
 function useVerdict(): { key: string; verdict: Verdict } | null {
   const key = useQuizSessionStore((s) => {

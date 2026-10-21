@@ -33,7 +33,6 @@ const question: Question = {
     { id: 'b', text: '5' },
   ],
   correctOptionIds: ['a'],
-  multiple: false,
   difficulty: 'easy',
 }
 

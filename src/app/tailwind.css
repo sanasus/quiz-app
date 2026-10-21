@@ -266,6 +266,70 @@
 }
 
 /* -------------------------------------------------------------------- */
+/* Quiz timer bar: drains and shifts green → red over the whole limit,  */
+/* in step with the 1 s store ticks (see QuizHeader).                   */
+/* -------------------------------------------------------------------- */
+@keyframes next-ring {
+  from {
+    stroke-dashoffset: 0;
+  }
+  to {
+    stroke-dashoffset: var(--ring-length);
+  }
+}
+
+.next-ring {
+  animation: next-ring linear forwards;
+}
+
+@keyframes timer-drain {
+  0% {
+    width: 100%;
+    background-color: color-mix(
+      in oklch,
+      var(--color-success) 100%,
+      var(--color-danger)
+    );
+  }
+  25% {
+    width: 75%;
+    background-color: color-mix(
+      in oklch,
+      var(--color-success) 75%,
+      var(--color-danger)
+    );
+  }
+  50% {
+    width: 50%;
+    background-color: color-mix(
+      in oklch,
+      var(--color-success) 50%,
+      var(--color-danger)
+    );
+  }
+  75% {
+    width: 25%;
+    background-color: color-mix(
+      in oklch,
+      var(--color-success) 25%,
+      var(--color-danger)
+    );
+  }
+  100% {
+    width: 0%;
+    background-color: color-mix(
+      in oklch,
+      var(--color-success) 0%,
+      var(--color-danger)
+    );
+  }
+}
+
+.timer-drain {
+  animation: timer-drain linear forwards;
+}
+
+/* -------------------------------------------------------------------- */
 /* Motion opt-outs: OS preference and the /settings toggle.             */
 /* Motion (JS) animations are handled separately via useReducedMotion.  */
 /* -------------------------------------------------------------------- */
@@ -398,4 +462,10 @@ input[type='range']::-moz-range-thumb {
 }
 ::-webkit-scrollbar-thumb:hover {
   background: var(--color-text-3, #716a97);
+}
+
+/* The bar IS the countdown, not decoration: keep its real duration under
+   the motion opt-outs above (same !important, higher source order). */
+.timer-drain {
+  animation-duration: var(--timer-duration) !important;
 }

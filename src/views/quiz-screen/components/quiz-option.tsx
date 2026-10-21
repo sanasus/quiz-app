@@ -12,7 +12,7 @@ export interface QuizOptionProps {
   isCorrect: boolean
   showResult: boolean
   disabled: boolean
-  onToggle: (optionId: string) => void
+  onSelect: (optionId: string) => void
 }
 
 /** Single-letter badge label: 0 → A, 1 → B, … 25 → Z, then the number. */
@@ -32,7 +32,7 @@ export const QuizOption = memo(function QuizOption({
   isCorrect,
   showResult,
   disabled,
-  onToggle,
+  onSelect,
 }: QuizOptionProps) {
   const motionEnabled = useMotionEnabled()
 
@@ -77,7 +77,7 @@ export const QuizOption = memo(function QuizOption({
     <motion.button
       data-testid={`option-${id}`}
       data-state={dataState}
-      onClick={() => onToggle(id)}
+      onClick={() => onSelect(id)}
       aria-selected={isSelected}
       role="option"
       className={`w-full rounded-lg border p-4 text-left text-body transition-colors disabled:cursor-not-allowed ${showResult ? '' : 'disabled:opacity-75'} ${hoverClass} ${optionClass}`}
