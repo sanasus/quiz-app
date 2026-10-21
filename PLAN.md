@@ -55,19 +55,14 @@
 
 ### 1.3 Тесты и качество
 
-10. **Компонентные тесты экранов.** Unit-тесты сосредоточены в
-    `shared/` и `features/`; у экранов покрыты только хуки
-    (`quiz-screen/hooks`, `setup-screen/hooks`) и `root-layout`.
-    - Без тестов: `results-screen`, `stats-screen`, `settings-screen`,
-      `achievements-screen`, `home-screen`, `setup-screen` и компоненты
-      `quiz-screen/components`.
-    - Приоритет — `results-screen` (ошибки, «повторить ошибки», тосты
-      достижений) и `quiz-screen/components` (выбор/подтверждение
-      ответа, жизни, таймер).
-    - В e2e `/achievements`, `/stats`, `/settings` только открываются
-      (`navigation.spec.ts`), а `/settings` ещё используется для смены
-      провайдера. Своих сценариев нет: смена темы/языка/анимаций,
-      сброс статистики, разблокировка и отображение достижений.
+10. **Компонентные тесты экранов.** Приоритетная часть сделана:
+    `results-screen.test.tsx`, `quiz-options.test.tsx`,
+    `quiz-header.test.tsx`; e2e на `/settings` (тема, язык, анимации),
+    `/stats` (пусто → данные, сброс с подтверждением) и `/achievements`
+    (`e2e/preferences.spec.ts`). Осталось: компонентные тесты
+    `home-screen`, `stats-screen`, `settings-screen`,
+    `achievements-screen`, `setup-screen`.
+
 11. **Accessibility-проверки в e2e.** `@axe-core/playwright` на каждом
     экране, в светлой и тёмной теме; нарушения уровня serious/critical
     валят тест. Включить в `@smoke` — проверка дешёвая. Отдельно
