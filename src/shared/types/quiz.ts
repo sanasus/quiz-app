@@ -55,6 +55,18 @@ export interface QuizSession {
    * shows it as the run's question count; undefined when unknown.
    */
   questionsTotal?: number
+  /**
+   * Cursor providers: pool position the run started from, and how many
+   * raw pool items the loaded pages consumed since — the next survival
+   * batch continues at `poolStart + poolConsumed`.
+   */
+  poolStart: number
+  poolConsumed: number
+  /**
+   * The player asked for the next question while the next survival batch
+   * was still loading: the advance is applied the moment the batch lands.
+   */
+  advancePending?: boolean
 }
 
 // ---------------------------------------------------------------------------
@@ -76,7 +88,12 @@ export type SessionAction =
   | { type: 'START_LOADING' }
   | {
       type: 'LOAD_QUESTIONS'
-      payload: { questions: Question[]; config: QuizConfig; total?: number }
+      payload: {
+        questions: Question[]
+        config: QuizConfig
+        total?: number
+        pool?: { start: number; consumed: number }
+      }
     }
   | { type: 'START_PLAYING' }
   | { type: 'START_TIMER'; payload: { timeRemaining: number } }
@@ -92,7 +109,14 @@ export type SessionAction =
   | { type: 'LOSE_LIFE' }
   | {
       type: 'APPEND_QUESTIONS'
-      payload: { questions: Question[]; total?: number }
+      payload: {
+        questions: Question[]
+        total?: number
+        /** Raw pool items the batch consumed (cursor providers). */
+        rawCount?: number
+        /** The pool has nothing further; absent = infer from `added === 0`. */
+        exhausted?: boolean
+      }
     }
   | { type: 'MARK_QUESTIONS_EXHAUSTED' }
   | {
@@ -141,6 +165,13 @@ export interface ApiMetadata {
 // Session result (for /results screen)
 // ---------------------------------------------------------------------------
 
+export interface SessionAttempt {
+  question: Question
+  /** Empty when the question timed out unanswered. */
+  selectedOptionIds: string[]
+  correct: boolean
+}
+
 export interface SessionResult {
   score: number
   correctCount: number
@@ -154,5 +185,8 @@ export interface SessionResult {
   mode: QuizMode
   difficulty: 'easy' | 'medium' | 'hard'
   category: string
-  mistakes: { question: Question; selectedOptionIds: string[] }[]
+  /** Every attempted question, in order, with the player's answer. */
+  attempts: SessionAttempt[]
+  /** Lives left at the end (meaningful for survival only). */
+  livesLeft: number
 }

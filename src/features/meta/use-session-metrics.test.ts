@@ -59,13 +59,17 @@ describe('useSessionMetrics', () => {
         mode: 'classic',
         difficulty: 'easy',
         category: 'Code',
-        mistakes: [],
+        attempts: [],
+        livesLeft: 3,
       },
     })
 
     const { result, rerender } = renderHook(() => useSessionMetrics())
 
     expect(result.current?.xpGained).toBe(25)
+    // First ever session: nothing to beat, so no record badge.
+    expect(result.current?.isNewRecord).toBe(false)
+    expect(result.current?.level).toBe(0)
     expect(result.current?.newAchievements.map((a) => a.id).sort()).toEqual([
       'first_blood',
       'streak_10',
@@ -101,7 +105,8 @@ describe('useSessionMetrics', () => {
         mode: 'classic',
         difficulty: 'easy',
         category: 'Code',
-        mistakes: [],
+        attempts: [],
+        livesLeft: 3,
       },
     })
 
@@ -137,7 +142,8 @@ describe('useSessionMetrics', () => {
         mode: 'classic',
         difficulty: 'easy',
         category: 'Code',
-        mistakes: [],
+        attempts: [],
+        livesLeft: 3,
       },
     })
     const first = renderHook(() => useSessionMetrics())
@@ -157,7 +163,8 @@ describe('useSessionMetrics', () => {
           mode: 'classic',
           difficulty: 'easy',
           category: 'Code',
-          mistakes: [],
+          attempts: [],
+          livesLeft: 3,
         },
       })
     })

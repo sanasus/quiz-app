@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { useQuizSessionStore } from '../../../shared/lib/session-store'
 import { calculateScore } from '../../../shared/lib/scoring'
 import type { Question } from '../../../shared/types/quiz'
-import { checkAnswer } from '../utils/answer-utils'
+import { checkAnswer } from '../../../shared/lib/answers'
 
 /**
  * Submission state and handlers for the current question.
@@ -64,6 +64,9 @@ export function useQuizSubmission(currentQuestion: Question | null) {
 
   const handleNext = useCallback(() => {
     if (!currentQuestion) return
+    // Timer, click and Enter can all fire before React re-renders: only the
+    // first one may advance (the reducer enforces it too).
+    if (useQuizSessionStore.getState().status !== 'answered') return
     setCurrentSubmission([])
     useQuizSessionStore.getState().nextQuestion()
   }, [currentQuestion])

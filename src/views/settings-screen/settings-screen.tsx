@@ -19,6 +19,7 @@ import {
   useQuizSessionStore,
 } from '../../shared/lib/session-store'
 import { useChangeProvider } from '../../features/provider/use-change-provider'
+import { BackupSection } from '../../features/backup/backup-section'
 import { Card } from '../../shared/ui/card'
 import { PageTitle } from '../../shared/ui/heading'
 
@@ -150,6 +151,8 @@ export function SettingsScreen() {
             {t('settings.api_provider_hint')}
           </p>
         </section>
+
+        <BackupSection />
       </Card>
 
       {/* Switching during a live session must be confirmed — the

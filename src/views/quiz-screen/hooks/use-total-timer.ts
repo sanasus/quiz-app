@@ -7,7 +7,7 @@ import type { QuizMode } from '../../../shared/types/quiz'
 export function useTotalTimer(
   effectiveConfig: { mode: string; questionCount: number } | null,
 ) {
-  const store = useQuizSessionStore()
+  const loaded = useQuizSessionStore((s) => s.questions.length)
 
   useEffect(() => {
     if (!effectiveConfig) return
@@ -21,10 +21,11 @@ export function useTotalTimer(
     // `timeRemaining`, so a timer started at mount would read `undefined`
     // on its next tick and instantly fire timeUp — ending the session
     // before it even starts.
-    if (store.questions.length === 0) return
+    if (loaded === 0) return
 
     // Already counting down? Keep ticking. Only start when the countdown
     // is missing (fresh session or remount with a preserved countdown).
+    const store = useQuizSessionStore.getState()
     if (store.timeRemaining === undefined) {
       const rawLimit = mode.timerLimit
       const timeLimit =
@@ -38,6 +39,5 @@ export function useTotalTimer(
     }
 
     return startTimerInterval(() => true)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [effectiveConfig?.mode, store.questions.length])
+  }, [effectiveConfig, loaded])
 }

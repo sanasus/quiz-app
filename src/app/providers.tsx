@@ -7,6 +7,7 @@ import i18n from './i18n'
 import { router } from './router'
 import { queryClient } from './query-client'
 import { SettingsEffects } from './settings-effects'
+import { PwaUpdateToast } from './pwa-update-toast'
 
 export function Providers({ children }: { children?: ReactNode }) {
   return (
@@ -14,6 +15,7 @@ export function Providers({ children }: { children?: ReactNode }) {
       <I18nextProvider i18n={i18n}>
         <SettingsEffects />
         {children}
+        <PwaUpdateToast />
         <RouterProvider router={router} />
       </I18nextProvider>
       <ReactQueryDevtools initialIsOpen={false} buttonPosition="bottom-left" />

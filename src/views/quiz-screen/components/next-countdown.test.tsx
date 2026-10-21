@@ -44,4 +44,20 @@ describe('NextCountdown', () => {
     expect(onNext).not.toHaveBeenCalled()
     expect(screen.getByTestId('next-countdown')).toBeDisabled()
   })
+
+  it('starts the digit from the full delay when it unblocks', () => {
+    const { rerender } = render(
+      <NextCountdown delayMs={3500} onNext={vi.fn()} />,
+    )
+    act(() => {
+      vi.advanceTimersByTime(2600)
+    })
+    expect(screen.getByTestId('next-countdown')).toHaveTextContent('1')
+
+    rerender(<NextCountdown delayMs={3500} blocked onNext={vi.fn()} />)
+    rerender(<NextCountdown delayMs={3500} onNext={vi.fn()} />)
+
+    // Not the stale «1» from before the wait.
+    expect(screen.getByTestId('next-countdown')).toHaveTextContent('4')
+  })
 })

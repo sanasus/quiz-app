@@ -20,6 +20,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { QuizConfig } from '../types/quiz'
 import { fetchBackendCatalog, fetchBackendQuestions } from './backend-client'
 import { QuizApiError } from './errors'
+import { useQuizSessionStore } from '../lib/session-store'
 import { SURVIVAL_BATCH_SIZE } from './fetch-limits'
 import { useProviderStore } from './provider-store'
 import { useCatalog, useQuestionBatch, useQuizQuestions } from './quizapi'
@@ -169,10 +170,14 @@ describe('quiz data hooks dispatch by providerId', () => {
     })
 
     await waitFor(() => expect(result.current.data?.questions).toHaveLength(1))
-    expect(fetchCalls).toHaveLength(1)
-    expect(fetchCalls[0]).toContain(QUESTIONS_URL)
-    expect(fetchCalls[0]?.includes('quizapi.io')).toBe(false)
-    expect(fetchCalls[0]?.includes('the-trivia-api.com')).toBe(false)
+    // A short page may be topped up (a few requests per quiz) — but only
+    // ever through our own proxy.
+    expect(fetchCalls.length).toBeGreaterThanOrEqual(1)
+    for (const url of fetchCalls) {
+      expect(url).toContain(QUESTIONS_URL)
+      expect(url.includes('quizapi.io')).toBe(false)
+      expect(url.includes('the-trivia-api.com')).toBe(false)
+    }
   })
 
   it('useQuizQuestions fetches with provider=trivia when providerId=trivia', async () => {
@@ -202,18 +207,45 @@ describe('quiz data hooks dispatch by providerId', () => {
     expect(result.current.data?.total).toBe(68)
   })
 
-  it('useQuestionBatch pages by offset with the survival batch size', async () => {
-    useProviderStore.setState({ providerId: 'trivia' })
+  it('useQuestionBatch continues a cursor pool at start + consumed', async () => {
+    useQuizSessionStore.setState({ poolStart: 0, poolConsumed: 10 })
 
     const { result } = renderHook(
-      () => useQuestionBatch(config, SURVIVAL_BATCH_SIZE, true),
+      () =>
+        useQuestionBatch(
+          config,
+          { poolStart: 0, poolConsumed: 10, loaded: 10 },
+          true,
+        ),
       { wrapper: createWrapper() },
     )
 
     await waitFor(() => expect(result.current.data?.questions).toHaveLength(1))
     const params = paramsFor(QUESTIONS_URL)
     expect(params.get('limit')).toBe(String(SURVIVAL_BATCH_SIZE))
-    expect(params.get('offset')).toBe(String(SURVIVAL_BATCH_SIZE))
+    expect(params.get('offset')).toBe('10')
+    expect(result.current.data?.rawCount).toBe(1)
+  })
+
+  it('useQuestionBatch asks a random-paged provider for a generous page', async () => {
+    useProviderStore.setState({ providerId: 'trivia' })
+    useQuizSessionStore.setState({ poolStart: 0, poolConsumed: 0 })
+
+    const { result } = renderHook(
+      () =>
+        useQuestionBatch(
+          config,
+          { poolStart: 0, poolConsumed: 0, loaded: 10 },
+          true,
+        ),
+      { wrapper: createWrapper() },
+    )
+
+    await waitFor(() => expect(result.current.data?.questions).toHaveLength(1))
+    const params = paramsFor(QUESTIONS_URL)
+    expect(params.get('provider')).toBe('trivia')
+    expect(params.get('limit')).toBe(String(SURVIVAL_BATCH_SIZE * 3))
+    expect(params.get('offset')).toBe('0')
   })
 
   it('switching the provider mid-session swaps key and provider param', async () => {
@@ -221,17 +253,20 @@ describe('quiz data hooks dispatch by providerId', () => {
       wrapper: createWrapper(),
     })
 
-    await waitFor(() => expect(callsTo('provider=quizapi')).toHaveLength(1))
     await waitFor(() => expect(result.current.data?.questions).toHaveLength(1))
+    const quizapiCalls = callsTo('provider=quizapi').length
+    expect(quizapiCalls).toBeGreaterThanOrEqual(1)
 
     act(() => {
       useProviderStore.getState().setProviderId('trivia')
     })
 
-    await waitFor(() => expect(callsTo('provider=trivia')).toHaveLength(1))
+    await waitFor(() =>
+      expect(callsTo('provider=trivia').length).toBeGreaterThanOrEqual(1),
+    )
     await waitFor(() => expect(result.current.data?.questions).toHaveLength(1))
     // The quizapi query was completed, not refetched.
-    expect(callsTo('provider=quizapi')).toHaveLength(1)
+    expect(callsTo('provider=quizapi')).toHaveLength(quizapiCalls)
   })
 
   it('useCatalog fetches the merged catalog from the active provider', async () => {

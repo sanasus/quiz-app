@@ -56,6 +56,8 @@ function makeSession(overrides: Partial<QuizSession> = {}): QuizSession {
     mode: 'survival',
     config: survivalConfig,
     questionsExhausted: false,
+    poolStart: 0,
+    poolConsumed: 0,
     ...overrides,
   }
 }
@@ -276,8 +278,14 @@ describe('finishSession', () => {
     expect(result?.incorrectCount).toBe(1)
     expect(result?.bestStreak).toBe(4)
     expect(result?.finishedAt).toBeGreaterThan(0)
-    expect(result?.mistakes).toHaveLength(1)
-    expect(result?.mistakes[0].question.id).toBe('q5')
+    expect(result?.attempts.map((a) => a.correct)).toEqual([
+      true,
+      true,
+      true,
+      true,
+      false,
+    ])
+    expect(result?.attempts[4].question.id).toBe('q5')
   })
 })
 
@@ -355,5 +363,145 @@ describe('isSessionActive', () => {
   it('treats idle/finished as inactive', () => {
     expect(isSessionActive('idle')).toBe(false)
     expect(isSessionActive('finished')).toBe(false)
+  })
+})
+
+// ---------------------------------------------------------------------------
+// Pool cursor + filtered batches
+// ---------------------------------------------------------------------------
+
+describe('pool cursor and filtered batches', () => {
+  beforeEach(() => {
+    useQuizSessionStore.getState().reset()
+    useQuizSessionStore
+      .getState()
+      .loadQuestions(pool.slice(0, 2), survivalConfig, 20, {
+        start: 4,
+        consumed: 3,
+      })
+  })
+
+  it('loadQuestions keeps the pool position of the run', () => {
+    const state = useQuizSessionStore.getState()
+    expect(state.poolStart).toBe(4)
+    expect(state.poolConsumed).toBe(3)
+  })
+
+  it('a batch advances the consumed count by the raw items it used', () => {
+    useQuizSessionStore
+      .getState()
+      .appendQuestions([makeQuestion('n1')], 20, { rawCount: 5 })
+
+    expect(useQuizSessionStore.getState().poolConsumed).toBe(8)
+  })
+
+  it('an all-filtered batch is not exhaustion when the source says so', () => {
+    useQuizSessionStore
+      .getState()
+      .appendQuestions([], 20, { rawCount: 5, exhausted: false })
+
+    const state = useQuizSessionStore.getState()
+    expect(state.questionsExhausted).toBe(false)
+    expect(state.poolConsumed).toBe(8)
+  })
+
+  it('the source can end the run even when the batch added questions', () => {
+    useQuizSessionStore
+      .getState()
+      .appendQuestions([makeQuestion('n1')], 20, { exhausted: true })
+
+    expect(useQuizSessionStore.getState().questionsExhausted).toBe(true)
+  })
+
+  it('reset clears the pool position', () => {
+    useQuizSessionStore.getState().reset()
+
+    expect(useQuizSessionStore.getState().poolStart).toBe(0)
+    expect(useQuizSessionStore.getState().poolConsumed).toBe(0)
+  })
+})
+
+// ---------------------------------------------------------------------------
+// Double advance and an advance queued behind a batch
+// ---------------------------------------------------------------------------
+
+describe('NEXT_QUESTION guards', () => {
+  beforeEach(() => {
+    useQuizSessionStore.getState().reset()
+    useQuizSessionStore.getState().loadQuestions(pool.slice(), survivalConfig)
+  })
+
+  it('a second advance in a row does not skip an unanswered question', () => {
+    useQuizSessionStore.setState({ currentIndex: 0, status: 'answered' })
+
+    useQuizSessionStore.getState().nextQuestion()
+    useQuizSessionStore.getState().nextQuestion()
+
+    const s = useQuizSessionStore.getState()
+    expect(s.currentIndex).toBe(1)
+    expect(s.status).toBe('playing')
+  })
+
+  it('does nothing outside the answered state', () => {
+    useQuizSessionStore.setState({ currentIndex: 3, status: 'playing' })
+
+    useQuizSessionStore.getState().nextQuestion()
+
+    expect(useQuizSessionStore.getState().currentIndex).toBe(3)
+  })
+
+  it('applies an advance requested while the batch was loading', () => {
+    useQuizSessionStore.setState({
+      currentIndex: pool.length - 1,
+      status: 'answered',
+    })
+    useQuizSessionStore.getState().nextQuestion()
+    expect(useQuizSessionStore.getState().advancePending).toBe(true)
+
+    useQuizSessionStore.getState().appendQuestions([makeQuestion('q11')])
+
+    const s = useQuizSessionStore.getState()
+    expect(s.currentIndex).toBe(pool.length)
+    expect(s.status).toBe('playing')
+    expect(s.advancePending).toBe(false)
+  })
+
+  it('without a request the batch just lands and the player stays put', () => {
+    useQuizSessionStore.setState({
+      currentIndex: pool.length - 1,
+      status: 'answered',
+    })
+
+    useQuizSessionStore.getState().appendQuestions([makeQuestion('q11')])
+
+    const s = useQuizSessionStore.getState()
+    expect(s.currentIndex).toBe(pool.length - 1)
+    expect(s.status).toBe('answered')
+  })
+
+  it('an exhausted pool drops the queued advance', () => {
+    useQuizSessionStore.setState({
+      currentIndex: pool.length - 1,
+      status: 'answered',
+    })
+    useQuizSessionStore.getState().nextQuestion()
+
+    useQuizSessionStore.getState().appendQuestions([], undefined, {
+      exhausted: true,
+    })
+
+    expect(useQuizSessionStore.getState().advancePending).toBe(false)
+  })
+
+  it('reset clears a queued advance', () => {
+    useQuizSessionStore.setState({
+      currentIndex: pool.length - 1,
+      status: 'answered',
+    })
+    useQuizSessionStore.getState().nextQuestion()
+
+    useQuizSessionStore.getState().reset()
+
+    expect(useQuizSessionStore.getState().advancePending).toBe(false)
   })
 })

@@ -17,8 +17,10 @@ import type { INestApplication } from '@nestjs/common'
 import { Test } from '@nestjs/testing'
 import request from 'supertest'
 import { afterEach, describe, expect, it } from 'vitest'
+import { AnalyticsService } from '../analytics/analytics.service'
 import { AppModule } from '../app.module'
 import { createTestApp } from '../test-app'
+import type { UpstreamError } from './errors'
 import {
   sendJson,
   startUpstream,
@@ -197,7 +199,7 @@ describe('QuizController (e2e)', () => {
     expect(params.get('difficulty')).toBe('EASY')
     expect(params.get('limit')).toBe('10')
     expect(params.get('offset')).toBe('20')
-    expect(params.get('random')).toBe('true')
+    expect(params.has('random')).toBe(false)
   })
 
   it('questions (trivia): merges the count and always asks for text_choice', async () => {
@@ -406,6 +408,39 @@ describe('QuizController (e2e)', () => {
       providerId: 'quizapi',
       status: 500,
     })
+  })
+
+  it('reports an upstream failure with its kind and provider, after answering', async () => {
+    const captured: Array<[UpstreamError, string]> = []
+    upstream = await startUpstream((_req, res) =>
+      sendJson(res, 500, { error: 'boom' }),
+    )
+    setEnv({
+      QUIZAPI_KEY: 'test-key',
+      QUIZAPI_BASE_URL: `${upstream.origin}/quizapi`,
+      TRIVIA_BASE_URL: `${upstream.origin}/trivia`,
+    })
+    const moduleRef = await Test.createTestingModule({ imports: [AppModule] })
+      .overrideProvider(AnalyticsService)
+      .useValue({
+        captureUpstreamError: (error: UpstreamError, providerId: string) =>
+          captured.push([error, providerId]),
+      })
+      .compile()
+    app = await createTestApp(moduleRef)
+
+    const response = await api()
+      .get('/api/quiz/questions')
+      .query({ provider: 'trivia', difficulty: 'easy', limit: 5 })
+
+    expect(response.status).toBe(500)
+    expect(response.body.error).toMatchObject({
+      kind: 'http',
+      providerId: 'trivia',
+    })
+    expect(captured).toHaveLength(1)
+    expect(captured[0][0].kind).toBe('http')
+    expect(captured[0][1]).toBe('trivia')
   })
 
   it('non-JSON upstream body → 502 with kind parse', async () => {

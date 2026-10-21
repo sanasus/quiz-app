@@ -69,7 +69,8 @@ describe('QuizApiProvider', () => {
       expect(params.get('limit')).toBe('25')
       expect(params.get('offset')).toBe('50')
       expect(params.get('difficulty')).toBe('HARD')
-      expect(params.get('random')).toBe('true')
+      // No `random`: a stable order is what makes cursor paging work.
+      expect(params.has('random')).toBe(false)
     })
 
     it('passes the category only when it is not all', () => {

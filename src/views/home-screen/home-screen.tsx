@@ -12,6 +12,7 @@ import { StatTile } from '../../shared/ui/stat-tile'
 import { useProgressStore } from '../../features/progress/progress-store'
 import { useStatsStore } from '../../features/stats/stats-store'
 import { useProviderStore } from '../../shared/api/provider-store'
+import { ResumeQuizPrompt } from '../../features/quiz-resume/resume-quiz-prompt'
 import { xpProgress } from '../../features/progress/xp'
 
 export function HomeScreen() {
@@ -33,6 +34,7 @@ export function HomeScreen() {
 
   return (
     <div className="mx-auto flex max-w-md flex-col items-center gap-6 px-4 py-10 animate-fade-in">
+      <ResumeQuizPrompt />
       <h1 className="px-2 text-center text-title text-primary-ink sm:text-display">
         {t('home.welcome')}
       </h1>

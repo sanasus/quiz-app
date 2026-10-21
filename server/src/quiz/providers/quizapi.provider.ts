@@ -118,7 +118,6 @@ export class QuizApiProvider implements QuizProvider {
     const params = new URLSearchParams({
       limit: String(query.limit),
       difficulty: query.difficulty.toUpperCase(),
-      random: 'true',
       offset: String(query.offset),
     })
 
