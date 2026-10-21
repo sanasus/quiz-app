@@ -63,7 +63,7 @@ inject` и `upload --delete-after`: карты уходят в PostHog и не �
 
 - секрет `POSTHOG_CLI_API_KEY` — personal API key (`phx_...`) с правами
   `error tracking write` и `organization read`;
-- переменную репозитория `POSTHOG_PROJECT_ID` — числовой ID проекта.
+- секрет `POSTHOG_CLI_PROJECT_ID` — числовой ID проекта.
 
 CLI ходит в EU-облако (`POSTHOG_CLI_HOST=https://eu.posthog.com`). Папки с
 картами ищутся под `.vercel/output`, а не зашиты, потому что раскладка

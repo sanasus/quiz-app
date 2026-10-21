@@ -91,6 +91,12 @@ jobs:
       VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
       VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
       VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+      # PostHog CLI (source maps). Job-level on purpose: the `secrets`
+      # context is not allowed in a step's `if`, and a step-level `env` is
+      # not visible in that same step's `if` — job-level `env` is both.
+      POSTHOG_CLI_API_KEY: ${{ secrets.POSTHOG_CLI_API_KEY }}
+      POSTHOG_CLI_PROJECT_ID: ${{ secrets.POSTHOG_CLI_PROJECT_ID }}
+      POSTHOG_CLI_HOST: https://eu.posthog.com
     steps:
       - uses: actions/checkout@v5
 
@@ -124,10 +130,6 @@ jobs:
       - name: Upload source maps to PostHog
         if: env.POSTHOG_CLI_API_KEY != ''
         continue-on-error: true
-        env:
-          POSTHOG_CLI_API_KEY: ${{ secrets.POSTHOG_CLI_API_KEY }}
-          POSTHOG_CLI_PROJECT_ID: ${{ vars.POSTHOG_PROJECT_ID }}
-          POSTHOG_CLI_HOST: https://eu.posthog.com
         run: |
           npm install -g @posthog/cli
           # The Vercel output layout depends on the service setup: find the
@@ -149,6 +151,19 @@ jobs:
             posthog-cli sourcemap inject --directory "$dir"
             posthog-cli sourcemap upload --directory "$dir" --release-name quiz-app --delete-after
           done
+
+      # `--delete-after` only removes maps after a SUCCESSFUL upload. If
+      # inject/upload failed or was cancelled, maps would still be in the
+      # output and the prebuilt deploy below would serve them by direct URL.
+      # The bundles are built with `sourcemap: 'hidden'`, so nothing links
+      # to these files — deleting them is always safe.
+      - name: Remove source maps from the deploy output
+        if: always()
+        shell: bash
+        run: |
+          if [ -d .vercel/output ]; then
+            find .vercel/output -name '*.js.map' -delete
+          fi
 
       - name: Deploy to production
         shell: bash
