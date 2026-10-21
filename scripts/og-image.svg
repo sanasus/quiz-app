@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <defs>
+    <radialGradient id="aura" cx="0.1" cy="0" r="0.9">
+      <stop offset="0" stop-color="#6c5ce7" stop-opacity="0.35"/>
+      <stop offset="1" stop-color="#6c5ce7" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="1200" height="630" fill="#e6e2f6"/>
+  <rect width="1200" height="630" fill="url(#aura)"/>
+  <g transform="translate(110 175) scale(0.55)">
+    <rect width="512" height="512" rx="112" fill="#6c5ce7"/>
+    <circle cx="250" cy="240" r="112" fill="none" stroke="#fff" stroke-width="46"/>
+    <path d="M308 298 372 366" fill="none" stroke="#fff" stroke-width="46" stroke-linecap="round"/>
+  </g>
+  <g font-family="Inter, 'Segoe UI', Arial, sans-serif">
+    <text x="440" y="285" font-size="108" font-weight="800" fill="#191436">QuizApp</text>
+    <text x="440" y="360" font-size="40" font-weight="600" fill="#47406b">Quiz game: four modes, XP,</text>
+    <text x="440" y="410" font-size="40" font-weight="600" fill="#47406b">statistics and achievements</text>
+  </g>
+</svg>

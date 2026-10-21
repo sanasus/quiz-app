@@ -3,6 +3,7 @@
  * main content area, and footer. Wraps every route via <Outlet />.
  */
 
+import { useEffect } from 'react'
 import { Link, Outlet, useRouterState } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
 import {
@@ -17,6 +18,7 @@ import { AppBackground } from '../../shared/ui/app-background'
 import { Button } from '../../shared/ui/button'
 import { NavItem } from '../../shared/ui/nav-item'
 import { TextLink } from '../../shared/ui/text-link'
+import { documentTitle } from './document-title'
 
 const routes: { path: string; icon: LucideIcon; key: string }[] = [
   { path: '/', icon: Home, key: 'app.nav.home' },
@@ -54,6 +56,12 @@ function ProviderFooter() {
 export function RootLayout() {
   const { t, i18n } = useTranslation()
   const pathname = useRouterState({ select: (s) => s.location.pathname })
+
+  // Tab title per route and language; re-runs when the language changes
+  // because `t` is a new function then.
+  useEffect(() => {
+    document.title = documentTitle(pathname, t)
+  }, [pathname, t])
 
   const toggleLang = () => {
     const next = i18n.language === 'ru' ? 'en' : 'ru'

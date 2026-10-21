@@ -49,6 +49,8 @@ export default defineConfig({
       workbox: {
         // Precache the app shell only; question data is never cached.
         globPatterns: ['**/*.{js,css,html,svg,png,ico,woff2}'],
+        // Only crawlers fetch the Open Graph picture.
+        globIgnores: ['og-image.png'],
         navigateFallback: '/index.html',
         navigateFallbackDenylist: [/^\/api\//],
         runtimeCaching: [

@@ -26,14 +26,10 @@
    генерируются `npm run pwa:assets` из `public/logo.svg`. Тела вопросов
    для офлайн-режима — в п. 6.
 
-5. **Мета-теги и заголовки страниц.** В `index.html` только
-   `<title>QuizApp</title>`.
-   - `description`, Open Graph (`og:title`, `og:description`,
-     `og:image` 1200×630 — статичная картинка), `twitter:card`.
-     Краулеры не исполняют JS SPA, поэтому OG-теги статичны в
-     `index.html` и на одном языке (en).
-   - `document.title` по маршруту и языку («Результаты · QuizApp»),
-     через i18n; `<html lang>` уже обновляется в `src/app/i18n.ts`.
+5. ~~**Мета-теги и заголовки страниц.**~~ Сделано: статичные
+   description/OG/Twitter в `index.html` (абсолютные URL прод-домена),
+   `public/og-image.png` из `scripts/og-image.svg` (`npm run og:image`),
+   `document.title` по маршруту и языку (`root-layout/document-title.ts`).
 
 ### 1.2 Данные и надёжность
 

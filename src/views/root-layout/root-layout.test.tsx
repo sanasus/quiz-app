@@ -17,7 +17,11 @@ import { RootLayout } from './root-layout'
 vi.mock('@tanstack/react-router', () => ({
   Link: ({ children }: { children?: ReactNode }) => <>{children}</>,
   Outlet: () => null,
-  useRouterState: () => ({ location: { pathname: '/' } }),
+  useRouterState: ({
+    select,
+  }: {
+    select: (state: { location: { pathname: string } }) => string
+  }) => select({ location: { pathname: '/' } }),
 }))
 
 beforeAll(async () => {
